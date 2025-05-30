@@ -3,6 +3,11 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, TrendingUp, TrendingDown, DollarSign, Users, FileText, PieChart, Calendar } from "lucide-react";
+import AddTransactionForm from "@/components/forms/AddTransactionForm";
+import UploadInvoiceForm from "@/components/forms/UploadInvoiceForm";
+import CreateBudgetForm from "@/components/forms/CreateBudgetForm";
+import ViewArchiveForm from "@/components/forms/ViewArchiveForm";
+import ViewReportsForm from "@/components/forms/ViewReportsForm";
 
 interface DashboardProps {
   userType: 'individual' | 'organization';
@@ -10,6 +15,11 @@ interface DashboardProps {
 
 const Dashboard = ({ userType }: DashboardProps) => {
   const [selectedPeriod, setSelectedPeriod] = useState<'month' | 'year'>('month');
+  const [showAddTransaction, setShowAddTransaction] = useState(false);
+  const [showUploadInvoice, setShowUploadInvoice] = useState(false);
+  const [showCreateBudget, setShowCreateBudget] = useState(false);
+  const [showViewArchive, setShowViewArchive] = useState(false);
+  const [showViewReports, setShowViewReports] = useState(false);
 
   const individualMetrics = {
     income: { amount: 5200, change: '+12%' },
@@ -28,47 +38,52 @@ const Dashboard = ({ userType }: DashboardProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50">
       {/* Header */}
-      <header className="w-full py-6 px-4 border-b border-collector-gold/20 bg-white/80 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-playfair font-bold text-collector-black">
-              Financial Dashboard
-            </h1>
-            <p className="text-collector-black/70 capitalize">
-              {userType} • {selectedPeriod === 'month' ? 'This Month' : 'This Year'}
-            </p>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <div className="flex bg-white rounded-lg border border-collector-gold/20 overflow-hidden">
-              <Button
-                variant={selectedPeriod === 'month' ? 'default' : 'ghost'}
-                className={`rounded-none ${selectedPeriod === 'month' ? 'bg-blue-gradient text-white' : 'text-collector-black'}`}
-                onClick={() => setSelectedPeriod('month')}
-              >
-                Month
-              </Button>
-              <Button
-                variant={selectedPeriod === 'year' ? 'default' : 'ghost'}
-                className={`rounded-none ${selectedPeriod === 'year' ? 'bg-blue-gradient text-white' : 'text-collector-black'}`}
-                onClick={() => setSelectedPeriod('year')}
-              >
-                Year
-              </Button>
+      <header className="w-full py-4 px-4 border-b border-collector-gold/20 bg-white/80 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+            <div>
+              <h1 className="text-2xl lg:text-3xl font-playfair font-bold text-collector-black">
+                Financial Dashboard
+              </h1>
+              <p className="text-collector-black/70 capitalize text-sm lg:text-base">
+                {userType} • {selectedPeriod === 'month' ? 'This Month' : 'This Year'}
+              </p>
             </div>
             
-            <Button className="bg-orange-gradient hover:bg-orange-600 text-white">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Transaction
-            </Button>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div className="flex bg-white rounded-lg border border-collector-gold/20 overflow-hidden">
+                <Button
+                  variant={selectedPeriod === 'month' ? 'default' : 'ghost'}
+                  className={`rounded-none text-sm ${selectedPeriod === 'month' ? 'bg-blue-gradient text-white' : 'text-collector-black'}`}
+                  onClick={() => setSelectedPeriod('month')}
+                >
+                  Month
+                </Button>
+                <Button
+                  variant={selectedPeriod === 'year' ? 'default' : 'ghost'}
+                  className={`rounded-none text-sm ${selectedPeriod === 'year' ? 'bg-blue-gradient text-white' : 'text-collector-black'}`}
+                  onClick={() => setSelectedPeriod('year')}
+                >
+                  Year
+                </Button>
+              </div>
+              
+              <Button 
+                className="bg-orange-gradient hover:bg-orange-600 text-white text-sm"
+                onClick={() => setShowAddTransaction(true)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Transaction
+              </Button>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-4 py-6 lg:py-8">
         {/* Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
           {userType === 'individual' ? (
             <>
               <Card className="ancient-border hover-lift bg-white/90 backdrop-blur-sm">
@@ -79,7 +94,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                   <TrendingUp className="h-4 w-4 text-collector-blue" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-playfair font-bold text-collector-black">
+                  <div className="text-xl lg:text-2xl font-playfair font-bold text-collector-black">
                     ${individualMetrics.income.amount.toLocaleString()}
                   </div>
                   <p className="text-xs text-green-600 font-medium">
@@ -96,7 +111,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                   <TrendingDown className="h-4 w-4 text-collector-orange" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-playfair font-bold text-collector-black">
+                  <div className="text-xl lg:text-2xl font-playfair font-bold text-collector-black">
                     ${individualMetrics.expenses.amount.toLocaleString()}
                   </div>
                   <p className="text-xs text-green-600 font-medium">
@@ -113,7 +128,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                   <DollarSign className="h-4 w-4 text-collector-gold" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-playfair font-bold text-collector-black">
+                  <div className="text-xl lg:text-2xl font-playfair font-bold text-collector-black">
                     ${individualMetrics.savings.amount.toLocaleString()}
                   </div>
                   <p className="text-xs text-green-600 font-medium">
@@ -130,7 +145,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                   <PieChart className="h-4 w-4 text-collector-blue" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-playfair font-bold text-collector-black">
+                  <div className="text-xl lg:text-2xl font-playfair font-bold text-collector-black">
                     {individualMetrics.budget.used}%
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
@@ -152,7 +167,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                   <TrendingUp className="h-4 w-4 text-collector-blue" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-playfair font-bold text-collector-black">
+                  <div className="text-xl lg:text-2xl font-playfair font-bold text-collector-black">
                     ${organizationMetrics.revenue.amount.toLocaleString()}
                   </div>
                   <p className="text-xs text-green-600 font-medium">
@@ -169,7 +184,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                   <TrendingDown className="h-4 w-4 text-collector-orange" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-playfair font-bold text-collector-black">
+                  <div className="text-xl lg:text-2xl font-playfair font-bold text-collector-black">
                     ${organizationMetrics.expenses.amount.toLocaleString()}
                   </div>
                   <p className="text-xs text-red-600 font-medium">
@@ -186,7 +201,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                   <DollarSign className="h-4 w-4 text-collector-gold" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-playfair font-bold text-collector-black">
+                  <div className="text-xl lg:text-2xl font-playfair font-bold text-collector-black">
                     ${organizationMetrics.profit.amount.toLocaleString()}
                   </div>
                   <p className="text-xs text-green-600 font-medium">
@@ -203,7 +218,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                   <Users className="h-4 w-4 text-collector-blue" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-playfair font-bold text-collector-black">
+                  <div className="text-xl lg:text-2xl font-playfair font-bold text-collector-black">
                     ${organizationMetrics.payroll.amount.toLocaleString()}
                   </div>
                   <p className="text-xs text-collector-black/70">
@@ -216,21 +231,27 @@ const Dashboard = ({ userType }: DashboardProps) => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">
           <Card className="ancient-border bg-white/90 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="flex items-center space-x-2 text-lg">
                 <Plus className="w-5 h-5 text-collector-orange" />
                 <span>Quick Add</span>
               </CardTitle>
               <CardDescription>Add income or expenses quickly</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full justify-start bg-green-600 hover:bg-green-700 text-white">
+              <Button 
+                className="w-full justify-start bg-green-600 hover:bg-green-700 text-white text-sm"
+                onClick={() => setShowAddTransaction(true)}
+              >
                 <TrendingUp className="w-4 h-4 mr-2" />
                 Add Income
               </Button>
-              <Button className="w-full justify-start bg-red-600 hover:bg-red-700 text-white">
+              <Button 
+                className="w-full justify-start bg-red-600 hover:bg-red-700 text-white text-sm"
+                onClick={() => setShowAddTransaction(true)}
+              >
                 <TrendingDown className="w-4 h-4 mr-2" />
                 Add Expense
               </Button>
@@ -239,18 +260,24 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
           <Card className="ancient-border bg-white/90 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="flex items-center space-x-2 text-lg">
                 <FileText className="w-5 h-5 text-collector-gold" />
                 <span>Documents</span>
               </CardTitle>
               <CardDescription>Manage your financial documents</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full justify-start bg-collector-blue hover:bg-collector-blue-dark text-white">
+              <Button 
+                className="w-full justify-start bg-collector-blue hover:bg-collector-blue-dark text-white text-sm"
+                onClick={() => setShowUploadInvoice(true)}
+              >
                 <FileText className="w-4 h-4 mr-2" />
                 Upload Invoice
               </Button>
-              <Button className="w-full justify-start bg-collector-gold hover:bg-collector-gold-dark text-white">
+              <Button 
+                className="w-full justify-start bg-collector-gold hover:bg-collector-gold-dark text-white text-sm"
+                onClick={() => setShowViewArchive(true)}
+              >
                 <Calendar className="w-4 h-4 mr-2" />
                 View Archive
               </Button>
@@ -259,18 +286,24 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
           <Card className="ancient-border bg-white/90 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="flex items-center space-x-2 text-lg">
                 <PieChart className="w-5 h-5 text-collector-blue" />
                 <span>Budget Planning</span>
               </CardTitle>
               <CardDescription>Plan and track your budget</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full justify-start bg-orange-gradient hover:bg-orange-600 text-white">
+              <Button 
+                className="w-full justify-start bg-orange-gradient hover:bg-orange-600 text-white text-sm"
+                onClick={() => setShowCreateBudget(true)}
+              >
                 <PieChart className="w-4 h-4 mr-2" />
                 Create Budget
               </Button>
-              <Button className="w-full justify-start bg-gold-gradient hover:bg-amber-600 text-white">
+              <Button 
+                className="w-full justify-start bg-gold-gradient hover:bg-amber-600 text-white text-sm"
+                onClick={() => setShowViewReports(true)}
+              >
                 <TrendingUp className="w-4 h-4 mr-2" />
                 View Reports
               </Button>
@@ -281,9 +314,9 @@ const Dashboard = ({ userType }: DashboardProps) => {
         {/* Recent Transactions */}
         <Card className="ancient-border bg-white/90 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Recent Transactions</span>
-              <Button variant="outline" size="sm">
+            <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <span className="text-lg lg:text-xl">Recent Transactions</span>
+              <Button variant="outline" size="sm" className="w-full sm:w-auto">
                 View All
               </Button>
             </CardTitle>
@@ -296,7 +329,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 { type: 'expense', amount: 120, description: 'Utilities Bill', date: '2024-01-13', category: 'Bills' },
                 { type: 'income', amount: 500, description: 'Freelance Project', date: '2024-01-12', category: 'Work' },
               ].map((transaction, index) => (
-                <div key={index} className="flex items-center justify-between p-4 border border-collector-gold/20 rounded-lg hover:bg-collector-white/50 transition-colors">
+                <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border border-collector-gold/20 rounded-lg hover:bg-collector-white/50 transition-colors gap-3">
                   <div className="flex items-center space-x-4">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                       transaction.type === 'income' ? 'bg-green-100' : 'bg-red-100'
@@ -306,14 +339,14 @@ const Dashboard = ({ userType }: DashboardProps) => {
                         <TrendingDown className="w-5 h-5 text-red-600" />
                       }
                     </div>
-                    <div>
-                      <p className="font-medium text-collector-black">{transaction.description}</p>
+                    <div className="flex-1">
+                      <p className="font-medium text-collector-black text-sm lg:text-base">{transaction.description}</p>
                       <p className="text-sm text-collector-black/60">{transaction.category} • {transaction.date}</p>
                     </div>
                   </div>
-                  <div className={`text-lg font-playfair font-semibold ${
+                  <div className={`text-lg lg:text-xl font-playfair font-semibold ${
                     transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                  }`}>
+                  } text-right sm:text-left`}>
                     {transaction.type === 'income' ? '+' : '-'}${transaction.amount}
                   </div>
                 </div>
@@ -322,6 +355,28 @@ const Dashboard = ({ userType }: DashboardProps) => {
           </CardContent>
         </Card>
       </main>
+
+      {/* Form Modals */}
+      <AddTransactionForm 
+        open={showAddTransaction} 
+        onOpenChange={setShowAddTransaction} 
+      />
+      <UploadInvoiceForm 
+        open={showUploadInvoice} 
+        onOpenChange={setShowUploadInvoice} 
+      />
+      <CreateBudgetForm 
+        open={showCreateBudget} 
+        onOpenChange={setShowCreateBudget} 
+      />
+      <ViewArchiveForm 
+        open={showViewArchive} 
+        onOpenChange={setShowViewArchive} 
+      />
+      <ViewReportsForm 
+        open={showViewReports} 
+        onOpenChange={setShowViewReports} 
+      />
     </div>
   );
 };
