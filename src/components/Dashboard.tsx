@@ -25,8 +25,6 @@ const Dashboard = ({ userType }: DashboardProps) => {
     payroll: { amount: 45000, employees: 12 }
   };
 
-  const metrics = userType === 'individual' ? individualMetrics : organizationMetrics;
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50">
       {/* Header */}
@@ -82,10 +80,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-playfair font-bold text-collector-black">
-                    ${metrics.income.amount.toLocaleString()}
+                    ${individualMetrics.income.amount.toLocaleString()}
                   </div>
                   <p className="text-xs text-green-600 font-medium">
-                    {metrics.income.change} from last {selectedPeriod}
+                    {individualMetrics.income.change} from last {selectedPeriod}
                   </p>
                 </CardContent>
               </Card>
@@ -99,10 +97,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-playfair font-bold text-collector-black">
-                    ${metrics.expenses.amount.toLocaleString()}
+                    ${individualMetrics.expenses.amount.toLocaleString()}
                   </div>
                   <p className="text-xs text-green-600 font-medium">
-                    {metrics.expenses.change} from last {selectedPeriod}
+                    {individualMetrics.expenses.change} from last {selectedPeriod}
                   </p>
                 </CardContent>
               </Card>
@@ -116,10 +114,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-playfair font-bold text-collector-black">
-                    ${metrics.savings.amount.toLocaleString()}
+                    ${individualMetrics.savings.amount.toLocaleString()}
                   </div>
                   <p className="text-xs text-green-600 font-medium">
-                    {metrics.savings.change} from last {selectedPeriod}
+                    {individualMetrics.savings.change} from last {selectedPeriod}
                   </p>
                 </CardContent>
               </Card>
@@ -133,12 +131,12 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-playfair font-bold text-collector-black">
-                    {metrics.budget.used}%
+                    {individualMetrics.budget.used}%
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                     <div 
                       className="bg-orange-gradient h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${metrics.budget.used}%` }}
+                      style={{ width: `${individualMetrics.budget.used}%` }}
                     ></div>
                   </div>
                 </CardContent>
@@ -155,10 +153,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-playfair font-bold text-collector-black">
-                    ${metrics.revenue.amount.toLocaleString()}
+                    ${organizationMetrics.revenue.amount.toLocaleString()}
                   </div>
                   <p className="text-xs text-green-600 font-medium">
-                    {metrics.revenue.change} from last {selectedPeriod}
+                    {organizationMetrics.revenue.change} from last {selectedPeriod}
                   </p>
                 </CardContent>
               </Card>
@@ -172,10 +170,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-playfair font-bold text-collector-black">
-                    ${metrics.expenses.amount.toLocaleString()}
+                    ${organizationMetrics.expenses.amount.toLocaleString()}
                   </div>
                   <p className="text-xs text-red-600 font-medium">
-                    {metrics.expenses.change} from last {selectedPeriod}
+                    {organizationMetrics.expenses.change} from last {selectedPeriod}
                   </p>
                 </CardContent>
               </Card>
@@ -189,10 +187,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-playfair font-bold text-collector-black">
-                    ${metrics.profit.amount.toLocaleString()}
+                    ${organizationMetrics.profit.amount.toLocaleString()}
                   </div>
                   <p className="text-xs text-green-600 font-medium">
-                    {metrics.profit.change} from last {selectedPeriod}
+                    {organizationMetrics.profit.change} from last {selectedPeriod}
                   </p>
                 </CardContent>
               </Card>
@@ -206,10 +204,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-playfair font-bold text-collector-black">
-                    ${metrics.payroll.amount.toLocaleString()}
+                    ${organizationMetrics.payroll.amount.toLocaleString()}
                   </div>
                   <p className="text-xs text-collector-black/70">
-                    {metrics.payroll.employees} employees
+                    {organizationMetrics.payroll.employees} employees
                   </p>
                 </CardContent>
               </Card>
