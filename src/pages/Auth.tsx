@@ -12,7 +12,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
 
-type AuthMode = 'login' | 'signup' | 'signup-org';
+type AuthMode = 'login' | 'signup' | 'signup-individual' | 'signup-org';
 
 const Auth = () => {
   const [authMode, setAuthMode] = useState<AuthMode>('login');
@@ -42,12 +42,12 @@ const Auth = () => {
     try {
       if (authMode === 'login') {
         await signIn(formData.email, formData.password);
-      } else if (authMode === 'signup') {
+      } else if (authMode === 'signup-individual') {
         await signUp(formData.email, formData.password, {
           full_name: formData.fullName,
           gender: formData.gender,
           date_of_birth: formData.dateOfBirth,
-          user_type: formData.userType
+          user_type: 'individual'
         });
       } else if (authMode === 'signup-org') {
         await signUp(formData.email, formData.password, {
@@ -77,6 +77,8 @@ const Auth = () => {
     setFormData(prev => ({ ...prev, userType }));
     if (userType === 'organization') {
       setAuthMode('signup-org');
+    } else {
+      setAuthMode('signup-individual');
     }
   };
 
@@ -90,6 +92,7 @@ const Auth = () => {
             <CardTitle className="text-2xl font-playfair text-collector-black">
               {authMode === 'login' ? 'Welcome Back' : 
                authMode === 'signup-org' ? 'Create Organization Account' :
+               authMode === 'signup-individual' ? 'Create Individual Account' :
                'Create Account'}
             </CardTitle>
             <CardDescription className="text-collector-black/70">
@@ -97,6 +100,8 @@ const Auth = () => {
                 ? 'Sign in to your account' 
                 : authMode === 'signup-org'
                 ? 'Set up your organization account'
+                : authMode === 'signup-individual'
+                ? 'Create your personal Collector account'
                 : 'Create your Collector account'
               }
             </CardDescription>
@@ -141,6 +146,88 @@ const Auth = () => {
                     </div>
                   </Button>
                 </div>
+              </div>
+            ) : authMode === 'signup-individual' ? (
+              // Individual Signup Form
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input
+                    id="fullName"
+                    type="text"
+                    placeholder="Enter your full name"
+                    value={formData.fullName}
+                    onChange={(e) => handleInputChange('fullName', e.target.value)}
+                    className="border-2 border-collector-gold/20 focus:border-collector-orange"
+                    disabled={loading}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    className="border-2 border-collector-gold/20 focus:border-collector-orange"
+                    disabled={loading}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    className="border-2 border-collector-gold/20 focus:border-collector-orange"
+                    disabled={loading}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="gender">Gender (Optional)</Label>
+                  <Select value={formData.gender} onValueChange={(value) => handleInputChange('gender', value)} disabled={loading}>
+                    <SelectTrigger className="border-2 border-collector-gold/20 focus:border-collector-orange">
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                    <SelectContent className="border-2 border-collector-gold/20 bg-white">
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                      <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="dateOfBirth">Date of Birth (Optional)</Label>
+                  <Input
+                    id="dateOfBirth"
+                    type="date"
+                    value={formData.dateOfBirth}
+                    onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+                    className="border-2 border-collector-gold/20 focus:border-collector-orange"
+                    disabled={loading}
+                  />
+                </div>
+                
+                <Button 
+                  onClick={handleAuthSubmit}
+                  className="w-full bg-orange-gradient hover:bg-orange-600 text-white py-3 rounded-xl border-2 border-transparent hover:border-orange-300"
+                  disabled={loading || !formData.fullName || !formData.email || !formData.password}
+                >
+                  {loading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  ) : (
+                    <User className="w-4 h-4 mr-2" />
+                  )}
+                  {loading ? 'Creating Account...' : 'Create Individual Account'}
+                </Button>
               </div>
             ) : authMode === 'signup-org' ? (
               // Organization Signup Form
@@ -333,7 +420,7 @@ const Auth = () => {
                 </div>
               )}
               
-              {(authMode === 'signup' || authMode === 'signup-org') && (
+              {(authMode === 'signup' || authMode === 'signup-individual' || authMode === 'signup-org') && (
                 <div className="text-center">
                   <Button
                     variant="link"
@@ -346,7 +433,7 @@ const Auth = () => {
                 </div>
               )}
               
-              {authMode === 'signup-org' && (
+              {(authMode === 'signup-individual' || authMode === 'signup-org') && (
                 <div className="text-center">
                   <Button
                     variant="link"
