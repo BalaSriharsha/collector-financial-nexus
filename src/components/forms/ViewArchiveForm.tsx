@@ -31,6 +31,18 @@ const ViewArchiveForm = ({ open, onOpenChange }: ViewArchiveFormProps) => {
 
   const categories = ["all", "business", "personal", "tax"];
 
+  const handleViewDocument = (doc: typeof mockDocuments[0]) => {
+    console.log("Viewing document:", doc.name);
+    // In a real app, this would open the document in a viewer
+    alert(`Viewing ${doc.name}`);
+  };
+
+  const handleDownloadDocument = (doc: typeof mockDocuments[0]) => {
+    console.log("Downloading document:", doc.name);
+    // In a real app, this would trigger the download
+    alert(`Downloading ${doc.name}`);
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
@@ -104,10 +116,20 @@ const ViewArchiveForm = ({ open, onOpenChange }: ViewArchiveFormProps) => {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline" className="text-collector-blue hover:text-collector-blue-dark">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-collector-blue hover:text-collector-blue-dark"
+                            onClick={() => handleViewDocument(doc)}
+                          >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          <Button size="sm" variant="outline" className="text-collector-gold hover:text-collector-gold-dark">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-collector-gold hover:text-collector-gold-dark"
+                            onClick={() => handleDownloadDocument(doc)}
+                          >
                             <Download className="w-4 h-4" />
                           </Button>
                         </div>

@@ -4,7 +4,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TrendingUp, TrendingDown, DollarSign, PieChart, BarChart3, Calendar } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, PieChart, BarChart3, Calendar, FileDown } from "lucide-react";
 
 interface ViewReportsFormProps {
   open: boolean;
@@ -37,6 +37,16 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
     ]
   };
 
+  const handleExportPDF = () => {
+    console.log("Exporting PDF for period:", selectedPeriod);
+    alert(`Exporting ${selectedPeriod} report as PDF`);
+  };
+
+  const handleExportCSV = () => {
+    console.log("Exporting CSV for period:", selectedPeriod);
+    alert(`Exporting ${selectedPeriod} report as CSV`);
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-4xl overflow-y-auto">
@@ -57,11 +67,21 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
               </TabsList>
               
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" className="text-collector-blue">
-                  <Calendar className="w-4 h-4 mr-2" />
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="text-collector-blue"
+                  onClick={handleExportPDF}
+                >
+                  <FileDown className="w-4 h-4 mr-2" />
                   Export PDF
                 </Button>
-                <Button size="sm" variant="outline" className="text-collector-gold">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="text-collector-gold"
+                  onClick={handleExportCSV}
+                >
                   <BarChart3 className="w-4 h-4 mr-2" />
                   Export CSV
                 </Button>
