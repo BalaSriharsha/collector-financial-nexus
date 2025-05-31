@@ -406,7 +406,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
         metrics={selectedMetrics}
         metricType="income"
         userType={userType}
-        period="monthly"
+        period="month"
       />
     </div>
   );
