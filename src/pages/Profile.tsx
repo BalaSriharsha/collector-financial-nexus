@@ -49,7 +49,7 @@ const Profile = () => {
             email: data.email || user.email || "",
             date_of_birth: data.date_of_birth || "",
             gender: data.gender || "",
-            user_type: data.user_type || "individual",
+            user_type: (data.user_type as "individual" | "organization") || "individual",
             country: data.country || "USA",
             currency: data.currency || "USD"
           });

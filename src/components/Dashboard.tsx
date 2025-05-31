@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -405,6 +404,9 @@ const Dashboard = ({ userType }: DashboardProps) => {
         open={metricDetailsOpen} 
         onOpenChange={setMetricDetailsOpen}
         metrics={selectedMetrics}
+        metricType="income"
+        userType={userType}
+        period="monthly"
       />
     </div>
   );
