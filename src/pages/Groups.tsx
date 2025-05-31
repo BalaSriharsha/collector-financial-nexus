@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Users, Mail, Edit, Trash2, UserPlus } from "lucide-react";
+import { ArrowLeft, Plus, Users, Mail, Edit, Trash2, UserPlus, LogOut } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -48,6 +48,7 @@ const Groups = () => {
           group_members(
             id,
             role,
+            user_id,
             profiles(full_name, email)
           )
         `)
@@ -191,6 +192,29 @@ const Groups = () => {
     }
   };
 
+  const handleExitGroup = async (groupId: string) => {
+    if (!user) return;
+    if (!confirm('Are you sure you want to leave this group?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('group_members')
+        .delete()
+        .eq('group_id', groupId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast.success('You have left the group successfully!');
+      queryClient.invalidateQueries({ queryKey: ['groups'] });
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to leave group');
+    }
+  };
+
+  const isGroupCreator = (group: any) => group.created_by === user?.id;
+  const canDeleteGroup = (group: any) => isGroupCreator(group);
+
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50 flex items-center justify-center">
@@ -224,7 +248,7 @@ const Groups = () => {
           </div>
           <Button
             onClick={() => setShowCreateGroup(true)}
-            className="bg-blue-gradient hover:bg-blue-600 text-white"
+            className="bg-blue-gradient hover:bg-blue-400 text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Group
@@ -249,11 +273,11 @@ const Groups = () => {
                       <Button
                         size="sm"
                         onClick={() => handleAcceptInvitation(invitation.id, invitation.group_id)}
-                        className="bg-green-600 hover:bg-green-700 text-white"
+                        className="bg-green-600 hover:bg-green-400 text-white"
                       >
                         Accept
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" className="hover:bg-gray-100">
                         Decline
                       </Button>
                     </div>
@@ -284,6 +308,7 @@ const Groups = () => {
                             size="sm"
                             variant="outline"
                             onClick={() => setSelectedGroupId(group.id)}
+                            className="hover:bg-blue-50"
                           >
                             <UserPlus className="w-3 h-3" />
                           </Button>
@@ -307,18 +332,28 @@ const Groups = () => {
                                 required
                               />
                             </div>
-                            <Button type="submit" disabled={loading} className="w-full">
+                            <Button type="submit" disabled={loading} className="w-full bg-blue-gradient hover:bg-blue-400 text-white">
                               {loading ? 'Sending...' : 'Send Invitation'}
                             </Button>
                           </form>
                         </DialogContent>
                       </Dialog>
-                      {group.created_by === user.id && (
+                      {!isGroupCreator(group) && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleExitGroup(group.id)}
+                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                        >
+                          <LogOut className="w-3 h-3" />
+                        </Button>
+                      )}
+                      {canDeleteGroup(group) && (
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleDeleteGroup(group.id)}
-                          className="text-red-600 hover:text-red-700"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
                           <Trash2 className="w-3 h-3" />
                         </Button>
@@ -333,6 +368,11 @@ const Groups = () => {
                     <span className="text-sm text-collector-black/60">
                       {group.group_members?.length || 0} members
                     </span>
+                    {isGroupCreator(group) && (
+                      <Badge variant="outline" className="text-xs text-blue-600 border-blue-200">
+                        Creator
+                      </Badge>
+                    )}
                   </div>
                   <div className="space-y-2">
                     {group.group_members?.slice(0, 3).map((member: any) => (
@@ -359,7 +399,7 @@ const Groups = () => {
               <p className="text-collector-black/50 mb-4">Create your first group to start sharing expenses</p>
               <Button
                 onClick={() => setShowCreateGroup(true)}
-                className="bg-blue-gradient hover:bg-blue-600 text-white"
+                className="bg-blue-gradient hover:bg-blue-400 text-white"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Create Group
@@ -406,7 +446,7 @@ const Groups = () => {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={loading} className="flex-1 bg-blue-gradient hover:bg-blue-600 text-white">
+                <Button type="submit" disabled={loading} className="flex-1 bg-blue-gradient hover:bg-blue-400 text-white">
                   {loading ? 'Creating...' : 'Create Group'}
                 </Button>
               </div>

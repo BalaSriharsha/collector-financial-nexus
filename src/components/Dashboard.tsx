@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,7 +44,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
   const [transactionDetailsOpen, setTransactionDetailsOpen] = useState(false);
   const [metricDetailsOpen, setMetricDetailsOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
-  const [selectedMetric, setSelectedMetric] = useState<string>("");
+  const [selectedMetrics, setSelectedMetrics] = useState<any>(null);
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
   const [editingBudget, setEditingBudget] = useState<any>(null);
 
@@ -166,7 +167,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
           <Button
             onClick={() => setAddTransactionOpen(true)}
-            className="bg-blue-gradient hover:bg-blue-600 text-white flex flex-col items-center p-6 h-auto"
+            className="bg-blue-gradient hover:bg-blue-400 text-white flex flex-col items-center p-6 h-auto"
           >
             <Plus className="w-8 h-8 mb-2" />
             <span className="text-sm">Add Transaction</span>
@@ -174,7 +175,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
           <Button
             onClick={() => setCreateBudgetOpen(true)}
-            className="bg-collector-orange hover:bg-orange-600 text-white flex flex-col items-center p-6 h-auto"
+            className="bg-collector-orange hover:bg-orange-400 text-white flex flex-col items-center p-6 h-auto"
           >
             <DollarSign className="w-8 h-8 mb-2" />
             <span className="text-sm">Create Budget</span>
@@ -182,7 +183,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
           <Button
             onClick={() => setUploadInvoiceOpen(true)}
-            className="bg-green-600 hover:bg-green-700 text-white flex flex-col items-center p-6 h-auto"
+            className="bg-green-600 hover:bg-green-400 text-white flex flex-col items-center p-6 h-auto"
           >
             <Receipt className="w-8 h-8 mb-2" />
             <span className="text-sm">Upload Invoice</span>
@@ -190,7 +191,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
           <Button
             onClick={() => setExpenseSharingOpen(true)}
-            className="bg-purple-600 hover:bg-purple-700 text-white flex flex-col items-center p-6 h-auto"
+            className="bg-purple-600 hover:bg-purple-400 text-white flex flex-col items-center p-6 h-auto"
           >
             <Users className="w-8 h-8 mb-2" />
             <span className="text-sm">Share Expense</span>
@@ -198,7 +199,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
           <Button
             onClick={() => setViewReportsOpen(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white flex flex-col items-center p-6 h-auto"
+            className="bg-indigo-600 hover:bg-indigo-400 text-white flex flex-col items-center p-6 h-auto"
           >
             <TrendingUp className="w-8 h-8 mb-2" />
             <span className="text-sm">View Reports</span>
@@ -206,7 +207,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
           <Button
             onClick={() => setViewArchiveOpen(true)}
-            className="bg-gray-600 hover:bg-gray-700 text-white flex flex-col items-center p-6 h-auto"
+            className="bg-gray-600 hover:bg-gray-400 text-white flex flex-col items-center p-6 h-auto"
           >
             <TrendingDown className="w-8 h-8 mb-2" />
             <span className="text-sm">View Archive</span>
@@ -403,7 +404,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
       <MetricDetailsModal 
         open={metricDetailsOpen} 
         onOpenChange={setMetricDetailsOpen}
-        metrics={selectedMetric}
+        metrics={selectedMetrics}
       />
     </div>
   );

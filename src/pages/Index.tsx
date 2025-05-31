@@ -1,170 +1,234 @@
-import { useState } from "react";
+
+import { useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, User, TrendingUp, PieChart, FileText, Coins } from "lucide-react";
-import Navigation from "@/components/Navigation";
+import { Badge } from "@/components/ui/badge";
+import { ArrowRight, BarChart3, DollarSign, Shield, Users, Zap, Receipt, TrendingUp, Building, User, CheckCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import Footer from "@/components/Footer";
-import Dashboard from "@/components/Dashboard";
 
 const Index = () => {
-  const [userType, setUserType] = useState<'individual' | 'organization' | null>(null);
-  const [showDashboard, setShowDashboard] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-  if (showDashboard && userType) {
-    return <Dashboard userType={userType} />;
+  // Redirect to dashboard if user is logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
+
+  // Don't render the homepage if user is logged in (already redirecting)
+  if (user) {
+    return null;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50">
       <Navigation />
       
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 py-8 lg:py-16 flex-1">
-        <div className="text-center mb-12 lg:mb-16 animate-fade-in">
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-playfair font-bold text-collector-black mb-4 lg:mb-6 leading-tight">
-            Master Your
-            <span className="gradient-text block">Financial Empire</span>
-          </h2>
-          <p className="text-lg lg:text-xl text-collector-black/70 max-w-2xl mx-auto font-inter leading-relaxed px-4">
-            Where traditional wisdom meets cutting-edge technology. Manage your finances with the precision of ancient merchants and the power of modern tools.
+      <section className="relative py-20 px-4">
+        <div className="max-w-6xl mx-auto text-center">
+          <Badge variant="secondary" className="mb-6 bg-collector-orange/10 text-collector-orange border-collector-orange/20">
+            The Ultimate Financial Management Platform
+          </Badge>
+          
+          <h1 className="text-4xl md:text-6xl font-playfair font-bold text-collector-black mb-6">
+            Take Control of Your
+            <span className="gradient-text block">Financial Future</span>
+          </h1>
+          
+          <p className="text-xl text-collector-black/70 mb-8 max-w-2xl mx-auto">
+            Track expenses, manage budgets, share costs with friends, and generate professional invoices all in one place.
           </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <Link to="/auth">
+              <Button size="lg" className="bg-blue-gradient hover:bg-blue-600 text-white px-8 py-3">
+                Get Started Free
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
+            <Link to="/features">
+              <Button size="lg" variant="outline" className="border-collector-orange text-collector-orange hover:bg-collector-orange hover:text-white px-8 py-3">
+                Learn More
+              </Button>
+            </Link>
+          </div>
         </div>
-
-        {/* User Type Selection */}
-        {!userType && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 max-w-4xl mx-auto animate-fade-in">
-            <Card 
-              className="ancient-border hover-lift cursor-pointer group bg-white/80 backdrop-blur-sm"
-              onClick={() => setUserType('individual')}
-            >
-              <CardHeader className="text-center pb-6 lg:pb-8">
-                <div className="w-16 h-16 lg:w-20 lg:h-20 bg-orange-gradient rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                  <User className="w-8 h-8 lg:w-10 lg:h-10 text-white" />
-                </div>
-                <CardTitle className="text-xl lg:text-2xl font-playfair text-collector-black">
-                  Individual
-                </CardTitle>
-                <CardDescription className="text-base lg:text-lg text-collector-black/70">
-                  Personal financial mastery
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3 lg:space-y-4">
-                <div className="flex items-center space-x-3 text-collector-black/80">
-                  <TrendingUp className="w-4 h-4 lg:w-5 lg:h-5 text-collector-orange flex-shrink-0" />
-                  <span className="text-sm lg:text-base">Income & Expenditure Tracking</span>
-                </div>
-                <div className="flex items-center space-x-3 text-collector-black/80">
-                  <PieChart className="w-4 h-4 lg:w-5 lg:h-5 text-collector-gold flex-shrink-0" />
-                  <span className="text-sm lg:text-base">Budget Planning & Savings</span>
-                </div>
-                <div className="flex items-center space-x-3 text-collector-black/80">
-                  <FileText className="w-4 h-4 lg:w-5 lg:h-5 text-collector-blue flex-shrink-0" />
-                  <span className="text-sm lg:text-base">Document Management</span>
-                </div>
-                <div className="flex items-center space-x-3 text-collector-black/80">
-                  <Users className="w-4 h-4 lg:w-5 lg:h-5 text-collector-orange flex-shrink-0" />
-                  <span className="text-sm lg:text-base">Expense Sharing</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card 
-              className="ancient-border hover-lift cursor-pointer group bg-white/80 backdrop-blur-sm"
-              onClick={() => setUserType('organization')}
-            >
-              <CardHeader className="text-center pb-6 lg:pb-8">
-                <div className="w-16 h-16 lg:w-20 lg:h-20 bg-gold-gradient rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                  <Users className="w-8 h-8 lg:w-10 lg:h-10 text-white" />
-                </div>
-                <CardTitle className="text-xl lg:text-2xl font-playfair text-collector-black">
-                  Organization
-                </CardTitle>
-                <CardDescription className="text-base lg:text-lg text-collector-black/70">
-                  Enterprise financial control
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3 lg:space-y-4">
-                <div className="flex items-center space-x-3 text-collector-black/80">
-                  <TrendingUp className="w-4 h-4 lg:w-5 lg:h-5 text-collector-orange flex-shrink-0" />
-                  <span className="text-sm lg:text-base">Revenue & Expense Management</span>
-                </div>
-                <div className="flex items-center space-x-3 text-collector-black/80">
-                  <PieChart className="w-4 h-4 lg:w-5 lg:h-5 text-collector-gold flex-shrink-0" />
-                  <span className="text-sm lg:text-base">Profit/Loss Analysis</span>
-                </div>
-                <div className="flex items-center space-x-3 text-collector-black/80">
-                  <Users className="w-4 h-4 lg:w-5 lg:h-5 text-collector-blue flex-shrink-0" />
-                  <span className="text-sm lg:text-base">Payroll Management</span>
-                </div>
-                <div className="flex items-center space-x-3 text-collector-black/80">
-                  <FileText className="w-4 h-4 lg:w-5 lg:h-5 text-collector-orange flex-shrink-0" />
-                  <span className="text-sm lg:text-base">Financial Documentation</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Proceed Button */}
-        {userType && !showDashboard && (
-          <div className="text-center mt-8 lg:mt-12 animate-fade-in">
-            <Button 
-              onClick={() => setShowDashboard(true)}
-              className="bg-blue-gradient hover:bg-blue-600 text-white px-8 lg:px-12 py-3 lg:py-4 text-base lg:text-lg font-playfair rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full sm:w-auto"
-            >
-              Enter Your Financial Realm
-            </Button>
-          </div>
-        )}
       </section>
 
-      {/* Features Preview */}
-      <section className="max-w-7xl mx-auto px-4 py-12 lg:py-16 border-t border-collector-gold/20">
-        <div className="text-center mb-8 lg:mb-12">
-          <h3 className="text-3xl lg:text-4xl font-playfair font-bold text-collector-black mb-4">
-            Ancient Wisdom, <span className="gradient-text">Modern Tools</span>
-          </h3>
-          <p className="text-base lg:text-lg text-collector-black/70 max-w-2xl mx-auto">
-            Every transaction tells a story. Every document holds wisdom. Let Collector be your financial chronicler.
-          </p>
+      {/* Features Grid */}
+      <section className="py-20 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-playfair font-bold text-collector-black mb-4">
+              Everything You Need to Manage Money
+            </h2>
+            <p className="text-lg text-collector-black/70 max-w-2xl mx-auto">
+              Whether you're an individual or organization, our platform provides all the tools you need for comprehensive financial management.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <Card className="ancient-border hover-lift bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <DollarSign className="w-12 h-12 text-collector-orange mb-4" />
+                <CardTitle className="text-xl">Expense Tracking</CardTitle>
+                <CardDescription>
+                  Monitor your spending with intelligent categorization and real-time insights.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="ancient-border hover-lift bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <BarChart3 className="w-12 h-12 text-collector-blue mb-4" />
+                <CardTitle className="text-xl">Budget Management</CardTitle>
+                <CardDescription>
+                  Set and track budgets across different categories with smart alerts.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="ancient-border hover-lift bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <Users className="w-12 h-12 text-green-600 mb-4" />
+                <CardTitle className="text-xl">Expense Sharing</CardTitle>
+                <CardDescription>
+                  Split bills and track shared expenses with friends and colleagues.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="ancient-border hover-lift bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <Receipt className="w-12 h-12 text-purple-600 mb-4" />
+                <CardTitle className="text-xl">Invoice Generation</CardTitle>
+                <CardDescription>
+                  Create professional invoices with automated tracking and follow-ups.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="ancient-border hover-lift bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <TrendingUp className="w-12 h-12 text-indigo-600 mb-4" />
+                <CardTitle className="text-xl">Financial Reports</CardTitle>
+                <CardDescription>
+                  Generate detailed reports and insights to understand your financial health.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="ancient-border hover-lift bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <Shield className="w-12 h-12 text-red-600 mb-4" />
+                <CardTitle className="text-xl">Secure & Private</CardTitle>
+                <CardDescription>
+                  Bank-grade security with end-to-end encryption for your financial data.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-          <div className="text-center animate-fade-in">
-            <div className="w-12 h-12 lg:w-16 lg:h-16 bg-orange-gradient rounded-full flex items-center justify-center mx-auto mb-4 animate-float">
-              <FileText className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
-            </div>
-            <h4 className="text-lg lg:text-xl font-playfair font-semibold text-collector-black mb-2">
-              Document Sanctum
-            </h4>
-            <p className="text-collector-black/70 text-sm lg:text-base">
-              Store invoices, receipts, and financial documents with the security of an ancient vault.
+      </section>
+
+      {/* User Types Section */}
+      <section className="py-20 px-4 bg-white/50">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-playfair font-bold text-collector-black mb-4">
+              Built for Everyone
+            </h2>
+            <p className="text-lg text-collector-black/70">
+              Whether you're managing personal finances or organizational expenses, we've got you covered.
             </p>
           </div>
-          
-          <div className="text-center animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            <div className="w-12 h-12 lg:w-16 lg:h-16 bg-gold-gradient rounded-full flex items-center justify-center mx-auto mb-4 animate-float" style={{ animationDelay: '1s' }}>
-              <TrendingUp className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
-            </div>
-            <h4 className="text-lg lg:text-xl font-playfair font-semibold text-collector-black mb-2">
-              Prosperity Insights
-            </h4>
-            <p className="text-collector-black/70 text-sm lg:text-base">
-              Visualize your financial journey with elegant charts and timeless wisdom.
-            </p>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Card className="ancient-border hover-lift bg-gradient-to-br from-blue-50 to-blue-100">
+              <CardHeader className="text-center">
+                <User className="w-16 h-16 text-collector-blue mx-auto mb-4" />
+                <CardTitle className="text-2xl">Individual Users</CardTitle>
+                <CardDescription className="text-base">
+                  Perfect for personal financial management
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  <li className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                    <span>Personal expense tracking</span>
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                    <span>Budget planning and monitoring</span>
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                    <span>Split bills with friends</span>
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                    <span>Financial goal tracking</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="ancient-border hover-lift bg-gradient-to-br from-orange-50 to-orange-100">
+              <CardHeader className="text-center">
+                <Building className="w-16 h-16 text-collector-orange mx-auto mb-4" />
+                <CardTitle className="text-2xl">Organizations</CardTitle>
+                <CardDescription className="text-base">
+                  Comprehensive business financial management
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  <li className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                    <span>Team expense management</span>
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                    <span>Professional invoice generation</span>
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                    <span>Department budget allocation</span>
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                    <span>Financial reporting and analytics</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
           </div>
-          
-          <div className="text-center animate-fade-in" style={{ animationDelay: '0.4s' }}>
-            <div className="w-12 h-12 lg:w-16 lg:h-16 bg-blue-gradient rounded-full flex items-center justify-center mx-auto mb-4 animate-float" style={{ animationDelay: '2s' }}>
-              <Users className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
-            </div>
-            <h4 className="text-lg lg:text-xl font-playfair font-semibold text-collector-black mb-2">
-              Shared Ledgers
-            </h4>
-            <p className="text-collector-black/70 text-sm lg:text-base">
-              Split expenses and share financial responsibilities with the grace of ancient guilds.
-            </p>
-          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-playfair font-bold text-collector-black mb-6">
+            Ready to Transform Your Financial Management?
+          </h2>
+          <p className="text-lg text-collector-black/70 mb-8">
+            Join thousands of users who have already taken control of their finances with our platform.
+          </p>
+          <Link to="/auth">
+            <Button size="lg" className="bg-orange-gradient hover:bg-orange-600 text-white px-8 py-4">
+              Start Your Journey Today
+              <Zap className="ml-2 w-5 h-5" />
+            </Button>
+          </Link>
         </div>
       </section>
 

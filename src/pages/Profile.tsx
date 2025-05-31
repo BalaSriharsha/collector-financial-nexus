@@ -1,16 +1,18 @@
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { ArrowLeft, Save, User } from "lucide-react";
+import { ArrowLeft, User, Mail, Calendar, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navigation from "@/components/Navigation";
+import { currencies } from "@/utils/currency";
 
 const Profile = () => {
   const { user, updateProfile } = useAuth();
@@ -20,79 +22,98 @@ const Profile = () => {
     email: "",
     date_of_birth: "",
     gender: "",
+    user_type: "individual" as "individual" | "organization",
+    country: "USA",
+    currency: "USD"
   });
 
   useEffect(() => {
-    if (user) {
-      setProfile({
-        full_name: user.user_metadata?.full_name || "",
-        email: user.email || "",
-        date_of_birth: "",
-        gender: "",
-      });
+    const fetchProfile = async () => {
+      if (!user) return;
 
-      // Fetch additional profile data from profiles table
-      fetchProfile();
-    }
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error fetching profile:', error);
+          return;
+        }
+
+        if (data) {
+          setProfile({
+            full_name: data.full_name || "",
+            email: data.email || user.email || "",
+            date_of_birth: data.date_of_birth || "",
+            gender: data.gender || "",
+            user_type: data.user_type || "individual",
+            country: data.country || "USA",
+            currency: data.currency || "USD"
+          });
+        } else {
+          // Set default values if no profile exists
+          setProfile(prev => ({
+            ...prev,
+            email: user.email || "",
+            full_name: user.user_metadata?.full_name || ""
+          }));
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    };
+
+    fetchProfile();
   }, [user]);
-
-  const fetchProfile = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching profile:', error);
-        return;
-      }
-
-      if (data) {
-        setProfile(prev => ({
-          ...prev,
-          full_name: data.full_name || prev.full_name,
-          date_of_birth: data.date_of_birth || "",
-          gender: data.gender || "",
-        }));
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
     setLoading(true);
-
     try {
-      // Update auth metadata
-      const { error: authError } = await supabase.auth.updateUser({
-        data: {
-          full_name: profile.full_name,
-        }
-      });
-
-      if (authError) throw authError;
-
-      // Update profiles table
-      const { error: profileError } = await supabase
+      // Check if profile exists
+      const { data: existingProfile } = await supabase
         .from('profiles')
-        .upsert({
-          id: user.id,
-          email: profile.email,
-          full_name: profile.full_name,
-          date_of_birth: profile.date_of_birth || null,
-          gender: profile.gender || null,
-          updated_at: new Date().toISOString(),
-        });
+        .select('id')
+        .eq('id', user.id)
+        .single();
 
-      if (profileError) throw profileError;
+      const profileData = {
+        id: user.id,
+        full_name: profile.full_name,
+        email: profile.email,
+        date_of_birth: profile.date_of_birth || null,
+        gender: profile.gender || null,
+        user_type: profile.user_type,
+        country: profile.country,
+        currency: profile.currency,
+        updated_at: new Date().toISOString()
+      };
+
+      let error;
+      if (existingProfile) {
+        // Update existing profile
+        const result = await supabase
+          .from('profiles')
+          .update(profileData)
+          .eq('id', user.id);
+        error = result.error;
+      } else {
+        // Insert new profile
+        const result = await supabase
+          .from('profiles')
+          .insert({
+            ...profileData,
+            created_at: new Date().toISOString()
+          });
+        error = result.error;
+      }
+
+      if (error) throw error;
 
       toast.success('Profile updated successfully!');
     } catch (error: any) {
@@ -103,16 +124,13 @@ const Profile = () => {
     }
   };
 
-  const getUserInitials = () => {
-    if (!profile.full_name && !profile.email) return "U";
-    
-    const name = profile.full_name || profile.email;
-    return name
-      .split(" ")
-      .map((n: string) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
+  const handleCountryChange = (country: string) => {
+    const currency = currencies.find(c => c.country === country);
+    setProfile(prev => ({
+      ...prev,
+      country,
+      currency: currency?.code || "USD"
+    }));
   };
 
   if (!user) {
@@ -137,115 +155,139 @@ const Profile = () => {
           </Link>
         </div>
 
-        <Card className="shadow-xl border-collector-gold/20">
-          <CardHeader className="bg-white/80 backdrop-blur-sm">
-            <div className="flex items-center space-x-4">
-              <Avatar className="w-16 h-16 border-4 border-collector-gold/20">
-                <AvatarImage 
-                  src={user.user_metadata?.avatar_url} 
-                  alt={profile.full_name || profile.email} 
-                />
-                <AvatarFallback className="bg-blue-gradient text-white font-bold text-lg">
-                  {getUserInitials()}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Profile Avatar Section */}
+          <Card className="lg:col-span-1">
+            <CardHeader>
+              <CardTitle>Profile Picture</CardTitle>
+              <CardDescription>Update your profile picture and basic info</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center space-y-4">
+              <Avatar className="w-32 h-32">
+                <AvatarImage src={user.user_metadata?.avatar_url} />
+                <AvatarFallback className="text-2xl bg-collector-orange text-white">
+                  {profile.full_name?.[0] || user.email?.[0]?.toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <CardTitle className="text-2xl text-collector-black">Edit Profile</CardTitle>
-                <CardDescription className="text-collector-black/60">
-                  Update your personal information and preferences
-                </CardDescription>
+              <div className="text-center">
+                <h3 className="font-medium text-lg">{profile.full_name || user.email}</h3>
+                <p className="text-sm text-collector-black/60">{profile.user_type === 'individual' ? 'Individual' : 'Organization'}</p>
               </div>
-            </div>
-          </CardHeader>
-          
-          <CardContent className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="full_name" className="text-collector-black font-medium">
-                    Full Name
-                  </Label>
-                  <Input
-                    id="full_name"
-                    type="text"
-                    value={profile.full_name}
-                    onChange={(e) => setProfile(prev => ({ ...prev, full_name: e.target.value }))}
-                    className="border-collector-gold/30 focus:border-collector-orange"
-                    placeholder="Enter your full name"
-                  />
+            </CardContent>
+          </Card>
+
+          {/* Profile Form */}
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Profile Information</CardTitle>
+              <CardDescription>Update your personal information and preferences</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="full_name">Full Name</Label>
+                    <Input
+                      id="full_name"
+                      value={profile.full_name}
+                      onChange={(e) => setProfile(prev => ({ ...prev, full_name: e.target.value }))}
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={profile.email}
+                      onChange={(e) => setProfile(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="Enter your email"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="date_of_birth">Date of Birth</Label>
+                    <Input
+                      id="date_of_birth"
+                      type="date"
+                      value={profile.date_of_birth}
+                      onChange={(e) => setProfile(prev => ({ ...prev, date_of_birth: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="gender">Gender</Label>
+                    <Select value={profile.gender} onValueChange={(value) => setProfile(prev => ({ ...prev, gender: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-collector-black font-medium">
-                    Email Address
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={profile.email}
-                    disabled
-                    className="border-collector-gold/30 bg-gray-50 text-gray-600"
-                    placeholder="your@email.com"
-                  />
-                  <p className="text-xs text-collector-black/60">
-                    Email cannot be changed from this page
-                  </p>
+                  <Label htmlFor="user_type">Account Type</Label>
+                  <Select value={profile.user_type} onValueChange={(value: "individual" | "organization") => setProfile(prev => ({ ...prev, user_type: value }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="individual">Individual</SelectItem>
+                      <SelectItem value="organization">Organization</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="date_of_birth" className="text-collector-black font-medium">
-                    Date of Birth
-                  </Label>
-                  <Input
-                    id="date_of_birth"
-                    type="date"
-                    value={profile.date_of_birth}
-                    onChange={(e) => setProfile(prev => ({ ...prev, date_of_birth: e.target.value }))}
-                    className="border-collector-gold/30 focus:border-collector-orange"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="country">Country</Label>
+                    <Select value={profile.country} onValueChange={handleCountryChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {currencies.map((currency) => (
+                          <SelectItem key={currency.country} value={currency.country}>
+                            {currency.country}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="currency">Currency</Label>
+                    <Select value={profile.currency} onValueChange={(value) => setProfile(prev => ({ ...prev, currency: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select currency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {currencies.map((currency) => (
+                          <SelectItem key={currency.code} value={currency.code}>
+                            {currency.symbol} {currency.name} ({currency.code})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="gender" className="text-collector-black font-medium">
-                    Gender
-                  </Label>
-                  <select
-                    id="gender"
-                    value={profile.gender}
-                    onChange={(e) => setProfile(prev => ({ ...prev, gender: e.target.value }))}
-                    className="w-full px-3 py-2 border border-collector-gold/30 rounded-md focus:outline-none focus:ring-2 focus:ring-collector-orange focus:border-collector-orange"
-                  >
-                    <option value="">Select gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                    <option value="prefer_not_to_say">Prefer not to say</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-6">
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-blue-gradient hover:bg-blue-600 text-white px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                >
-                  {loading ? (
-                    <div className="flex items-center">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                      Saving...
-                    </div>
-                  ) : (
-                    <div className="flex items-center">
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Changes
-                    </div>
-                  )}
+                <Button type="submit" disabled={loading} className="w-full bg-blue-gradient hover:bg-blue-400 text-white">
+                  {loading ? 'Updating...' : 'Update Profile'}
                 </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
