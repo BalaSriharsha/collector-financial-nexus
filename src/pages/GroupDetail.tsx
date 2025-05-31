@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,6 +24,50 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+type GroupMember = {
+  id: string;
+  role: string;
+  user_id: string;
+  profiles: {
+    id: string;
+    full_name: string | null;
+    email: string | null;
+  } | null;
+};
+
+type GroupData = {
+  id: string;
+  name: string;
+  description: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  group_members: GroupMember[];
+};
+
+type ExpenseData = {
+  id: string;
+  title: string;
+  description: string | null;
+  total_amount: number;
+  created_by: string;
+  created_at: string | null;
+  group_id: string | null;
+  profiles: {
+    full_name: string | null;
+  } | null;
+  shared_expense_participants: {
+    id: string;
+    user_id: string;
+    amount_owed: number;
+    paid: boolean | null;
+    profiles: {
+      full_name: string | null;
+      email: string | null;
+    } | null;
+  }[];
+};
+
 const GroupDetail = () => {
   const { groupId } = useParams();
   const { user } = useAuth();
@@ -35,7 +80,6 @@ const GroupDetail = () => {
     total_amount: "",
   });
   const [newBudget, setNewBudget] = useState({
-    name: "",
     amount: "",
     category: "",
     period: "monthly",
@@ -52,7 +96,7 @@ const GroupDetail = () => {
   // Fetch group details
   const { data: group, isLoading: isGroupLoading } = useQuery({
     queryKey: ['group', groupId],
-    queryFn: async () => {
+    queryFn: async (): Promise<GroupData | null> => {
       if (!groupId) return null;
       
       const { data, error } = await supabase
@@ -70,7 +114,7 @@ const GroupDetail = () => {
         .single();
       
       if (error) throw error;
-      return data;
+      return data as GroupData;
     },
     enabled: !!groupId,
   });
@@ -78,7 +122,7 @@ const GroupDetail = () => {
   // Fetch group expenses
   const { data: expenses, isLoading: isExpensesLoading } = useQuery({
     queryKey: ['group-expenses', groupId],
-    queryFn: async () => {
+    queryFn: async (): Promise<ExpenseData[]> => {
       if (!groupId) return [];
       
       const { data, error } = await supabase
@@ -98,25 +142,19 @@ const GroupDetail = () => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data;
+      return data as ExpenseData[];
     },
     enabled: !!groupId,
   });
 
-  // Fetch group budgets
+  // Fetch group budgets - Note: Current schema doesn't support group_id in budgets table
+  // This is a placeholder until we add proper group budget support
   const { data: groupBudgets, isLoading: isBudgetsLoading } = useQuery({
     queryKey: ['group-budgets', groupId],
     queryFn: async () => {
-      if (!groupId) return [];
-      
-      const { data, error } = await supabase
-        .from('budgets')
-        .select('*')
-        .eq('group_id', groupId)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
+      // Since budgets table doesn't have group_id, we'll return empty array for now
+      // This needs database schema update to properly support group budgets
+      return [];
     },
     enabled: !!groupId,
   });
@@ -134,7 +172,6 @@ const GroupDetail = () => {
     endDate.setMonth(endDate.getMonth() + 1);
     
     setNewBudget({
-      name: "",
       amount: "",
       category: "",
       period: "monthly",
@@ -266,39 +303,10 @@ const GroupDetail = () => {
     }
   };
 
+  // Note: Group budget functionality is disabled until database schema supports it
   const handleSubmitBudget = async () => {
-    if (!user || !groupId || !newBudget.name || !newBudget.amount || !newBudget.category) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { error } = await supabase
-        .from('budgets')
-        .insert({
-          name: newBudget.name,
-          amount: parseFloat(newBudget.amount),
-          category: newBudget.category,
-          period: newBudget.period,
-          start_date: newBudget.start_date,
-          end_date: newBudget.end_date,
-          user_id: user.id,
-          group_id: groupId,
-        });
-
-      if (error) throw error;
-
-      toast.success('Group budget created successfully!');
-      resetBudgetForm();
-      setShowCreateBudget(false);
-      queryClient.invalidateQueries({ queryKey: ['group-budgets', groupId] });
-    } catch (error: any) {
-      console.error('Error creating budget:', error);
-      toast.error(error.message || 'Failed to create budget');
-    } finally {
-      setLoading(false);
-    }
+    toast.error('Group budgets are not yet supported. Please add budgets from your individual dashboard.');
+    return;
   };
 
   const handleDeleteExpense = async (expenseId: string) => {
@@ -506,51 +514,14 @@ const GroupDetail = () => {
             <Card className="shadow-lg border-collector-gold/20">
               <CardHeader>
                 <CardTitle>Group Budgets</CardTitle>
-                <CardDescription>Shared budgets for this group</CardDescription>
+                <CardDescription>Shared budgets for this group (Coming Soon)</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {isBudgetsLoading ? (
-                    <div className="text-center py-8">
-                      <div className="w-8 h-8 border-4 border-collector-orange border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                      <p className="text-collector-black/70">Loading budgets...</p>
-                    </div>
-                  ) : groupBudgets && groupBudgets.length > 0 ? (
-                    groupBudgets.map((budget) => (
-                      <Card key={budget.id} className="border-collector-gold/20">
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h3 className="font-medium text-collector-black">{budget.name}</h3>
-                              <p className="text-sm text-collector-black/60 capitalize">{budget.category} • {budget.period}</p>
-                              <p className="text-sm text-collector-black/60">
-                                {new Date(budget.start_date).toLocaleDateString()} - {new Date(budget.end_date).toLocaleDateString()}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-bold text-lg text-green-600">
-                                ${Number(budget.amount).toFixed(2)}
-                              </p>
-                              <p className="text-sm text-collector-black/60">Budget</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                  ) : (
-                    <div className="text-center py-12">
-                      <PiggyBank className="w-16 h-16 text-collector-black/30 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-collector-black/70 mb-2">No budgets yet</h3>
-                      <p className="text-collector-black/50 mb-4">Create your first group budget</p>
-                      <Button
-                        onClick={() => setShowCreateBudget(true)}
-                        className="bg-green-500 hover:bg-green-200 text-white hover:text-collector-black transition-all duration-200"
-                      >
-                        <PiggyBank className="w-4 h-4 mr-2" />
-                        Create Budget
-                      </Button>
-                    </div>
-                  )}
+                <div className="text-center py-12">
+                  <PiggyBank className="w-16 h-16 text-collector-black/30 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-collector-black/70 mb-2">Group Budgets Coming Soon</h3>
+                  <p className="text-collector-black/50 mb-4">Group budget functionality will be available once the database schema is updated</p>
+                  <p className="text-sm text-collector-black/40">For now, please create budgets from your individual dashboard</p>
                 </div>
               </CardContent>
             </Card>
@@ -564,7 +535,7 @@ const GroupDetail = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {groupMembers.map((member: any) => (
+                  {groupMembers.map((member: GroupMember) => (
                     <div key={member.id} className="flex items-center justify-between p-3 bg-white/60 rounded-lg">
                       <div className="flex items-center">
                         <div className="w-10 h-10 bg-blue-gradient rounded-full flex items-center justify-center text-white font-medium mr-3">
@@ -675,8 +646,8 @@ const GroupDetail = () => {
                 {/* Group Members */}
                 <div className="space-y-2">
                   {groupMembers
-                    .filter((member: any) => member.user_id !== user.id)
-                    .map((member: any) => {
+                    .filter((member: GroupMember) => member.user_id !== user.id)
+                    .map((member: GroupMember) => {
                       const isSelected = selectedMembers.includes(member.user_id);
                       let memberAmount = '0.00';
                       
@@ -777,109 +748,26 @@ const GroupDetail = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Create Budget Modal */}
+        {/* Create Budget Modal - Disabled for now */}
         <Dialog open={showCreateBudget} onOpenChange={setShowCreateBudget}>
           <DialogContent className="border-2 border-collector-gold/30">
             <DialogHeader>
-              <DialogTitle>Create Group Budget</DialogTitle>
+              <DialogTitle>Group Budgets Not Available</DialogTitle>
               <DialogDescription>
-                Set up a budget for this group
+                Group budget functionality is coming soon
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="budgetName">Budget Name</Label>
-                <Input
-                  id="budgetName"
-                  value={newBudget.name}
-                  onChange={(e) => setNewBudget(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="e.g., Monthly Group Expenses..."
-                  className="border-2 border-collector-gold/30 focus:border-collector-orange"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="budgetAmount">Budget Amount ($)</Label>
-                <Input
-                  id="budgetAmount"
-                  type="number"
-                  step="0.01"
-                  value={newBudget.amount}
-                  onChange={(e) => setNewBudget(prev => ({ ...prev, amount: e.target.value }))}
-                  placeholder="0.00"
-                  className="border-2 border-collector-gold/30 focus:border-collector-orange"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="budgetCategory">Category</Label>
-                <Select value={newBudget.category} onValueChange={(value) => setNewBudget(prev => ({ ...prev, category: value }))}>
-                  <SelectTrigger className="border-2 border-collector-gold/30 focus:border-collector-orange">
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                    {categories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category.charAt(0).toUpperCase() + category.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="budgetPeriod">Budget Period</Label>
-                <Select value={newBudget.period} onValueChange={(value) => setNewBudget(prev => ({ ...prev, period: value }))}>
-                  <SelectTrigger className="border-2 border-collector-gold/30 focus:border-collector-orange">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="quarterly">Quarterly</SelectItem>
-                    <SelectItem value="yearly">Yearly</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="budgetStartDate">Start Date</Label>
-                  <Input
-                    id="budgetStartDate"
-                    type="date"
-                    value={newBudget.start_date}
-                    onChange={(e) => setNewBudget(prev => ({ ...prev, start_date: e.target.value }))}
-                    className="border-2 border-collector-gold/30 focus:border-collector-orange"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="budgetEndDate">End Date</Label>
-                  <Input
-                    id="budgetEndDate"
-                    type="date"
-                    value={newBudget.end_date}
-                    onChange={(e) => setNewBudget(prev => ({ ...prev, end_date: e.target.value }))}
-                    className="border-2 border-collector-gold/30 focus:border-collector-orange"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3">
+              <p className="text-center text-collector-black/70">
+                Group budgets are not yet supported in the current database schema.
+                Please create budgets from your individual dashboard for now.
+              </p>
+              <div className="flex justify-center">
                 <Button
-                  type="button"
-                  variant="outline"
                   onClick={() => setShowCreateBudget(false)}
-                  className="flex-1 hover:bg-gray-200 transition-all duration-200"
+                  className="bg-gray-500 hover:bg-gray-200 text-white hover:text-collector-black transition-all duration-200"
                 >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleSubmitBudget} 
-                  disabled={loading || !newBudget.name || !newBudget.amount || !newBudget.category}
-                  className="flex-1 bg-green-500 hover:bg-green-200 text-white hover:text-collector-black transition-all duration-200"
-                >
-                  {loading ? 'Creating...' : 'Create Budget'}
+                  Close
                 </Button>
               </div>
             </div>
