@@ -146,10 +146,10 @@ const AddTransactionForm = ({ open, onOpenChange, userType, editingTransaction, 
             <Select value={formData.type} onValueChange={(value: "income" | "expense") => {
               setFormData(prev => ({ ...prev, type: value, category: "" }));
             }}>
-              <SelectTrigger>
+              <SelectTrigger className="border-2 border-collector-gold/30 focus:border-collector-orange">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                 <SelectItem value="income">Income</SelectItem>
                 <SelectItem value="expense">Expense</SelectItem>
               </SelectContent>
@@ -165,6 +165,7 @@ const AddTransactionForm = ({ open, onOpenChange, userType, editingTransaction, 
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
               required
+              className="border-2 border-collector-gold/30 focus:border-collector-orange"
             />
           </div>
 
@@ -179,6 +180,7 @@ const AddTransactionForm = ({ open, onOpenChange, userType, editingTransaction, 
               value={formData.amount}
               onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
               required
+              className="border-2 border-collector-gold/30 focus:border-collector-orange"
             />
           </div>
 
@@ -186,10 +188,10 @@ const AddTransactionForm = ({ open, onOpenChange, userType, editingTransaction, 
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
             <Select value={formData.category} onValueChange={(value: TransactionCategory) => setFormData(prev => ({ ...prev, category: value }))}>
-              <SelectTrigger>
+              <SelectTrigger className="border-2 border-collector-gold/30 focus:border-collector-orange">
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                 {getCurrentCategories().map((category) => (
                   <SelectItem key={category} value={category}>
                     {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -208,6 +210,7 @@ const AddTransactionForm = ({ open, onOpenChange, userType, editingTransaction, 
               value={formData.date}
               onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
               required
+              className="border-2 border-collector-gold/30 focus:border-collector-orange"
             />
           </div>
 
@@ -220,6 +223,7 @@ const AddTransactionForm = ({ open, onOpenChange, userType, editingTransaction, 
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               rows={3}
+              className="border-2 border-collector-gold/30 focus:border-collector-orange"
             />
           </div>
 
@@ -228,14 +232,14 @@ const AddTransactionForm = ({ open, onOpenChange, userType, editingTransaction, 
               type="button" 
               variant="outline" 
               onClick={() => onClose ? onClose() : onOpenChange(false)} 
-              className="flex-1"
+              className="flex-1 hover:bg-gray-200 transition-all duration-200"
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
               disabled={loading} 
-              className="flex-1 bg-blue-gradient hover:bg-blue-600 text-white"
+              className="flex-1 bg-blue-500 hover:bg-blue-200 text-white hover:text-collector-black transition-all duration-200"
             >
               {loading ? 'Saving...' : editingTransaction ? 'Update Transaction' : 'Add Transaction'}
             </Button>

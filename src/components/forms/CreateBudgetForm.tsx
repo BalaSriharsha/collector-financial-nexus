@@ -152,6 +152,7 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               required
+              className="border-2 border-collector-gold/30 focus:border-collector-orange"
             />
           </div>
 
@@ -166,6 +167,7 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
               value={formData.amount}
               onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
               required
+              className="border-2 border-collector-gold/30 focus:border-collector-orange"
             />
           </div>
 
@@ -173,10 +175,10 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
             <Select value={formData.category} onValueChange={(value: BudgetCategory) => setFormData(prev => ({ ...prev, category: value }))}>
-              <SelectTrigger>
+              <SelectTrigger className="border-2 border-collector-gold/30 focus:border-collector-orange">
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                 {categories.map((category) => (
                   <SelectItem key={category} value={category}>
                     {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -190,10 +192,10 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
           <div className="space-y-2">
             <Label htmlFor="period">Budget Period</Label>
             <Select value={formData.period} onValueChange={(value) => setFormData(prev => ({ ...prev, period: value }))}>
-              <SelectTrigger>
+              <SelectTrigger className="border-2 border-collector-gold/30 focus:border-collector-orange">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                 <SelectItem value="weekly">Weekly</SelectItem>
                 <SelectItem value="monthly">Monthly</SelectItem>
                 <SelectItem value="quarterly">Quarterly</SelectItem>
@@ -211,6 +213,7 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
               value={formData.start_date}
               onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
               required
+              className="border-2 border-collector-gold/30 focus:border-collector-orange"
             />
           </div>
 
@@ -223,6 +226,7 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
               value={formData.end_date}
               onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
               required
+              className="border-2 border-collector-gold/30 focus:border-collector-orange"
             />
           </div>
 
@@ -231,14 +235,14 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
               type="button" 
               variant="outline" 
               onClick={() => onClose ? onClose() : onOpenChange(false)} 
-              className="flex-1"
+              className="flex-1 hover:bg-gray-200 transition-all duration-200"
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
               disabled={loading} 
-              className="flex-1 bg-blue-gradient hover:bg-blue-600 text-white"
+              className="flex-1 bg-blue-500 hover:bg-blue-200 text-white hover:text-collector-black transition-all duration-200"
             >
               {loading ? 'Saving...' : editingBudget ? 'Update Budget' : 'Create Budget'}
             </Button>

@@ -1,14 +1,18 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TrendingUp, TrendingDown, DollarSign, PieChart, BarChart3, Calendar, FileDown } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { Download, FileText, Calendar, DollarSign, TrendingUp, TrendingDown, PieChart } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { generatePDF } from "@/utils/pdfGenerator";
 
 interface ViewReportsFormProps {
   open: boolean;
@@ -17,390 +21,466 @@ interface ViewReportsFormProps {
 
 const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
   const { user } = useAuth();
-  const [selectedPeriod, setSelectedPeriod] = useState("month");
+  const [reportType, setReportType] = useState<'transactions' | 'budgets' | 'summary'>('summary');
+  const [dateRange, setDateRange] = useState<'week' | 'month' | 'quarter' | 'year' | 'custom'>('month');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
-  // Fetch real financial data
-  const { data: reportData, isLoading } = useQuery({
-    queryKey: ['financial-reports', selectedPeriod],
+  // Calculate date range
+  const getDateRange = () => {
+    const now = new Date();
+    let start: Date, end: Date;
+
+    switch (dateRange) {
+      case 'week':
+        start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        end = now;
+        break;
+      case 'month':
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+        end = now;
+        break;
+      case 'quarter':
+        const quarterStart = Math.floor(now.getMonth() / 3) * 3;
+        start = new Date(now.getFullYear(), quarterStart, 1);
+        end = now;
+        break;
+      case 'year':
+        start = new Date(now.getFullYear(), 0, 1);
+        end = now;
+        break;
+      case 'custom':
+        start = startDate ? new Date(startDate) : new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        end = endDate ? new Date(endDate) : now;
+        break;
+      default:
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+        end = now;
+    }
+
+    return { start: start.toISOString().split('T')[0], end: end.toISOString().split('T')[0] };
+  };
+
+  const { start, end } = getDateRange();
+
+  // Fetch transactions data
+  const { data: transactions = [], isLoading: transactionsLoading } = useQuery({
+    queryKey: ['transactions-report', user?.id, start, end],
     queryFn: async () => {
-      if (!user) return null;
-
-      const now = new Date();
-      let startDate: Date;
-
-      // Calculate date range based on selected period
-      if (selectedPeriod === "month") {
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-      } else if (selectedPeriod === "quarter") {
-        const quarterStartMonth = Math.floor(now.getMonth() / 3) * 3;
-        startDate = new Date(now.getFullYear(), quarterStartMonth, 1);
-      } else {
-        startDate = new Date(now.getFullYear(), 0, 1);
-      }
-
-      // Fetch transactions for the period
-      const { data: transactions, error: transError } = await supabase
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
         .from('transactions')
         .select('*')
         .eq('user_id', user.id)
-        .gte('date', startDate.toISOString().split('T')[0])
-        .lte('date', now.toISOString().split('T')[0]);
+        .gte('date', start)
+        .lte('date', end)
+        .order('date', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id && open,
+  });
 
-      if (transError) throw transError;
-
-      // Fetch budgets for the period
-      const { data: budgets, error: budgetError } = await supabase
+  // Fetch budgets data
+  const { data: budgets = [], isLoading: budgetsLoading } = useQuery({
+    queryKey: ['budgets-report', user?.id, start, end],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
         .from('budgets')
         .select('*')
         .eq('user_id', user.id)
-        .gte('start_date', startDate.toISOString().split('T')[0])
-        .lte('end_date', now.toISOString().split('T')[0]);
-
-      if (budgetError) throw budgetError;
-
-      // Calculate summary data
-      const income = transactions?.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0) || 0;
-      const expenses = transactions?.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0) || 0;
-      const totalBudget = budgets?.reduce((sum, b) => sum + Number(b.amount), 0) || 0;
-
-      // Calculate category breakdown
-      const categoryMap = new Map();
-      transactions?.filter(t => t.type === 'expense').forEach(t => {
-        const category = t.category;
-        categoryMap.set(category, (categoryMap.get(category) || 0) + Number(t.amount));
-      });
-
-      const categoryBreakdown = Array.from(categoryMap.entries()).map(([name, amount]) => ({
-        name,
-        amount,
-        percentage: expenses > 0 ? Math.round((amount / expenses) * 100) : 0
-      }));
-
-      // Calculate trends (last 4 periods)
-      const trends = [];
-      for (let i = 3; i >= 0; i--) {
-        let periodStart: Date, periodEnd: Date;
-        
-        if (selectedPeriod === "month") {
-          periodStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          periodEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
-        } else if (selectedPeriod === "quarter") {
-          const quarterStart = Math.floor(now.getMonth() / 3) * 3 - (i * 3);
-          periodStart = new Date(now.getFullYear(), quarterStart, 1);
-          periodEnd = new Date(now.getFullYear(), quarterStart + 3, 0);
-        } else {
-          periodStart = new Date(now.getFullYear() - i, 0, 1);
-          periodEnd = new Date(now.getFullYear() - i, 11, 31);
-        }
-
-        const periodTransactions = transactions?.filter(t => {
-          const tDate = new Date(t.date);
-          return tDate >= periodStart && tDate <= periodEnd;
-        }) || [];
-
-        const periodIncome = periodTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0);
-        const periodExpenses = periodTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0);
-
-        trends.push({
-          month: periodStart.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
-          income: periodIncome,
-          expenses: periodExpenses
-        });
-      }
-
-      return {
-        summary: {
-          totalIncome: income,
-          totalExpenses: expenses,
-          netSavings: income - expenses,
-          budgetUsed: totalBudget > 0 ? Math.round((expenses / totalBudget) * 100) : 0
-        },
-        categoryBreakdown,
-        trends,
-        transactions: transactions || [],
-        budgets: budgets || []
-      };
+        .gte('start_date', start)
+        .lte('end_date', end)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
     },
-    enabled: !!user && open,
+    enabled: !!user?.id && open,
   });
 
-  const handleExportPDF = async () => {
-    try {
-      if (!reportData) {
-        toast.error('No data available to export');
-        return;
-      }
+  // Calculate summary data
+  const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0);
+  const totalExpenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0);
+  const netAmount = totalIncome - totalExpenses;
+  const totalBudgets = budgets.reduce((sum, b) => sum + Number(b.amount), 0);
 
-      // Create PDF content
-      const pdfContent = `
-FINANCIAL REPORT - ${selectedPeriod.toUpperCase()}
-Generated on: ${new Date().toLocaleDateString()}
+  // Category breakdown
+  const expensesByCategory = transactions
+    .filter(t => t.type === 'expense')
+    .reduce((acc, t) => {
+      acc[t.category] = (acc[t.category] || 0) + Number(t.amount);
+      return acc;
+    }, {} as Record<string, number>);
 
-SUMMARY:
-- Total Income: $${reportData.summary.totalIncome.toLocaleString()}
-- Total Expenses: $${reportData.summary.totalExpenses.toLocaleString()}
-- Net Savings: $${reportData.summary.netSavings.toLocaleString()}
-- Budget Used: ${reportData.summary.budgetUsed}%
+  const incomeByCategory = transactions
+    .filter(t => t.type === 'income')
+    .reduce((acc, t) => {
+      acc[t.category] = (acc[t.category] || 0) + Number(t.amount);
+      return acc;
+    }, {} as Record<string, number>);
 
-CATEGORY BREAKDOWN:
-${reportData.categoryBreakdown.map(cat => 
-  `- ${cat.name}: $${cat.amount.toLocaleString()} (${cat.percentage}%)`
-).join('\n')}
-
-TRENDS:
-${reportData.trends.map(trend => 
-  `${trend.month}: Income $${trend.income.toLocaleString()}, Expenses $${trend.expenses.toLocaleString()}`
-).join('\n')}
-      `;
-
-      // Create and download file
-      const blob = new Blob([pdfContent], { type: 'text/plain' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `financial-report-${selectedPeriod}-${new Date().toISOString().split('T')[0]}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-
-      toast.success(`${selectedPeriod} report exported successfully!`);
-    } catch (error) {
-      console.error('Error exporting PDF:', error);
-      toast.error('Failed to export report');
+  const downloadCSV = (data: any[], filename: string, type: 'transactions' | 'budgets') => {
+    let csvContent = '';
+    
+    if (type === 'transactions') {
+      csvContent = 'Date,Title,Type,Category,Amount,Description\n';
+      csvContent += data.map(t => 
+        `${t.date},${t.title},${t.type},${t.category},${t.amount},"${t.description || ''}"`
+      ).join('\n');
+    } else {
+      csvContent = 'Name,Category,Period,Start Date,End Date,Amount\n';
+      csvContent += data.map(b => 
+        `${b.name},${b.category},${b.period},${b.start_date},${b.end_date},${b.amount}`
+      ).join('\n');
     }
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${filename}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
-  const handleExportCSV = async () => {
-    try {
-      if (!reportData) {
-        toast.error('No data available to export');
-        return;
-      }
-
-      // Create CSV content
-      let csvContent = "Type,Date,Title,Category,Amount\n";
+  const handleDownloadPDF = () => {
+    if (reportType === 'transactions') {
+      generatePDF(transactions, `Transaction Report - ${start} to ${end}`, 'transactions');
+    } else if (reportType === 'budgets') {
+      generatePDF(budgets, `Budget Report - ${start} to ${end}`, 'budgets');
+    } else {
+      // Generate summary report
+      const summaryData = [
+        { label: 'Total Income', value: `$${totalIncome.toFixed(2)}` },
+        { label: 'Total Expenses', value: `$${totalExpenses.toFixed(2)}` },
+        { label: 'Net Amount', value: `$${netAmount.toFixed(2)}` },
+        { label: 'Total Budgets', value: `$${totalBudgets.toFixed(2)}` },
+      ];
       
-      reportData.transactions.forEach(transaction => {
-        csvContent += `${transaction.type},${transaction.date},"${transaction.title}","${transaction.category}",${transaction.amount}\n`;
-      });
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Financial Summary Report</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+                h1 { color: #1e40af; border-bottom: 2px solid #f97316; padding-bottom: 10px; }
+                .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 20px 0; }
+                .summary-card { border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: #f9f9f9; }
+                .summary-value { font-size: 24px; font-weight: bold; color: #1e40af; }
+                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #f8f9fa; }
+            </style>
+        </head>
+        <body>
+            <h1>Financial Summary Report</h1>
+            <p>Period: ${start} to ${end}</p>
+            <p>Generated on: ${new Date().toLocaleDateString()}</p>
+            
+            <div class="summary-grid">
+                ${summaryData.map(item => `
+                    <div class="summary-card">
+                        <div>${item.label}</div>
+                        <div class="summary-value">${item.value}</div>
+                    </div>
+                `).join('')}
+            </div>
 
-      csvContent += "\n\nCategory Breakdown\n";
-      csvContent += "Category,Amount,Percentage\n";
-      reportData.categoryBreakdown.forEach(category => {
-        csvContent += `"${category.name}",${category.amount},${category.percentage}%\n`;
-      });
-
-      // Create and download file
-      const blob = new Blob([csvContent], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `financial-data-${selectedPeriod}-${new Date().toISOString().split('T')[0]}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-
-      toast.success(`${selectedPeriod} data exported as CSV successfully!`);
-    } catch (error) {
-      console.error('Error exporting CSV:', error);
-      toast.error('Failed to export CSV');
+            <h2>Expense Breakdown by Category</h2>
+            <table>
+                <thead><tr><th>Category</th><th>Amount</th></tr></thead>
+                <tbody>
+                    ${Object.entries(expensesByCategory).map(([category, amount]) => `
+                        <tr><td>${category.charAt(0).toUpperCase() + category.slice(1)}</td><td>$${amount.toFixed(2)}</td></tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </body>
+        </html>
+      `;
+      
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'financial_summary_report.html';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     }
+    
+    toast.success('Report downloaded successfully!');
+  };
+
+  const handleDownloadCSV = () => {
+    if (reportType === 'transactions') {
+      downloadCSV(transactions, `transactions_${start}_to_${end}`, 'transactions');
+    } else if (reportType === 'budgets') {
+      downloadCSV(budgets, `budgets_${start}_to_${end}`, 'budgets');
+    }
+    
+    toast.success('CSV downloaded successfully!');
   };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-4xl overflow-y-auto">
         <SheetHeader>
-          <SheetTitle className="font-playfair text-collector-black">Financial Reports</SheetTitle>
+          <SheetTitle className="font-playfair text-collector-black">
+            Financial Reports
+          </SheetTitle>
           <SheetDescription>
-            Analyze your financial patterns and gain insights into your spending habits.
+            View and download your financial reports and analytics
           </SheetDescription>
         </SheetHeader>
 
-        <div className="mt-6">
-          <Tabs value={selectedPeriod} onValueChange={setSelectedPeriod} className="w-full">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-              <TabsList className="grid grid-cols-3 w-full sm:w-auto">
-                <TabsTrigger value="month">This Month</TabsTrigger>
-                <TabsTrigger value="quarter">Quarter</TabsTrigger>
-                <TabsTrigger value="year">Year</TabsTrigger>
-              </TabsList>
-              
-              <div className="flex gap-2">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="text-collector-blue hover:bg-blue-200 transition-all duration-200"
-                  onClick={handleExportPDF}
-                  disabled={isLoading || !reportData}
-                >
-                  <FileDown className="w-4 h-4 mr-2" />
-                  Export PDF
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="text-collector-gold hover:bg-yellow-200 transition-all duration-200"
-                  onClick={handleExportCSV}
-                  disabled={isLoading || !reportData}
-                >
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  Export CSV
-                </Button>
-              </div>
+        <div className="mt-6 space-y-6">
+          {/* Report Controls */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label>Report Type</Label>
+              <Select value={reportType} onValueChange={(value: 'transactions' | 'budgets' | 'summary') => setReportType(value)}>
+                <SelectTrigger className="border-2 border-collector-gold/30 focus:border-collector-orange">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                  <SelectItem value="summary">Summary</SelectItem>
+                  <SelectItem value="transactions">Transactions</SelectItem>
+                  <SelectItem value="budgets">Budgets</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <TabsContent value={selectedPeriod} className="space-y-6">
-              {isLoading ? (
-                <div className="text-center py-8">
-                  <div className="w-8 h-8 border-4 border-collector-orange border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-collector-black/70">Loading report data...</p>
-                </div>
-              ) : reportData ? (
-                <>
-                  {/* Summary Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Card className="ancient-border bg-white/90">
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Income</CardTitle>
-                        <TrendingUp className="h-4 w-4 text-green-600" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold text-green-600">
-                          ${reportData.summary.totalIncome.toLocaleString()}
-                        </div>
-                      </CardContent>
-                    </Card>
+            <div>
+              <Label>Date Range</Label>
+              <Select value={dateRange} onValueChange={(value: 'week' | 'month' | 'quarter' | 'year' | 'custom') => setDateRange(value)}>
+                <SelectTrigger className="border-2 border-collector-gold/30 focus:border-collector-orange">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                  <SelectItem value="week">Last 7 Days</SelectItem>
+                  <SelectItem value="month">This Month</SelectItem>
+                  <SelectItem value="quarter">This Quarter</SelectItem>
+                  <SelectItem value="year">This Year</SelectItem>
+                  <SelectItem value="custom">Custom Range</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-                    <Card className="ancient-border bg-white/90">
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
-                        <TrendingDown className="h-4 w-4 text-red-600" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold text-red-600">
-                          ${reportData.summary.totalExpenses.toLocaleString()}
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="ancient-border bg-white/90">
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Net Savings</CardTitle>
-                        <DollarSign className="h-4 w-4 text-collector-gold" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className={`text-2xl font-bold ${reportData.summary.netSavings >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          ${reportData.summary.netSavings.toLocaleString()}
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="ancient-border bg-white/90">
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Budget Used</CardTitle>
-                        <PieChart className="h-4 w-4 text-collector-blue" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold text-collector-blue">
-                          {reportData.summary.budgetUsed}%
-                        </div>
-                        {reportData.summary.budgetUsed > 0 && (
-                          <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                            <div
-                              className="bg-blue-gradient h-2 rounded-full"
-                              style={{ width: `${Math.min(reportData.summary.budgetUsed, 100)}%` }}
-                            ></div>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* Category Breakdown */}
-                  {reportData.categoryBreakdown.length > 0 && (
-                    <Card className="ancient-border bg-white/90">
-                      <CardHeader>
-                        <CardTitle className="font-playfair">Expense Categories</CardTitle>
-                        <CardDescription>Breakdown of your spending by category</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          {reportData.categoryBreakdown.map((category, index) => (
-                            <div key={index} className="flex items-center justify-between">
-                              <div className="flex items-center space-x-3 flex-1">
-                                <div className="flex-1">
-                                  <div className="flex justify-between items-center mb-1">
-                                    <span className="text-sm font-medium text-collector-black">{category.name}</span>
-                                    <span className="text-sm text-collector-black/70">${category.amount.toLocaleString()}</span>
-                                  </div>
-                                  <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <div
-                                      className="bg-orange-gradient h-2 rounded-full transition-all duration-500"
-                                      style={{ width: `${category.percentage}%` }}
-                                    ></div>
-                                  </div>
-                                </div>
-                                <span className="text-sm font-medium text-collector-black/70 ml-3">
-                                  {category.percentage}%
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {/* Income vs Expenses Trend */}
-                  {reportData.trends.length > 0 && (
-                    <Card className="ancient-border bg-white/90">
-                      <CardHeader>
-                        <CardTitle className="font-playfair">Income vs Expenses Trend</CardTitle>
-                        <CardDescription>Comparison over the selected period</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          {reportData.trends.map((item, index) => (
-                            <div key={index} className="flex items-center justify-between p-3 border border-collector-gold/20 rounded-lg">
-                              <span className="font-medium text-collector-black">{item.month}</span>
-                              <div className="flex items-center gap-4">
-                                <div className="text-right">
-                                  <div className="text-sm text-green-600">Income: ${item.income.toLocaleString()}</div>
-                                  <div className="text-sm text-red-600">Expenses: ${item.expenses.toLocaleString()}</div>
-                                </div>
-                                <div className="text-right">
-                                  <div className={`text-sm font-medium ${(item.income - item.expenses) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                    Net: ${(item.income - item.expenses).toLocaleString()}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                </>
-              ) : (
-                <Card className="ancient-border bg-white/90">
-                  <CardContent className="text-center py-12">
-                    <BarChart3 className="w-16 h-16 text-collector-black/30 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-collector-black/70 mb-2">No data available</h3>
-                    <p className="text-collector-black/50">Add some transactions to see your financial reports</p>
-                  </CardContent>
-                </Card>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleDownloadPDF}
+                className="flex-1 bg-blue-500 hover:bg-blue-200 text-white hover:text-collector-black transition-all duration-200"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                PDF
+              </Button>
+              {reportType !== 'summary' && (
+                <Button 
+                  onClick={handleDownloadCSV}
+                  variant="outline"
+                  className="flex-1 hover:bg-gray-200 transition-all duration-200"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  CSV
+                </Button>
               )}
-            </TabsContent>
-          </Tabs>
-
-          <div className="flex justify-end pt-6">
-            <Button variant="outline" onClick={() => onOpenChange(false)} className="hover:bg-gray-200 transition-all duration-200">
-              Close
-            </Button>
+            </div>
           </div>
+
+          {/* Custom Date Range */}
+          {dateRange === 'custom' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Start Date</Label>
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="border-2 border-collector-gold/30 focus:border-collector-orange"
+                />
+              </div>
+              <div>
+                <Label>End Date</Label>
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="border-2 border-collector-gold/30 focus:border-collector-orange"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Summary Cards */}
+          {reportType === 'summary' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card className="border-collector-gold/20">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Income</p>
+                      <p className="text-2xl font-bold text-green-600">${totalIncome.toFixed(2)}</p>
+                    </div>
+                    <TrendingUp className="w-8 h-8 text-green-600" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-collector-gold/20">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Expenses</p>
+                      <p className="text-2xl font-bold text-red-600">${totalExpenses.toFixed(2)}</p>
+                    </div>
+                    <TrendingDown className="w-8 h-8 text-red-600" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-collector-gold/20">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Net Amount</p>
+                      <p className={`text-2xl font-bold ${netAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        ${netAmount.toFixed(2)}
+                      </p>
+                    </div>
+                    <DollarSign className={`w-8 h-8 ${netAmount >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-collector-gold/20">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Budgets</p>
+                      <p className="text-2xl font-bold text-blue-600">${totalBudgets.toFixed(2)}</p>
+                    </div>
+                    <PieChart className="w-8 h-8 text-blue-600" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Category Breakdown */}
+          {reportType === 'summary' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="border-collector-gold/20">
+                <CardHeader>
+                  <CardTitle className="text-lg">Expenses by Category</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {Object.entries(expensesByCategory).map(([category, amount]) => (
+                      <div key={category} className="flex justify-between items-center">
+                        <span className="capitalize">{category}</span>
+                        <Badge variant="outline">${amount.toFixed(2)}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-collector-gold/20">
+                <CardHeader>
+                  <CardTitle className="text-lg">Income by Category</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {Object.entries(incomeByCategory).map(([category, amount]) => (
+                      <div key={category} className="flex justify-between items-center">
+                        <span className="capitalize">{category}</span>
+                        <Badge variant="outline" className="text-green-600">${amount.toFixed(2)}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Detailed Data */}
+          {reportType === 'transactions' && (
+            <Card className="border-collector-gold/20">
+              <CardHeader>
+                <CardTitle>Transaction Details</CardTitle>
+                <CardDescription>
+                  {transactions.length} transactions from {start} to {end}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {transactionsLoading ? (
+                    <p>Loading transactions...</p>
+                  ) : transactions.length > 0 ? (
+                    transactions.map((transaction) => (
+                      <div key={transaction.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                        <div>
+                          <p className="font-medium">{transaction.title}</p>
+                          <p className="text-sm text-gray-600">
+                            {new Date(transaction.date).toLocaleDateString()} • {transaction.category}
+                          </p>
+                        </div>
+                        <Badge variant={transaction.type === 'income' ? 'default' : 'destructive'}>
+                          {transaction.type === 'income' ? '+' : '-'}${Number(transaction.amount).toFixed(2)}
+                        </Badge>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-center text-gray-500">No transactions found for this period</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {reportType === 'budgets' && (
+            <Card className="border-collector-gold/20">
+              <CardHeader>
+                <CardTitle>Budget Details</CardTitle>
+                <CardDescription>
+                  {budgets.length} budgets from {start} to {end}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {budgetsLoading ? (
+                    <p>Loading budgets...</p>
+                  ) : budgets.length > 0 ? (
+                    budgets.map((budget) => (
+                      <div key={budget.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                        <div>
+                          <p className="font-medium">{budget.name}</p>
+                          <p className="text-sm text-gray-600">
+                            {budget.category} • {budget.period}
+                          </p>
+                        </div>
+                        <Badge variant="outline">
+                          ${Number(budget.amount).toFixed(2)}
+                        </Badge>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-center text-gray-500">No budgets found for this period</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </SheetContent>
     </Sheet>
