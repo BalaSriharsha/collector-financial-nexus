@@ -19,6 +19,8 @@ interface AddTransactionFormProps {
   onClose?: () => void;
 }
 
+type TransactionCategory = "food" | "transport" | "entertainment" | "utilities" | "healthcare" | "shopping" | "education" | "investment" | "salary" | "freelance" | "business" | "other";
+
 const AddTransactionForm = ({ open, onOpenChange, userType, editingTransaction, onClose }: AddTransactionFormProps) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -27,13 +29,13 @@ const AddTransactionForm = ({ open, onOpenChange, userType, editingTransaction, 
     title: "",
     amount: "",
     type: "expense" as "income" | "expense",
-    category: "",
+    category: "" as TransactionCategory | "",
     date: new Date().toISOString().split('T')[0],
     description: "",
   });
 
-  const incomeCategories = ["salary", "freelance", "business", "investment", "other"];
-  const expenseCategories = ["food", "transport", "entertainment", "utilities", "healthcare", "shopping", "education", "other"];
+  const incomeCategories: TransactionCategory[] = ["salary", "freelance", "business", "investment", "other"];
+  const expenseCategories: TransactionCategory[] = ["food", "transport", "entertainment", "utilities", "healthcare", "shopping", "education", "other"];
 
   // Reset form when modal opens/closes or editing transaction changes
   useEffect(() => {
@@ -60,7 +62,7 @@ const AddTransactionForm = ({ open, onOpenChange, userType, editingTransaction, 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user || !formData.category) return;
 
     setLoading(true);
     try {
@@ -68,7 +70,7 @@ const AddTransactionForm = ({ open, onOpenChange, userType, editingTransaction, 
         title: formData.title,
         amount: parseFloat(formData.amount),
         type: formData.type,
-        category: formData.category,
+        category: formData.category as TransactionCategory,
         date: formData.date,
         description: formData.description,
         user_id: user.id,
@@ -91,7 +93,7 @@ const AddTransactionForm = ({ open, onOpenChange, userType, editingTransaction, 
         // Create new transaction
         const result = await supabase
           .from('transactions')
-          .insert([transactionData]);
+          .insert(transactionData);
         error = result.error;
         
         if (!error) {
@@ -121,7 +123,7 @@ const AddTransactionForm = ({ open, onOpenChange, userType, editingTransaction, 
     }
   };
 
-  const getCurrentCategories = () => {
+  const getCurrentCategories = (): TransactionCategory[] => {
     return formData.type === 'income' ? incomeCategories : expenseCategories;
   };
 
@@ -183,7 +185,7 @@ const AddTransactionForm = ({ open, onOpenChange, userType, editingTransaction, 
           {/* Category */}
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
-            <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+            <Select value={formData.category} onValueChange={(value: TransactionCategory) => setFormData(prev => ({ ...prev, category: value }))}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>

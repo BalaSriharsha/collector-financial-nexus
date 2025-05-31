@@ -18,6 +18,8 @@ interface CreateBudgetFormProps {
   onClose?: () => void;
 }
 
+type BudgetCategory = "food" | "transport" | "entertainment" | "utilities" | "healthcare" | "shopping" | "education" | "investment" | "salary" | "freelance" | "business" | "other";
+
 const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose }: CreateBudgetFormProps) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -25,13 +27,13 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
   const [formData, setFormData] = useState({
     name: "",
     amount: "",
-    category: "",
+    category: "" as BudgetCategory | "",
     period: "monthly",
     start_date: new Date().toISOString().split('T')[0],
     end_date: "",
   });
 
-  const categories = ["food", "transport", "entertainment", "utilities", "healthcare", "shopping", "education", "other"];
+  const categories: BudgetCategory[] = ["food", "transport", "entertainment", "utilities", "healthcare", "shopping", "education", "other"];
 
   // Reset form when modal opens/closes or editing budget changes
   useEffect(() => {
@@ -63,14 +65,14 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user || !formData.category) return;
 
     setLoading(true);
     try {
       const budgetData = {
         name: formData.name,
         amount: parseFloat(formData.amount),
-        category: formData.category,
+        category: formData.category as BudgetCategory,
         period: formData.period,
         start_date: formData.start_date,
         end_date: formData.end_date,
@@ -94,7 +96,7 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
         // Create new budget
         const result = await supabase
           .from('budgets')
-          .insert([budgetData]);
+          .insert(budgetData);
         error = result.error;
         
         if (!error) {
@@ -170,7 +172,7 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
           {/* Category */}
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
-            <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+            <Select value={formData.category} onValueChange={(value: BudgetCategory) => setFormData(prev => ({ ...prev, category: value }))}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>

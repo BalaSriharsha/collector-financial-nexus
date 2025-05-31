@@ -386,18 +386,14 @@ const Dashboard = ({ userType }: DashboardProps) => {
           setEditingBudget(null);
         }}
       />
-      <UploadInvoiceForm open={uploadInvoiceOpen} onOpenChange={setUploadInvoiceOpen} userType={userType} />
+      <UploadInvoiceForm open={uploadInvoiceOpen} onOpenChange={setUploadInvoiceOpen} />
       <ExpenseSharingForm open={expenseSharingOpen} onOpenChange={setExpenseSharingOpen} userType={userType} />
-      <ViewReportsForm open={viewReportsOpen} onOpenChange={setViewReportsOpen} userType={userType} />
-      <ViewArchiveForm open={viewArchiveOpen} onOpenChange={setViewArchiveOpen} userType={userType} />
+      <ViewReportsForm open={viewReportsOpen} onOpenChange={setViewReportsOpen} />
+      <ViewArchiveForm open={viewArchiveOpen} onOpenChange={setViewArchiveOpen} />
       <AllTransactionsModal 
         open={allTransactionsOpen} 
         onOpenChange={setAllTransactionsOpen}
         transactions={transactionsData || []}
-        onTransactionClick={(transaction) => {
-          setSelectedTransaction(transaction);
-          setTransactionDetailsOpen(true);
-        }}
       />
       <TransactionDetailsModal 
         open={transactionDetailsOpen} 
@@ -407,7 +403,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
       <MetricDetailsModal 
         open={metricDetailsOpen} 
         onOpenChange={setMetricDetailsOpen}
-        metric={selectedMetric}
+        metrics={selectedMetric}
       />
     </div>
   );
