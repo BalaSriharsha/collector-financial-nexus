@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,55 @@ const Dashboard = ({ userType }: DashboardProps) => {
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
   const [editingBudget, setEditingBudget] = useState<any>(null);
 
+  // Set up real-time subscriptions
+  useEffect(() => {
+    if (!user) return;
+
+    const dashboardChannel = supabase
+      .channel('dashboard-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'transactions',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['transactions'] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'budgets',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['budgets'] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'invoices',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['invoices'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(dashboardChannel);
+    };
+  }, [user, queryClient]);
+
   // Fetch transactions
   const { data: transactionsData, isLoading: isTransactionsLoading } = useQuery({
     queryKey: ['transactions'],
@@ -59,8 +109,11 @@ const Dashboard = ({ userType }: DashboardProps) => {
         .eq('user_id', user.id)
         .order('date', { ascending: false });
 
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Error fetching transactions:', error);
+        throw error;
+      }
+      return data || [];
     },
     enabled: !!user,
   });
@@ -77,8 +130,11 @@ const Dashboard = ({ userType }: DashboardProps) => {
         .eq('user_id', user.id)
         .order('start_date', { ascending: false });
 
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Error fetching budgets:', error);
+        throw error;
+      }
+      return data || [];
     },
     enabled: !!user,
   });
@@ -95,8 +151,11 @@ const Dashboard = ({ userType }: DashboardProps) => {
         .eq('user_id', user.id)
         .order('due_date', { ascending: false });
 
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Error fetching invoices:', error);
+        throw error;
+      }
+      return data || [];
     },
     enabled: !!user,
   });
@@ -113,8 +172,9 @@ const Dashboard = ({ userType }: DashboardProps) => {
       if (error) throw error;
       
       toast.success('Transaction deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      // Real-time subscription will handle the update
     } catch (error: any) {
+      console.error('Error deleting transaction:', error);
       toast.error(error.message || 'Failed to delete transaction');
     }
   };
@@ -131,8 +191,9 @@ const Dashboard = ({ userType }: DashboardProps) => {
       if (error) throw error;
       
       toast.success('Budget deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['budgets'] });
+      // Real-time subscription will handle the update
     } catch (error: any) {
+      console.error('Error deleting budget:', error);
       toast.error(error.message || 'Failed to delete budget');
     }
   };
@@ -166,7 +227,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
           <Button
             onClick={() => setAddTransactionOpen(true)}
-            className="bg-blue-gradient hover:bg-blue-400 text-white flex flex-col items-center p-6 h-auto"
+            className="bg-blue-gradient hover:bg-blue-200 text-white hover:text-collector-black flex flex-col items-center p-6 h-auto transition-all duration-200"
           >
             <Plus className="w-8 h-8 mb-2" />
             <span className="text-sm">Add Transaction</span>
@@ -174,7 +235,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
           <Button
             onClick={() => setCreateBudgetOpen(true)}
-            className="bg-collector-orange hover:bg-orange-400 text-white flex flex-col items-center p-6 h-auto"
+            className="bg-collector-orange hover:bg-orange-200 text-white hover:text-collector-black flex flex-col items-center p-6 h-auto transition-all duration-200"
           >
             <DollarSign className="w-8 h-8 mb-2" />
             <span className="text-sm">Create Budget</span>
@@ -182,7 +243,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
           <Button
             onClick={() => setUploadInvoiceOpen(true)}
-            className="bg-green-600 hover:bg-green-400 text-white flex flex-col items-center p-6 h-auto"
+            className="bg-green-600 hover:bg-green-200 text-white hover:text-collector-black flex flex-col items-center p-6 h-auto transition-all duration-200"
           >
             <Receipt className="w-8 h-8 mb-2" />
             <span className="text-sm">Upload Invoice</span>
@@ -190,7 +251,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
           <Button
             onClick={() => setExpenseSharingOpen(true)}
-            className="bg-purple-600 hover:bg-purple-400 text-white flex flex-col items-center p-6 h-auto"
+            className="bg-purple-600 hover:bg-purple-200 text-white hover:text-collector-black flex flex-col items-center p-6 h-auto transition-all duration-200"
           >
             <Users className="w-8 h-8 mb-2" />
             <span className="text-sm">Share Expense</span>
@@ -198,7 +259,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
           <Button
             onClick={() => setViewReportsOpen(true)}
-            className="bg-indigo-600 hover:bg-indigo-400 text-white flex flex-col items-center p-6 h-auto"
+            className="bg-indigo-600 hover:bg-indigo-200 text-white hover:text-collector-black flex flex-col items-center p-6 h-auto transition-all duration-200"
           >
             <TrendingUp className="w-8 h-8 mb-2" />
             <span className="text-sm">View Reports</span>
@@ -206,7 +267,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
           <Button
             onClick={() => setViewArchiveOpen(true)}
-            className="bg-gray-600 hover:bg-gray-400 text-white flex flex-col items-center p-6 h-auto"
+            className="bg-gray-600 hover:bg-gray-200 text-white hover:text-collector-black flex flex-col items-center p-6 h-auto transition-all duration-200"
           >
             <TrendingDown className="w-8 h-8 mb-2" />
             <span className="text-sm">View Archive</span>
@@ -275,6 +336,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                   variant="outline" 
                   size="sm"
                   onClick={() => setAllTransactionsOpen(true)}
+                  className="hover:bg-gray-100"
                 >
                   View All
                 </Button>
@@ -300,6 +362,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                             setEditingTransaction(transaction);
                             setAddTransactionOpen(true);
                           }}
+                          className="hover:bg-blue-50"
                         >
                           <Edit className="w-3 h-3" />
                         </Button>
@@ -307,7 +370,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                           size="sm"
                           variant="outline"
                           onClick={() => handleDeleteTransaction(transaction.id)}
-                          className="text-red-600 hover:text-red-700"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
                           <Trash2 className="w-3 h-3" />
                         </Button>
@@ -346,6 +409,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                             setEditingBudget(budget);
                             setCreateBudgetOpen(true);
                           }}
+                          className="hover:bg-blue-50"
                         >
                           <Edit className="w-3 h-3" />
                         </Button>
@@ -353,7 +417,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                           size="sm"
                           variant="outline"
                           onClick={() => handleDeleteBudget(budget.id)}
-                          className="text-red-600 hover:text-red-700"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
                           <Trash2 className="w-3 h-3" />
                         </Button>

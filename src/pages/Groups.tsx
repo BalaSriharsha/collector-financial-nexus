@@ -35,11 +35,13 @@ const Groups = () => {
   const [inviteEmail, setInviteEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Fetch user's groups
-  const { data: groups, isLoading } = useQuery({
+  // Fetch user's groups with proper error handling
+  const { data: groups, isLoading, error } = useQuery({
     queryKey: ['groups'],
     queryFn: async () => {
       if (!user) return [];
+      
+      console.log('Fetching groups for user:', user.id);
       
       const { data, error } = await supabase
         .from('groups')
@@ -54,8 +56,13 @@ const Groups = () => {
         `)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Error fetching groups:', error);
+        throw error;
+      }
+      
+      console.log('Groups data:', data);
+      return data || [];
     },
     enabled: !!user,
   });
@@ -75,11 +82,60 @@ const Groups = () => {
         .eq('invited_user_id', user.id)
         .eq('status', 'pending');
       
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Error fetching invitations:', error);
+        throw error;
+      }
+      return data || [];
     },
     enabled: !!user,
   });
+
+  // Set up real-time subscriptions
+  useEffect(() => {
+    if (!user) return;
+
+    const groupsChannel = supabase
+      .channel('groups-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'groups'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['groups'] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'group_members'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['groups'] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'group_invitations'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['group-invitations'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(groupsChannel);
+    };
+  }, [user, queryClient]);
 
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,8 +156,9 @@ const Groups = () => {
       toast.success('Group created successfully!');
       setNewGroup({ name: "", description: "" });
       setShowCreateGroup(false);
-      queryClient.invalidateQueries({ queryKey: ['groups'] });
+      // Real-time subscription will handle the update
     } catch (error: any) {
+      console.error('Error creating group:', error);
       toast.error(error.message || 'Failed to create group');
     } finally {
       setLoading(false);
@@ -135,8 +192,9 @@ const Groups = () => {
       toast.success('Invitation sent successfully!');
       setInviteEmail("");
       setShowInviteModal(false);
-      queryClient.invalidateQueries({ queryKey: ['group-invitations'] });
+      // Real-time subscription will handle the update
     } catch (error: any) {
+      console.error('Error sending invitation:', error);
       toast.error(error.message || 'Failed to send invitation');
     } finally {
       setLoading(false);
@@ -167,9 +225,9 @@ const Groups = () => {
       if (memberError) throw memberError;
 
       toast.success('Invitation accepted!');
-      queryClient.invalidateQueries({ queryKey: ['groups'] });
-      queryClient.invalidateQueries({ queryKey: ['group-invitations'] });
+      // Real-time subscription will handle the update
     } catch (error: any) {
+      console.error('Error accepting invitation:', error);
       toast.error(error.message || 'Failed to accept invitation');
     }
   };
@@ -186,8 +244,9 @@ const Groups = () => {
       if (error) throw error;
 
       toast.success('Group deleted successfully!');
-      queryClient.invalidateQueries({ queryKey: ['groups'] });
+      // Real-time subscription will handle the update
     } catch (error: any) {
+      console.error('Error deleting group:', error);
       toast.error(error.message || 'Failed to delete group');
     }
   };
@@ -206,8 +265,9 @@ const Groups = () => {
       if (error) throw error;
 
       toast.success('You have left the group successfully!');
-      queryClient.invalidateQueries({ queryKey: ['groups'] });
+      // Real-time subscription will handle the update
     } catch (error: any) {
+      console.error('Error leaving group:', error);
       toast.error(error.message || 'Failed to leave group');
     }
   };
@@ -220,6 +280,20 @@ const Groups = () => {
       <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-collector-black/70">Please log in to view your groups.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error('Groups query error:', error);
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50">
+        <Navigation />
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <div className="text-center">
+            <p className="text-red-600">Error loading groups: {error.message}</p>
+          </div>
         </div>
       </div>
     );
@@ -248,7 +322,7 @@ const Groups = () => {
           </div>
           <Button
             onClick={() => setShowCreateGroup(true)}
-            className="bg-blue-gradient hover:bg-blue-400 text-white"
+            className="bg-blue-gradient hover:bg-blue-200 text-white hover:text-collector-black"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Group
@@ -273,7 +347,7 @@ const Groups = () => {
                       <Button
                         size="sm"
                         onClick={() => handleAcceptInvitation(invitation.id, invitation.group_id)}
-                        className="bg-green-600 hover:bg-green-400 text-white"
+                        className="bg-green-600 hover:bg-green-200 text-white hover:text-collector-black"
                       >
                         Accept
                       </Button>
@@ -313,7 +387,7 @@ const Groups = () => {
                             <UserPlus className="w-3 h-3" />
                           </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="border-2 border-collector-gold/30">
                           <DialogHeader>
                             <DialogTitle>Invite User</DialogTitle>
                             <DialogDescription>
@@ -330,9 +404,10 @@ const Groups = () => {
                                 onChange={(e) => setInviteEmail(e.target.value)}
                                 placeholder="Enter email address"
                                 required
+                                className="border-2 border-collector-gold/30 focus:border-collector-orange"
                               />
                             </div>
-                            <Button type="submit" disabled={loading} className="w-full bg-blue-gradient hover:bg-blue-400 text-white">
+                            <Button type="submit" disabled={loading} className="w-full bg-blue-gradient hover:bg-blue-200 text-white hover:text-collector-black">
                               {loading ? 'Sending...' : 'Send Invitation'}
                             </Button>
                           </form>
@@ -399,7 +474,7 @@ const Groups = () => {
               <p className="text-collector-black/50 mb-4">Create your first group to start sharing expenses</p>
               <Button
                 onClick={() => setShowCreateGroup(true)}
-                className="bg-blue-gradient hover:bg-blue-400 text-white"
+                className="bg-blue-gradient hover:bg-blue-200 text-white hover:text-collector-black"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Create Group
@@ -410,7 +485,7 @@ const Groups = () => {
 
         {/* Create Group Modal */}
         <Dialog open={showCreateGroup} onOpenChange={setShowCreateGroup}>
-          <DialogContent>
+          <DialogContent className="border-2 border-collector-gold/30">
             <DialogHeader>
               <DialogTitle>Create New Group</DialogTitle>
               <DialogDescription>
@@ -426,6 +501,7 @@ const Groups = () => {
                   onChange={(e) => setNewGroup(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="e.g., Trip to Paris, Office Expenses..."
                   required
+                  className="border-2 border-collector-gold/30 focus:border-collector-orange"
                 />
               </div>
               <div>
@@ -435,6 +511,7 @@ const Groups = () => {
                   value={newGroup.description}
                   onChange={(e) => setNewGroup(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="What is this group for?"
+                  className="border-2 border-collector-gold/30 focus:border-collector-orange"
                 />
               </div>
               <div className="flex gap-3">
@@ -442,11 +519,11 @@ const Groups = () => {
                   type="button"
                   variant="outline"
                   onClick={() => setShowCreateGroup(false)}
-                  className="flex-1"
+                  className="flex-1 hover:bg-gray-100"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={loading} className="flex-1 bg-blue-gradient hover:bg-blue-400 text-white">
+                <Button type="submit" disabled={loading} className="flex-1 bg-blue-gradient hover:bg-blue-200 text-white hover:text-collector-black">
                   {loading ? 'Creating...' : 'Create Group'}
                 </Button>
               </div>

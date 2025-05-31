@@ -192,6 +192,7 @@ const Profile = () => {
                       value={profile.full_name}
                       onChange={(e) => setProfile(prev => ({ ...prev, full_name: e.target.value }))}
                       placeholder="Enter your full name"
+                      className="border-2 border-collector-gold/30 focus:border-collector-orange"
                     />
                   </div>
 
@@ -203,6 +204,7 @@ const Profile = () => {
                       value={profile.email}
                       onChange={(e) => setProfile(prev => ({ ...prev, email: e.target.value }))}
                       placeholder="Enter your email"
+                      className="border-2 border-collector-gold/30 focus:border-collector-orange"
                     />
                   </div>
                 </div>
@@ -215,13 +217,14 @@ const Profile = () => {
                       type="date"
                       value={profile.date_of_birth}
                       onChange={(e) => setProfile(prev => ({ ...prev, date_of_birth: e.target.value }))}
+                      className="border-2 border-collector-gold/30 focus:border-collector-orange"
                     />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="gender">Gender</Label>
                     <Select value={profile.gender} onValueChange={(value) => setProfile(prev => ({ ...prev, gender: value }))}>
-                      <SelectTrigger>
+                      <SelectTrigger className="border-2 border-collector-gold/30 focus:border-collector-orange">
                         <SelectValue placeholder="Select gender" />
                       </SelectTrigger>
                       <SelectContent>
@@ -237,7 +240,7 @@ const Profile = () => {
                 <div className="space-y-2">
                   <Label htmlFor="user_type">Account Type</Label>
                   <Select value={profile.user_type} onValueChange={(value: "individual" | "organization") => setProfile(prev => ({ ...prev, user_type: value }))}>
-                    <SelectTrigger>
+                    <SelectTrigger className="border-2 border-collector-gold/30 focus:border-collector-orange">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -251,7 +254,7 @@ const Profile = () => {
                   <div className="space-y-2">
                     <Label htmlFor="country">Country</Label>
                     <Select value={profile.country} onValueChange={handleCountryChange}>
-                      <SelectTrigger>
+                      <SelectTrigger className="border-2 border-collector-gold/30 focus:border-collector-orange">
                         <SelectValue placeholder="Select country" />
                       </SelectTrigger>
                       <SelectContent>
@@ -267,7 +270,7 @@ const Profile = () => {
                   <div className="space-y-2">
                     <Label htmlFor="currency">Currency</Label>
                     <Select value={profile.currency} onValueChange={(value) => setProfile(prev => ({ ...prev, currency: value }))}>
-                      <SelectTrigger>
+                      <SelectTrigger className="border-2 border-collector-gold/30 focus:border-collector-orange">
                         <SelectValue placeholder="Select currency" />
                       </SelectTrigger>
                       <SelectContent>
@@ -281,7 +284,11 @@ const Profile = () => {
                   </div>
                 </div>
 
-                <Button type="submit" disabled={loading} className="w-full bg-blue-gradient hover:bg-blue-400 text-white">
+                <Button 
+                  type="submit" 
+                  disabled={loading} 
+                  className="w-full bg-blue-gradient hover:bg-blue-200 text-white hover:text-collector-black transition-all duration-200"
+                >
                   {loading ? 'Updating...' : 'Update Profile'}
                 </Button>
               </form>
