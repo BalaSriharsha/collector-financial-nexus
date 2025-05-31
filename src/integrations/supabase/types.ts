@@ -203,25 +203,31 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string
+          department_name: string | null
           description: string | null
           id: string
           name: string
+          team_name: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           created_by: string
+          department_name?: string | null
           description?: string | null
           id?: string
           name: string
+          team_name?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           created_by?: string
+          department_name?: string | null
           description?: string | null
           id?: string
           name?: string
+          team_name?: string | null
           updated_at?: string
         }
         Relationships: [

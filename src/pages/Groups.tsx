@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Users } from "lucide-react";
+import { Plus, Users, Edit, Trash2 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import {
   Dialog,
@@ -37,11 +37,11 @@ const Groups = () => {
   const [groups, setGroups] = useState<Group[]>([]);
   const [newGroup, setNewGroup] = useState({ 
     name: "", 
-    description: "", 
-    department_name: "", 
-    team_name: "" 
+    description: ""
   });
   const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [showEditGroup, setShowEditGroup] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -92,8 +92,6 @@ const Groups = () => {
         .insert({
           name: newGroup.name,
           description: newGroup.description || null,
-          department_name: newGroup.department_name || null,
-          team_name: newGroup.team_name || null,
           created_by: user.id,
         })
         .select()
@@ -101,19 +99,25 @@ const Groups = () => {
 
       if (error) throw error;
 
-      // Automatically add the creator to the group_members table with 'admin' role
-      const { error: memberError } = await supabase
-        .from('group_members')
-        .insert({
-          group_id: group.id,
-          user_id: user.id,
-          role: 'admin',
-        });
+      // Refresh the groups list to get the updated data with the auto-added member
+      const { data: updatedGroups, error: fetchError } = await supabase
+        .from('groups')
+        .select(`
+          *,
+          group_members(
+            id,
+            role,
+            user_id,
+            profiles(id, full_name, email)
+          )
+        `)
+        .eq('created_by', user.id)
+        .order('created_at', { ascending: false });
 
-      if (memberError) throw memberError;
+      if (fetchError) throw fetchError;
+      setGroups(updatedGroups || []);
 
-      setGroups(prevGroups => [...prevGroups, { ...group, group_members: [{ user_id: user.id, role: 'admin', profiles: user.user_metadata }] }]);
-      setNewGroup({ name: "", description: "", department_name: "", team_name: "" });
+      setNewGroup({ name: "", description: "" });
       setShowCreateGroup(false);
       toast.success('Group created successfully!');
     } catch (error: any) {
@@ -122,6 +126,77 @@ const Groups = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleUpdateGroup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingGroup || !user) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('groups')
+        .update({
+          name: editingGroup.name,
+          description: editingGroup.description,
+        })
+        .eq('id', editingGroup.id);
+
+      if (error) throw error;
+
+      // Refresh the groups list
+      const { data: updatedGroups, error: fetchError } = await supabase
+        .from('groups')
+        .select(`
+          *,
+          group_members(
+            id,
+            role,
+            user_id,
+            profiles(id, full_name, email)
+          )
+        `)
+        .eq('created_by', user.id)
+        .order('created_at', { ascending: false });
+
+      if (fetchError) throw fetchError;
+      setGroups(updatedGroups || []);
+
+      toast.success('Group updated successfully!');
+      setShowEditGroup(false);
+      setEditingGroup(null);
+    } catch (error: any) {
+      console.error("Error updating group:", error);
+      toast.error(error.message || "Failed to update group");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteGroup = async (groupId: string, groupName: string) => {
+    if (!confirm(`Are you sure you want to delete the group "${groupName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('groups')
+        .delete()
+        .eq('id', groupId);
+
+      if (error) throw error;
+
+      setGroups(prevGroups => prevGroups.filter(group => group.id !== groupId));
+      toast.success('Group deleted successfully!');
+    } catch (error: any) {
+      console.error("Error deleting group:", error);
+      toast.error(error.message || "Failed to delete group");
+    }
+  };
+
+  const openEditDialog = (group: Group) => {
+    setEditingGroup({ ...group });
+    setShowEditGroup(true);
   };
 
   return (
@@ -158,26 +233,37 @@ const Groups = () => {
             groups.map((group) => (
               <Card 
                 key={group.id} 
-                className="shadow-lg border-collector-gold/20 hover:shadow-xl transition-all duration-200 cursor-pointer hover:transform hover:-translate-y-1"
-                onClick={() => navigate(`/groups/${group.id}`)}
+                className="shadow-lg border-collector-gold/20 hover:shadow-xl transition-all duration-200"
               >
                 <CardHeader>
                   <div className="flex items-start justify-between">
-                    <div className="flex-1">
+                    <div className="flex-1 cursor-pointer" onClick={() => navigate(`/groups/${group.id}`)}>
                       <CardTitle className="text-collector-black">{group.name}</CardTitle>
-                      {group.department_name && (
-                        <p className="text-sm text-collector-black/60 mt-1">Department: {group.department_name}</p>
-                      )}
-                      {group.team_name && (
-                        <p className="text-sm text-collector-black/60">Team: {group.team_name}</p>
-                      )}
                       <CardDescription className="mt-1">{group.description}</CardDescription>
                     </div>
-                    {group.created_by === user?.id && (
-                      <Badge variant="outline" className="text-xs text-blue-600 border-blue-200">
-                        Owner
-                      </Badge>
-                    )}
+                    <div className="flex gap-1">
+                      {group.created_by === user?.id && (
+                        <Badge variant="outline" className="text-xs text-blue-600 border-blue-200">
+                          Owner
+                        </Badge>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openEditDialog(group)}
+                        className="hover:bg-blue-200 transition-all duration-200"
+                      >
+                        <Edit className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeleteGroup(group.id, group.name)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-200 transition-all duration-200"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -233,7 +319,7 @@ const Groups = () => {
             <DialogHeader>
               <DialogTitle>Create New Group</DialogTitle>
               <DialogDescription>
-                Create a group to share expenses with friends or colleagues. Department and team names are optional.
+                Create a group to share expenses with friends or colleagues.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -245,26 +331,6 @@ const Groups = () => {
                   onChange={(e) => setNewGroup(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="e.g., Roommates, Trip to Paris..."
                   required
-                  className="border-2 border-collector-gold/30 focus:border-collector-orange"
-                />
-              </div>
-              <div>
-                <Label htmlFor="departmentName">Department Name (Optional)</Label>
-                <Input
-                  id="departmentName"
-                  value={newGroup.department_name}
-                  onChange={(e) => setNewGroup(prev => ({ ...prev, department_name: e.target.value }))}
-                  placeholder="e.g., Marketing, Finance, Operations..."
-                  className="border-2 border-collector-gold/30 focus:border-collector-orange"
-                />
-              </div>
-              <div>
-                <Label htmlFor="teamName">Team Name (Optional)</Label>
-                <Input
-                  id="teamName"
-                  value={newGroup.team_name}
-                  onChange={(e) => setNewGroup(prev => ({ ...prev, team_name: e.target.value }))}
-                  placeholder="e.g., Alpha Team, Digital Marketing..."
                   className="border-2 border-collector-gold/30 focus:border-collector-orange"
                 />
               </div>
@@ -296,6 +362,60 @@ const Groups = () => {
                 </Button>
               </div>
             </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Group Modal */}
+        <Dialog open={showEditGroup} onOpenChange={setShowEditGroup}>
+          <DialogContent className="border-2 border-collector-gold/30">
+            <DialogHeader>
+              <DialogTitle>Edit Group</DialogTitle>
+              <DialogDescription>
+                Update group information.
+              </DialogDescription>
+            </DialogHeader>
+            {editingGroup && (
+              <form onSubmit={handleUpdateGroup} className="space-y-4">
+                <div>
+                  <Label htmlFor="editGroupName">Group Name *</Label>
+                  <Input
+                    id="editGroupName"
+                    value={editingGroup.name}
+                    onChange={(e) => setEditingGroup(prev => prev ? { ...prev, name: e.target.value } : null)}
+                    placeholder="e.g., Roommates, Trip to Paris..."
+                    required
+                    className="border-2 border-collector-gold/30 focus:border-collector-orange"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="editGroupDescription">Description (Optional)</Label>
+                  <Textarea
+                    id="editGroupDescription"
+                    value={editingGroup.description || ""}
+                    onChange={(e) => setEditingGroup(prev => prev ? { ...prev, description: e.target.value } : null)}
+                    placeholder="Brief description of the group..."
+                    className="border-2 border-collector-gold/30 focus:border-collector-orange"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setShowEditGroup(false)} 
+                    className="flex-1 hover:bg-gray-200 transition-all duration-200"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={loading} 
+                    className="flex-1 bg-blue-500 hover:bg-blue-200 text-white hover:text-collector-black transition-all duration-200"
+                  >
+                    {loading ? 'Updating...' : 'Update Group'}
+                  </Button>
+                </div>
+              </form>
+            )}
           </DialogContent>
         </Dialog>
       </div>

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -107,17 +106,6 @@ const OrganizationTeams = ({ onCreateInvoice }: OrganizationTeamsProps) => {
         .single();
 
       if (error) throw error;
-
-      // Add creator as admin member
-      const { error: memberError } = await supabase
-        .from('group_members')
-        .insert({
-          group_id: group.id,
-          user_id: user.id,
-          role: 'admin',
-        });
-
-      if (memberError) throw memberError;
 
       toast.success('Team created successfully!');
       setNewGroup({ name: "", description: "", department_name: "", team_name: "" });
