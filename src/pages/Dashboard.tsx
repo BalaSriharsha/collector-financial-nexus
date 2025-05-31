@@ -1,30 +1,50 @@
 
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Dashboard from "@/components/Dashboard";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const DashboardPage = () => {
+  const { user } = useAuth();
   const [userType, setUserType] = useState<'individual' | 'organization'>('individual');
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in or is a guest
-    const user = localStorage.getItem('user');
-    const guestUser = localStorage.getItem('guestUser');
-    
-    if (!user && !guestUser) {
-      navigate('/auth');
-      return;
-    }
+    const fetchUserProfile = async () => {
+      if (!user) return;
 
-    // Determine user type
-    if (user) {
-      const userData = JSON.parse(user);
-      setUserType(userData.userType === 'organization' ? 'organization' : 'individual');
-    } else if (guestUser) {
-      setUserType('individual'); // Guests are always individual
-    }
-  }, [navigate]);
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('user_type')
+          .eq('id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching profile:', error);
+        } else if (profile) {
+          setUserType(profile.user_type as 'individual' | 'organization');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-collector-orange border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-collector-black/70">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return <Dashboard userType={userType} />;
 };

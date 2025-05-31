@@ -7,15 +7,16 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Chrome, Mail, User, Calendar, Users, Building2 } from "lucide-react";
+import { Chrome, Mail, User, Building2 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
-type AuthMode = 'login' | 'signup' | 'guest' | 'signup-org';
+type AuthMode = 'login' | 'signup' | 'signup-org';
 
 const Auth = () => {
   const [authMode, setAuthMode] = useState<AuthMode>('login');
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -28,50 +29,48 @@ const Auth = () => {
     organizationSize: '',
     organizationIndustry: ''
   });
-  const navigate = useNavigate();
+
+  const { signIn, signUp, signInWithGoogle } = useAuth();
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleGuestContinue = () => {
-    if (formData.fullName && formData.gender && formData.dateOfBirth) {
-      localStorage.setItem('guestUser', JSON.stringify({
-        fullName: formData.fullName,
-        gender: formData.gender,
-        dateOfBirth: formData.dateOfBirth,
-        userType: 'individual'
-      }));
-      navigate('/dashboard');
+  const handleAuthSubmit = async () => {
+    setLoading(true);
+    
+    try {
+      if (authMode === 'login') {
+        await signIn(formData.email, formData.password);
+      } else if (authMode === 'signup') {
+        await signUp(formData.email, formData.password, {
+          full_name: formData.fullName,
+          gender: formData.gender,
+          date_of_birth: formData.dateOfBirth,
+          user_type: formData.userType
+        });
+      } else if (authMode === 'signup-org') {
+        await signUp(formData.email, formData.password, {
+          full_name: formData.fullName,
+          user_type: 'organization',
+          organization_name: formData.organizationName,
+          organization_description: formData.organizationDescription,
+          organization_size: formData.organizationSize,
+          organization_industry: formData.organizationIndustry
+        });
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleAuthSubmit = () => {
-    console.log('Auth submitted:', { authMode, formData });
-    // Store user data and redirect to dashboard
-    if (authMode === 'login') {
-      localStorage.setItem('user', JSON.stringify({
-        email: formData.email,
-        userType: 'individual'
-      }));
-    } else if (authMode === 'signup') {
-      localStorage.setItem('user', JSON.stringify({
-        email: formData.email,
-        fullName: formData.fullName,
-        userType: formData.userType
-      }));
-    } else if (authMode === 'signup-org') {
-      localStorage.setItem('user', JSON.stringify({
-        email: formData.email,
-        fullName: formData.fullName,
-        userType: 'organization',
-        organizationName: formData.organizationName,
-        organizationDescription: formData.organizationDescription,
-        organizationSize: formData.organizationSize,
-        organizationIndustry: formData.organizationIndustry
-      }));
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    try {
+      await signInWithGoogle();
+    } finally {
+      setLoading(false);
     }
-    navigate('/dashboard');
   };
 
   const handleSignupUserType = (userType: string) => {
@@ -89,15 +88,12 @@ const Auth = () => {
         <Card className="w-full max-w-md border-2 border-collector-gold/30 bg-white/90 backdrop-blur-sm shadow-xl">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-playfair text-collector-black">
-              {authMode === 'guest' ? 'Continue as Guest' : 
-               authMode === 'login' ? 'Welcome Back' : 
+              {authMode === 'login' ? 'Welcome Back' : 
                authMode === 'signup-org' ? 'Create Organization Account' :
                'Create Account'}
             </CardTitle>
             <CardDescription className="text-collector-black/70">
-              {authMode === 'guest' 
-                ? 'Tell us a bit about yourself to get started'
-                : authMode === 'login' 
+              {authMode === 'login' 
                 ? 'Sign in to your account' 
                 : authMode === 'signup-org'
                 ? 'Set up your organization account'
@@ -107,57 +103,7 @@ const Auth = () => {
           </CardHeader>
           
           <CardContent className="space-y-6">
-            {authMode === 'guest' ? (
-              // Guest Form
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input
-                    id="fullName"
-                    type="text"
-                    placeholder="Enter your full name"
-                    value={formData.fullName}
-                    onChange={(e) => handleInputChange('fullName', e.target.value)}
-                    className="border-2 border-collector-gold/20 focus:border-collector-orange"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="gender">Gender</Label>
-                  <Select value={formData.gender} onValueChange={(value) => handleInputChange('gender', value)}>
-                    <SelectTrigger className="border-2 border-collector-gold/20 focus:border-collector-orange">
-                      <SelectValue placeholder="Select your gender" />
-                    </SelectTrigger>
-                    <SelectContent className="border-2 border-collector-gold/20 bg-white">
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                      <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                  <Input
-                    id="dateOfBirth"
-                    type="date"
-                    value={formData.dateOfBirth}
-                    onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
-                    className="border-2 border-collector-gold/20 focus:border-collector-orange"
-                  />
-                </div>
-                
-                <Button 
-                  onClick={handleGuestContinue}
-                  className="w-full bg-blue-gradient hover:bg-blue-600 text-white py-3 rounded-xl border-2 border-transparent hover:border-blue-300"
-                  disabled={!formData.fullName || !formData.gender || !formData.dateOfBirth}
-                >
-                  <User className="w-4 h-4 mr-2" />
-                  Continue as Guest
-                </Button>
-              </div>
-            ) : authMode === 'signup' ? (
+            {authMode === 'signup' ? (
               // User Type Selection for Signup
               <div className="space-y-4">
                 <div className="text-center mb-6">
@@ -169,6 +115,7 @@ const Auth = () => {
                     variant="outline"
                     onClick={() => handleSignupUserType('individual')}
                     className="p-6 h-auto border-2 border-collector-gold/30 hover:border-collector-orange hover:bg-collector-orange/5"
+                    disabled={loading}
                   >
                     <div className="flex items-center space-x-3">
                       <User className="w-8 h-8 text-collector-orange" />
@@ -183,6 +130,7 @@ const Auth = () => {
                     variant="outline"
                     onClick={() => handleSignupUserType('organization')}
                     className="p-6 h-auto border-2 border-collector-gold/30 hover:border-collector-blue hover:bg-collector-blue/5"
+                    disabled={loading}
                   >
                     <div className="flex items-center space-x-3">
                       <Building2 className="w-8 h-8 text-collector-blue" />
@@ -206,6 +154,7 @@ const Auth = () => {
                     value={formData.fullName}
                     onChange={(e) => handleInputChange('fullName', e.target.value)}
                     className="border-2 border-collector-gold/20 focus:border-collector-orange"
+                    disabled={loading}
                   />
                 </div>
                 
@@ -218,6 +167,7 @@ const Auth = () => {
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     className="border-2 border-collector-gold/20 focus:border-collector-orange"
+                    disabled={loading}
                   />
                 </div>
                 
@@ -230,6 +180,7 @@ const Auth = () => {
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
                     className="border-2 border-collector-gold/20 focus:border-collector-orange"
+                    disabled={loading}
                   />
                 </div>
                 
@@ -242,12 +193,13 @@ const Auth = () => {
                     value={formData.organizationName}
                     onChange={(e) => handleInputChange('organizationName', e.target.value)}
                     className="border-2 border-collector-gold/20 focus:border-collector-orange"
+                    disabled={loading}
                   />
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="organizationSize">Organization Size</Label>
-                  <Select value={formData.organizationSize} onValueChange={(value) => handleInputChange('organizationSize', value)}>
+                  <Select value={formData.organizationSize} onValueChange={(value) => handleInputChange('organizationSize', value)} disabled={loading}>
                     <SelectTrigger className="border-2 border-collector-gold/20 focus:border-collector-orange">
                       <SelectValue placeholder="Select organization size" />
                     </SelectTrigger>
@@ -270,6 +222,7 @@ const Auth = () => {
                     value={formData.organizationIndustry}
                     onChange={(e) => handleInputChange('organizationIndustry', e.target.value)}
                     className="border-2 border-collector-gold/20 focus:border-collector-orange"
+                    disabled={loading}
                   />
                 </div>
                 
@@ -281,56 +234,64 @@ const Auth = () => {
                     value={formData.organizationDescription}
                     onChange={(e) => handleInputChange('organizationDescription', e.target.value)}
                     className="border-2 border-collector-gold/20 focus:border-collector-orange min-h-[80px]"
+                    disabled={loading}
                   />
                 </div>
                 
                 <Button 
                   onClick={handleAuthSubmit}
                   className="w-full bg-blue-gradient hover:bg-blue-600 text-white py-3 rounded-xl border-2 border-transparent hover:border-blue-300"
-                  disabled={!formData.fullName || !formData.email || !formData.password || !formData.organizationName}
+                  disabled={loading || !formData.fullName || !formData.email || !formData.password || !formData.organizationName}
                 >
-                  <Building2 className="w-4 h-4 mr-2" />
-                  Create Organization Account
+                  {loading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  ) : (
+                    <Building2 className="w-4 h-4 mr-2" />
+                  )}
+                  {loading ? 'Creating Account...' : 'Create Organization Account'}
                 </Button>
               </div>
             ) : (
-              // Login/Individual Signup Form
+              // Login Form
               <div className="space-y-4">
-                {authMode === 'login' && (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="Enter your email"
-                        value={formData.email}
-                        onChange={(e) => handleInputChange('email', e.target.value)}
-                        className="border-2 border-collector-gold/20 focus:border-collector-orange"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder="Enter your password"
-                        value={formData.password}
-                        onChange={(e) => handleInputChange('password', e.target.value)}
-                        className="border-2 border-collector-gold/20 focus:border-collector-orange"
-                      />
-                    </div>
-                    
-                    <Button 
-                      onClick={handleAuthSubmit}
-                      className="w-full bg-blue-gradient hover:bg-blue-600 text-white py-3 rounded-xl border-2 border-transparent hover:border-blue-300"
-                    >
-                      <Mail className="w-4 h-4 mr-2" />
-                      Sign In
-                    </Button>
-                  </>
-                )}
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    className="border-2 border-collector-gold/20 focus:border-collector-orange"
+                    disabled={loading}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    className="border-2 border-collector-gold/20 focus:border-collector-orange"
+                    disabled={loading}
+                  />
+                </div>
+                
+                <Button 
+                  onClick={handleAuthSubmit}
+                  className="w-full bg-blue-gradient hover:bg-blue-600 text-white py-3 rounded-xl border-2 border-transparent hover:border-blue-300"
+                  disabled={loading || !formData.email || !formData.password}
+                >
+                  {loading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  ) : (
+                    <Mail className="w-4 h-4 mr-2" />
+                  )}
+                  {loading ? 'Signing In...' : 'Sign In'}
+                </Button>
                 
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
@@ -343,23 +304,29 @@ const Auth = () => {
                 
                 <Button 
                   variant="outline" 
+                  onClick={handleGoogleSignIn}
                   className="w-full py-3 rounded-xl border-2 border-collector-gold/30 hover:bg-collector-orange/5 hover:border-collector-orange"
-                  onClick={handleAuthSubmit}
+                  disabled={loading}
                 >
-                  <Chrome className="w-4 h-4 mr-2" />
-                  Continue with Google
+                  {loading ? (
+                    <div className="w-4 h-4 border-2 border-collector-orange border-t-transparent rounded-full animate-spin mr-2" />
+                  ) : (
+                    <Chrome className="w-4 h-4 mr-2" />
+                  )}
+                  {loading ? 'Connecting...' : 'Continue with Google'}
                 </Button>
               </div>
             )}
             
             {/* Mode Switching */}
             <div className="space-y-3 pt-4 border-t border-collector-gold/20">
-              {authMode !== 'guest' && authMode !== 'signup' && authMode !== 'signup-org' && (
+              {authMode === 'login' && (
                 <div className="text-center">
                   <Button
                     variant="link"
                     onClick={() => setAuthMode('signup')}
                     className="text-collector-orange hover:text-collector-orange/80 border-b border-transparent hover:border-collector-orange"
+                    disabled={loading}
                   >
                     Don't have an account? Sign up
                   </Button>
@@ -372,6 +339,7 @@ const Auth = () => {
                     variant="link"
                     onClick={() => setAuthMode('login')}
                     className="text-collector-orange hover:text-collector-orange/80 border-b border-transparent hover:border-collector-orange"
+                    disabled={loading}
                   >
                     Already have an account? Sign in
                   </Button>
@@ -384,24 +352,12 @@ const Auth = () => {
                     variant="link"
                     onClick={() => setAuthMode('signup')}
                     className="text-collector-black/60 hover:text-collector-black border-b border-transparent hover:border-collector-black/30"
+                    disabled={loading}
                   >
                     Back to account type selection
                   </Button>
                 </div>
               )}
-              
-              <div className="text-center">
-                <Button
-                  variant="link"
-                  onClick={() => setAuthMode(authMode === 'guest' ? 'login' : 'guest')}
-                  className="text-collector-black/60 hover:text-collector-black border-b border-transparent hover:border-collector-black/30"
-                >
-                  {authMode === 'guest' 
-                    ? "Back to sign in options" 
-                    : "Continue without account"
-                  }
-                </Button>
-              </div>
             </div>
           </CardContent>
         </Card>
