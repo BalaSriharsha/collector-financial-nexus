@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,18 +7,20 @@ import UploadInvoiceForm from "@/components/forms/UploadInvoiceForm";
 import CreateBudgetForm from "@/components/forms/CreateBudgetForm";
 import ViewArchiveForm from "@/components/forms/ViewArchiveForm";
 import ViewReportsForm from "@/components/forms/ViewReportsForm";
+import ExpenseSharingForm from "@/components/forms/ExpenseSharingForm";
 
 interface DashboardProps {
   userType: 'individual' | 'organization';
 }
 
 const Dashboard = ({ userType }: DashboardProps) => {
-  const [selectedPeriod, setSelectedPeriod] = useState<'month' | 'year'>('month');
+  const [selectedPeriod, setSelectedPeriod] = useState<'day' | 'week' | 'month' | 'year'>('month');
   const [showAddTransaction, setShowAddTransaction] = useState(false);
   const [showUploadInvoice, setShowUploadInvoice] = useState(false);
   const [showCreateBudget, setShowCreateBudget] = useState(false);
   const [showViewArchive, setShowViewArchive] = useState(false);
   const [showViewReports, setShowViewReports] = useState(false);
+  const [showExpenseSharing, setShowExpenseSharing] = useState(false);
 
   const individualMetrics = {
     income: { amount: 5200, change: '+12%' },
@@ -35,6 +36,16 @@ const Dashboard = ({ userType }: DashboardProps) => {
     payroll: { amount: 45000, employees: 12 }
   };
 
+  const getPeriodLabel = () => {
+    switch(selectedPeriod) {
+      case 'day': return 'Today';
+      case 'week': return 'This Week';
+      case 'month': return 'This Month';
+      case 'year': return 'This Year';
+      default: return 'This Month';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50">
       {/* Header */}
@@ -46,26 +57,24 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 Financial Dashboard
               </h1>
               <p className="text-collector-black/70 capitalize text-sm lg:text-base">
-                {userType} • {selectedPeriod === 'month' ? 'This Month' : 'This Year'}
+                {userType} • {getPeriodLabel()}
               </p>
             </div>
             
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <div className="flex bg-white rounded-lg border border-collector-gold/20 overflow-hidden">
-                <Button
-                  variant={selectedPeriod === 'month' ? 'default' : 'ghost'}
-                  className={`rounded-none text-sm ${selectedPeriod === 'month' ? 'bg-blue-gradient text-white' : 'text-collector-black'}`}
-                  onClick={() => setSelectedPeriod('month')}
-                >
-                  Month
-                </Button>
-                <Button
-                  variant={selectedPeriod === 'year' ? 'default' : 'ghost'}
-                  className={`rounded-none text-sm ${selectedPeriod === 'year' ? 'bg-blue-gradient text-white' : 'text-collector-black'}`}
-                  onClick={() => setSelectedPeriod('year')}
-                >
-                  Year
-                </Button>
+                {(['day', 'week', 'month', 'year'] as const).map((period) => (
+                  <Button
+                    key={period}
+                    variant={selectedPeriod === period ? 'default' : 'ghost'}
+                    className={`rounded-none text-xs sm:text-sm px-2 sm:px-4 ${
+                      selectedPeriod === period ? 'bg-blue-gradient text-white' : 'text-collector-black'
+                    }`}
+                    onClick={() => setSelectedPeriod(period)}
+                  >
+                    {period.charAt(0).toUpperCase() + period.slice(1)}
+                  </Button>
+                ))}
               </div>
               
               <Button 
@@ -287,25 +296,25 @@ const Dashboard = ({ userType }: DashboardProps) => {
           <Card className="ancient-border bg-white/90 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2 text-lg">
-                <PieChart className="w-5 h-5 text-collector-blue" />
-                <span>Budget Planning</span>
+                <Users className="w-5 h-5 text-collector-blue" />
+                <span>Sharing & Budget</span>
               </CardTitle>
-              <CardDescription>Plan and track your budget</CardDescription>
+              <CardDescription>Share expenses and plan budget</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
+              <Button 
+                className="w-full justify-start bg-purple-600 hover:bg-purple-700 text-white text-sm"
+                onClick={() => setShowExpenseSharing(true)}
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Share Expense
+              </Button>
               <Button 
                 className="w-full justify-start bg-orange-gradient hover:bg-orange-600 text-white text-sm"
                 onClick={() => setShowCreateBudget(true)}
               >
                 <PieChart className="w-4 h-4 mr-2" />
                 Create Budget
-              </Button>
-              <Button 
-                className="w-full justify-start bg-gold-gradient hover:bg-amber-600 text-white text-sm"
-                onClick={() => setShowViewReports(true)}
-              >
-                <TrendingUp className="w-4 h-4 mr-2" />
-                View Reports
               </Button>
             </CardContent>
           </Card>
@@ -376,6 +385,11 @@ const Dashboard = ({ userType }: DashboardProps) => {
       <ViewReportsForm 
         open={showViewReports} 
         onOpenChange={setShowViewReports} 
+      />
+      <ExpenseSharingForm 
+        open={showExpenseSharing} 
+        onOpenChange={setShowExpenseSharing}
+        userType={userType}
       />
     </div>
   );

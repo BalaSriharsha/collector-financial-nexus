@@ -1,8 +1,9 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, User, TrendingUp, PieChart, FileText, Coins } from "lucide-react";
+import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 import Dashboard from "@/components/Dashboard";
 
 const Index = () => {
@@ -14,26 +15,11 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50">
-      {/* Header */}
-      <header className="w-full py-4 lg:py-6 px-4">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-gradient rounded-xl flex items-center justify-center">
-              <Coins className="w-6 h-6 lg:w-7 lg:h-7 text-white" />
-            </div>
-            <h1 className="text-2xl lg:text-3xl font-playfair font-bold text-collector-black">
-              Collector
-            </h1>
-          </div>
-          <div className="text-xs sm:text-sm text-collector-black/60 font-inter text-center sm:text-right">
-            Ancient Wisdom • Modern Finance
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50 flex flex-col">
+      <Navigation />
+      
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 py-8 lg:py-16">
+      <section className="max-w-7xl mx-auto px-4 py-8 lg:py-16 flex-1">
         <div className="text-center mb-12 lg:mb-16 animate-fade-in">
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-playfair font-bold text-collector-black mb-4 lg:mb-6 leading-tight">
             Master Your
@@ -181,6 +167,8 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      <Footer />
     </div>
   );
 };
