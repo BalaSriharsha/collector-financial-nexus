@@ -3,16 +3,29 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, Plus, Building2, FileText } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Users, Plus, Building2, FileText, Edit, Trash2 } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Group {
   id: string;
   name: string;
   description: string | null;
   created_at: string;
+  department_name?: string | null;
+  team_name?: string | null;
   group_members?: any[];
 }
 
@@ -22,6 +35,17 @@ interface OrganizationTeamsProps {
 
 const OrganizationTeams = ({ onCreateInvoice }: OrganizationTeamsProps) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [showEditGroup, setShowEditGroup] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<Group | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [newGroup, setNewGroup] = useState({
+    name: "",
+    description: "",
+    department_name: "",
+    team_name: "",
+  });
 
   // Fetch groups for the organization view
   const { data: teams, isLoading } = useQuery({
@@ -49,23 +73,122 @@ const OrganizationTeams = ({ onCreateInvoice }: OrganizationTeamsProps) => {
     enabled: !!user,
   });
 
-  // Categorize teams into departments (simplified logic for demo)
+  // Categorize teams into departments
   const categorizeTeams = (teams: Group[]) => {
-    const departments = {
-      'Finance': teams.filter(team => team.name.toLowerCase().includes('finance') || team.name.toLowerCase().includes('accounting')),
-      'Marketing': teams.filter(team => team.name.toLowerCase().includes('marketing') || team.name.toLowerCase().includes('sales')),
-      'Operations': teams.filter(team => team.name.toLowerCase().includes('operations') || team.name.toLowerCase().includes('ops')),
-      'General': teams.filter(team => 
-        !team.name.toLowerCase().includes('finance') && 
-        !team.name.toLowerCase().includes('accounting') &&
-        !team.name.toLowerCase().includes('marketing') && 
-        !team.name.toLowerCase().includes('sales') &&
-        !team.name.toLowerCase().includes('operations') && 
-        !team.name.toLowerCase().includes('ops')
-      )
-    };
+    const departments: { [key: string]: Group[] } = {};
+
+    teams.forEach(team => {
+      const departmentName = team.department_name || 'General';
+      if (!departments[departmentName]) {
+        departments[departmentName] = [];
+      }
+      departments[departmentName].push(team);
+    });
 
     return Object.entries(departments).filter(([_, teams]) => teams.length > 0);
+  };
+
+  const handleCreateGroup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    setLoading(true);
+    try {
+      const { data: group, error } = await supabase
+        .from('groups')
+        .insert({
+          name: newGroup.name,
+          description: newGroup.description || null,
+          department_name: newGroup.department_name || null,
+          team_name: newGroup.team_name || null,
+          created_by: user.id,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Add creator as admin member
+      const { error: memberError } = await supabase
+        .from('group_members')
+        .insert({
+          group_id: group.id,
+          user_id: user.id,
+          role: 'admin',
+        });
+
+      if (memberError) throw memberError;
+
+      toast.success('Team created successfully!');
+      setNewGroup({ name: "", description: "", department_name: "", team_name: "" });
+      setShowCreateGroup(false);
+      queryClient.invalidateQueries({ queryKey: ['organization-teams'] });
+    } catch (error: any) {
+      console.error("Error creating group:", error);
+      toast.error(error.message || "Failed to create team");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateGroup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingGroup || !user) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('groups')
+        .update({
+          name: editingGroup.name,
+          description: editingGroup.description,
+          department_name: editingGroup.department_name,
+          team_name: editingGroup.team_name,
+        })
+        .eq('id', editingGroup.id);
+
+      if (error) throw error;
+
+      toast.success('Team updated successfully!');
+      setShowEditGroup(false);
+      setEditingGroup(null);
+      queryClient.invalidateQueries({ queryKey: ['organization-teams'] });
+    } catch (error: any) {
+      console.error("Error updating group:", error);
+      toast.error(error.message || "Failed to update team");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteGroup = async (groupId: string, groupName: string) => {
+    if (!confirm(`Are you sure you want to delete the team "${groupName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('groups')
+        .delete()
+        .eq('id', groupId);
+
+      if (error) throw error;
+
+      toast.success('Team deleted successfully!');
+      queryClient.invalidateQueries({ queryKey: ['organization-teams'] });
+    } catch (error: any) {
+      console.error("Error deleting group:", error);
+      toast.error(error.message || "Failed to delete team");
+    }
+  };
+
+  const openEditDialog = (group: Group) => {
+    setEditingGroup({
+      ...group,
+      department_name: group.department_name || "",
+      team_name: group.team_name || "",
+    });
+    setShowEditGroup(true);
   };
 
   if (isLoading) {
@@ -86,13 +209,22 @@ const OrganizationTeams = ({ onCreateInvoice }: OrganizationTeamsProps) => {
           <h2 className="text-2xl font-playfair font-bold text-collector-black">Teams & Departments</h2>
           <p className="text-collector-black/70">Manage your organizational structure and generate invoices</p>
         </div>
-        <Button
-          onClick={onCreateInvoice}
-          className="bg-green-500 hover:bg-green-200 text-white hover:text-collector-black transition-all duration-200"
-        >
-          <FileText className="w-4 h-4 mr-2" />
-          Generate Invoice
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setShowCreateGroup(true)}
+            className="bg-blue-500 hover:bg-blue-200 text-white hover:text-collector-black transition-all duration-200"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create Team
+          </Button>
+          <Button
+            onClick={onCreateInvoice}
+            className="bg-green-500 hover:bg-green-200 text-white hover:text-collector-black transition-all duration-200"
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            Generate Invoice
+          </Button>
+        </div>
       </div>
 
       {departmentData.length > 0 ? (
@@ -119,11 +251,29 @@ const OrganizationTeams = ({ onCreateInvoice }: OrganizationTeamsProps) => {
                             <Users className="w-4 h-4 text-collector-orange" />
                             {team.name}
                           </CardTitle>
+                          {team.team_name && (
+                            <p className="text-sm text-collector-black/60 mt-1">Team: {team.team_name}</p>
+                          )}
                           <CardDescription className="mt-1">{team.description}</CardDescription>
                         </div>
-                        <Badge variant="secondary" className="text-xs">
-                          Team
-                        </Badge>
+                        <div className="flex gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openEditDialog(team)}
+                            className="hover:bg-blue-200 transition-all duration-200"
+                          >
+                            <Edit className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteGroup(team.id, team.name)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-200 transition-all duration-200"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
                       </div>
                     </CardHeader>
                     <CardContent>
@@ -167,6 +317,7 @@ const OrganizationTeams = ({ onCreateInvoice }: OrganizationTeamsProps) => {
           <h3 className="text-lg font-medium text-collector-black/70 mb-2">No teams yet</h3>
           <p className="text-collector-black/50 mb-4">Create teams and departments to organize your organization</p>
           <Button
+            onClick={() => setShowCreateGroup(true)}
             className="bg-blue-500 hover:bg-blue-200 text-white hover:text-collector-black transition-all duration-200"
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -174,6 +325,152 @@ const OrganizationTeams = ({ onCreateInvoice }: OrganizationTeamsProps) => {
           </Button>
         </div>
       )}
+
+      {/* Create Group Modal */}
+      <Dialog open={showCreateGroup} onOpenChange={setShowCreateGroup}>
+        <DialogContent className="border-2 border-collector-gold/30">
+          <DialogHeader>
+            <DialogTitle>Create New Team</DialogTitle>
+            <DialogDescription>
+              Create a team for your organization. Department and team names are optional.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateGroup} className="space-y-4">
+            <div>
+              <Label htmlFor="groupName">Team Name *</Label>
+              <Input
+                id="groupName"
+                value={newGroup.name}
+                onChange={(e) => setNewGroup(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="e.g., Marketing Team, Finance Team..."
+                required
+                className="border-2 border-collector-gold/30 focus:border-collector-orange"
+              />
+            </div>
+            <div>
+              <Label htmlFor="departmentName">Department Name (Optional)</Label>
+              <Input
+                id="departmentName"
+                value={newGroup.department_name}
+                onChange={(e) => setNewGroup(prev => ({ ...prev, department_name: e.target.value }))}
+                placeholder="e.g., Marketing, Finance, Operations..."
+                className="border-2 border-collector-gold/30 focus:border-collector-orange"
+              />
+            </div>
+            <div>
+              <Label htmlFor="teamName">Team Name (Optional)</Label>
+              <Input
+                id="teamName"
+                value={newGroup.team_name}
+                onChange={(e) => setNewGroup(prev => ({ ...prev, team_name: e.target.value }))}
+                placeholder="e.g., Alpha Team, Digital Marketing..."
+                className="border-2 border-collector-gold/30 focus:border-collector-orange"
+              />
+            </div>
+            <div>
+              <Label htmlFor="groupDescription">Description (Optional)</Label>
+              <Textarea
+                id="groupDescription"
+                value={newGroup.description}
+                onChange={(e) => setNewGroup(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Brief description of the team..."
+                className="border-2 border-collector-gold/30 focus:border-collector-orange"
+              />
+            </div>
+            <div className="flex gap-3">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setShowCreateGroup(false)} 
+                className="flex-1 hover:bg-gray-200 transition-all duration-200"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={loading} 
+                className="flex-1 bg-blue-500 hover:bg-blue-200 text-white hover:text-collector-black transition-all duration-200"
+              >
+                {loading ? 'Creating...' : 'Create Team'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Group Modal */}
+      <Dialog open={showEditGroup} onOpenChange={setShowEditGroup}>
+        <DialogContent className="border-2 border-collector-gold/30">
+          <DialogHeader>
+            <DialogTitle>Edit Team</DialogTitle>
+            <DialogDescription>
+              Update team information. Department and team names are optional.
+            </DialogDescription>
+          </DialogHeader>
+          {editingGroup && (
+            <form onSubmit={handleUpdateGroup} className="space-y-4">
+              <div>
+                <Label htmlFor="editGroupName">Team Name *</Label>
+                <Input
+                  id="editGroupName"
+                  value={editingGroup.name}
+                  onChange={(e) => setEditingGroup(prev => prev ? { ...prev, name: e.target.value } : null)}
+                  placeholder="e.g., Marketing Team, Finance Team..."
+                  required
+                  className="border-2 border-collector-gold/30 focus:border-collector-orange"
+                />
+              </div>
+              <div>
+                <Label htmlFor="editDepartmentName">Department Name (Optional)</Label>
+                <Input
+                  id="editDepartmentName"
+                  value={editingGroup.department_name || ""}
+                  onChange={(e) => setEditingGroup(prev => prev ? { ...prev, department_name: e.target.value } : null)}
+                  placeholder="e.g., Marketing, Finance, Operations..."
+                  className="border-2 border-collector-gold/30 focus:border-collector-orange"
+                />
+              </div>
+              <div>
+                <Label htmlFor="editTeamName">Team Name (Optional)</Label>
+                <Input
+                  id="editTeamName"
+                  value={editingGroup.team_name || ""}
+                  onChange={(e) => setEditingGroup(prev => prev ? { ...prev, team_name: e.target.value } : null)}
+                  placeholder="e.g., Alpha Team, Digital Marketing..."
+                  className="border-2 border-collector-gold/30 focus:border-collector-orange"
+                />
+              </div>
+              <div>
+                <Label htmlFor="editGroupDescription">Description (Optional)</Label>
+                <Textarea
+                  id="editGroupDescription"
+                  value={editingGroup.description || ""}
+                  onChange={(e) => setEditingGroup(prev => prev ? { ...prev, description: e.target.value } : null)}
+                  placeholder="Brief description of the team..."
+                  className="border-2 border-collector-gold/30 focus:border-collector-orange"
+                />
+              </div>
+              <div className="flex gap-3">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setShowEditGroup(false)} 
+                  className="flex-1 hover:bg-gray-200 transition-all duration-200"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={loading} 
+                  className="flex-1 bg-blue-500 hover:bg-blue-200 text-white hover:text-collector-black transition-all duration-200"
+                >
+                  {loading ? 'Updating...' : 'Update Team'}
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

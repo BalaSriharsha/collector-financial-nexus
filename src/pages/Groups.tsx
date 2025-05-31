@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,7 +17,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -26,6 +26,8 @@ interface Group {
   name: string;
   description: string;
   created_by: string;
+  department_name?: string | null;
+  team_name?: string | null;
   group_members?: any[];
 }
 
@@ -33,7 +35,12 @@ const Groups = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [groups, setGroups] = useState<Group[]>([]);
-  const [newGroup, setNewGroup] = useState({ name: "", description: "" });
+  const [newGroup, setNewGroup] = useState({ 
+    name: "", 
+    description: "", 
+    department_name: "", 
+    team_name: "" 
+  });
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -84,7 +91,9 @@ const Groups = () => {
         .from('groups')
         .insert({
           name: newGroup.name,
-          description: newGroup.description,
+          description: newGroup.description || null,
+          department_name: newGroup.department_name || null,
+          team_name: newGroup.team_name || null,
           created_by: user.id,
         })
         .select()
@@ -104,7 +113,7 @@ const Groups = () => {
       if (memberError) throw memberError;
 
       setGroups(prevGroups => [...prevGroups, { ...group, group_members: [{ user_id: user.id, role: 'admin', profiles: user.user_metadata }] }]);
-      setNewGroup({ name: "", description: "" });
+      setNewGroup({ name: "", description: "", department_name: "", team_name: "" });
       setShowCreateGroup(false);
       toast.success('Group created successfully!');
     } catch (error: any) {
@@ -156,6 +165,12 @@ const Groups = () => {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <CardTitle className="text-collector-black">{group.name}</CardTitle>
+                      {group.department_name && (
+                        <p className="text-sm text-collector-black/60 mt-1">Department: {group.department_name}</p>
+                      )}
+                      {group.team_name && (
+                        <p className="text-sm text-collector-black/60">Team: {group.team_name}</p>
+                      )}
                       <CardDescription className="mt-1">{group.description}</CardDescription>
                     </div>
                     {group.created_by === user?.id && (
@@ -218,18 +233,38 @@ const Groups = () => {
             <DialogHeader>
               <DialogTitle>Create New Group</DialogTitle>
               <DialogDescription>
-                Create a group to share expenses with friends or colleagues
+                Create a group to share expenses with friends or colleagues. Department and team names are optional.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="groupName">Group Name</Label>
+                <Label htmlFor="groupName">Group Name *</Label>
                 <Input
                   id="groupName"
                   value={newGroup.name}
                   onChange={(e) => setNewGroup(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="e.g., Roommates, Trip to Paris..."
                   required
+                  className="border-2 border-collector-gold/30 focus:border-collector-orange"
+                />
+              </div>
+              <div>
+                <Label htmlFor="departmentName">Department Name (Optional)</Label>
+                <Input
+                  id="departmentName"
+                  value={newGroup.department_name}
+                  onChange={(e) => setNewGroup(prev => ({ ...prev, department_name: e.target.value }))}
+                  placeholder="e.g., Marketing, Finance, Operations..."
+                  className="border-2 border-collector-gold/30 focus:border-collector-orange"
+                />
+              </div>
+              <div>
+                <Label htmlFor="teamName">Team Name (Optional)</Label>
+                <Input
+                  id="teamName"
+                  value={newGroup.team_name}
+                  onChange={(e) => setNewGroup(prev => ({ ...prev, team_name: e.target.value }))}
+                  placeholder="e.g., Alpha Team, Digital Marketing..."
                   className="border-2 border-collector-gold/30 focus:border-collector-orange"
                 />
               </div>
