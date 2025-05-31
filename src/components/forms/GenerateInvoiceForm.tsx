@@ -56,12 +56,21 @@ const GenerateInvoiceForm = ({ open, onOpenChange }: GenerateInvoiceFormProps) =
 
     setLoading(true);
     try {
+      // Create the invoice data object with explicit typing
+      const invoiceData = {
+        invoice_number: data.invoice_number,
+        client_name: data.client_name,
+        client_email: data.client_email,
+        amount: data.amount,
+        due_date: data.due_date,
+        description: data.description || null,
+        status: data.status,
+        user_id: user.id,
+      };
+
       const { error } = await supabase
         .from('invoices')
-        .insert({
-          ...data,
-          user_id: user.id,
-        });
+        .insert(invoiceData);
 
       if (error) throw error;
 
