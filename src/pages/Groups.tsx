@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Users, Mail, Edit, Trash2, UserPlus, LogOut } from "lucide-react";
+import { ArrowLeft, Plus, Users, Mail, Edit, Trash2, UserPlus, LogOut, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -377,6 +377,15 @@ const Groups = () => {
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg">{group.name}</CardTitle>
                     <div className="flex gap-1">
+                      <Link to={`/groups/${group.id}`}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="hover:bg-green-200 transition-all duration-200"
+                        >
+                          <Eye className="w-3 h-3" />
+                        </Button>
+                      </Link>
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button

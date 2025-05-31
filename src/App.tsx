@@ -16,6 +16,7 @@ import Auth from "./pages/Auth";
 import DashboardPage from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Groups from "./pages/Groups";
+import GroupDetail from "./pages/GroupDetail";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,11 @@ const App = () => (
             <Route path="/groups" element={
               <ProtectedRoute>
                 <Groups />
+              </ProtectedRoute>
+            } />
+            <Route path="/groups/:groupId" element={
+              <ProtectedRoute>
+                <GroupDetail />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
