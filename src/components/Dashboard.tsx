@@ -1,7 +1,8 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, TrendingUp, TrendingDown, DollarSign, Users, FileText, PieChart, Calendar, Coins, X } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, DollarSign, Users, FileText, PieChart, Calendar, Coins } from "lucide-react";
 import AddTransactionForm from "@/components/forms/AddTransactionForm";
 import UploadInvoiceForm from "@/components/forms/UploadInvoiceForm";
 import CreateBudgetForm from "@/components/forms/CreateBudgetForm";
@@ -11,12 +12,37 @@ import ExpenseSharingForm from "@/components/forms/ExpenseSharingForm";
 import MetricDetailsModal from "@/components/MetricDetailsModal";
 import TransactionDetailsModal from "@/components/TransactionDetailsModal";
 import AllTransactionsModal from "@/components/AllTransactionsModal";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface DashboardProps {
   userType: 'individual' | 'organization';
 }
 
+interface Transaction {
+  id: string;
+  title: string;
+  description: string | null;
+  amount: number;
+  type: 'income' | 'expense';
+  category: string;
+  date: string;
+  created_at: string;
+}
+
+interface Metrics {
+  income?: number;
+  expenses?: number;
+  savings?: number;
+  budget?: { used: number; total: number };
+  revenue?: number;
+  profit?: number;
+  payroll?: { amount: number; employees: number };
+}
+
 const Dashboard = ({ userType }: DashboardProps) => {
+  const { user } = useAuth();
   const [selectedPeriod, setSelectedPeriod] = useState<'day' | 'week' | 'month' | 'year'>('month');
   const [showAddTransaction, setShowAddTransaction] = useState(false);
   const [showUploadInvoice, setShowUploadInvoice] = useState(false);
@@ -25,29 +51,138 @@ const Dashboard = ({ userType }: DashboardProps) => {
   const [showViewReports, setShowViewReports] = useState(false);
   const [showExpenseSharing, setShowExpenseSharing] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<string | null>(null);
-  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [showAllTransactions, setShowAllTransactions] = useState(false);
+  
+  // Data states
+  const [metrics, setMetrics] = useState<Metrics>({});
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [organizationMembers, setOrganizationMembers] = useState(0);
 
-  const individualMetrics = {
-    income: { amount: 5200, change: '+12%' },
-    expenses: { amount: 3800, change: '-5%' },
-    savings: { amount: 1400, change: '+18%' },
-    budget: { used: 75, total: 100 }
+  useEffect(() => {
+    if (user) {
+      fetchDashboardData();
+    }
+  }, [user, selectedPeriod]);
+
+  const fetchDashboardData = async () => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      await Promise.all([
+        fetchTransactions(),
+        fetchMetrics(),
+        userType === 'organization' ? fetchOrganizationData() : Promise.resolve()
+      ]);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      toast.error('Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const organizationMetrics = {
-    revenue: { amount: 125000, change: '+8%' },
-    expenses: { amount: 89000, change: '+3%' },
-    profit: { amount: 36000, change: '+15%' },
-    payroll: { amount: 45000, employees: 12 }
+  const fetchTransactions = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('date', { ascending: false })
+      .limit(10);
+
+    if (error) {
+      console.error('Error fetching transactions:', error);
+      return;
+    }
+
+    setTransactions(data || []);
   };
 
-  const transactions = [
-    { id: 1, type: 'income', amount: 2500, description: 'Salary Payment', date: '2024-01-15', category: 'Work' },
-    { id: 2, type: 'expense', amount: 450, description: 'Grocery Shopping', date: '2024-01-14', category: 'Food' },
-    { id: 3, type: 'expense', amount: 120, description: 'Utilities Bill', date: '2024-01-13', category: 'Bills' },
-    { id: 4, type: 'income', amount: 500, description: 'Freelance Project', date: '2024-01-12', category: 'Work' },
-  ];
+  const fetchMetrics = async () => {
+    if (!user) return;
+
+    // Get date range based on selected period
+    const now = new Date();
+    let startDate = new Date();
+    
+    switch (selectedPeriod) {
+      case 'day':
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        break;
+      case 'week':
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case 'month':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
+      case 'year':
+        startDate = new Date(now.getFullYear(), 0, 1);
+        break;
+    }
+
+    const { data: transactionData, error } = await supabase
+      .from('transactions')
+      .select('amount, type')
+      .eq('user_id', user.id)
+      .gte('date', startDate.toISOString().split('T')[0]);
+
+    if (error) {
+      console.error('Error fetching metrics:', error);
+      return;
+    }
+
+    const income = transactionData?.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0) || 0;
+    const expenses = transactionData?.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0) || 0;
+    const savings = income - expenses;
+
+    // Fetch budget data
+    const { data: budgetData } = await supabase
+      .from('budgets')
+      .select('amount')
+      .eq('user_id', user.id);
+
+    const totalBudget = budgetData?.reduce((sum, b) => sum + Number(b.amount), 0) || 1000; // Default budget if none set
+    const budgetUsed = Math.min((expenses / totalBudget) * 100, 100);
+
+    if (userType === 'individual') {
+      setMetrics({
+        income,
+        expenses,
+        savings,
+        budget: { used: Math.round(budgetUsed), total: totalBudget }
+      });
+    } else {
+      setMetrics({
+        revenue: income,
+        expenses,
+        profit: savings,
+        payroll: { amount: 0, employees: organizationMembers } // Payroll would need separate tracking
+      });
+    }
+  };
+
+  const fetchOrganizationData = async () => {
+    if (!user) return;
+
+    const { data: orgData } = await supabase
+      .from('organizations')
+      .select('id')
+      .eq('owner_id', user.id)
+      .single();
+
+    if (orgData) {
+      const { data: membersData } = await supabase
+        .from('organization_members')
+        .select('id')
+        .eq('organization_id', orgData.id);
+
+      setOrganizationMembers(membersData?.length || 0);
+    }
+  };
 
   const getPeriodLabel = () => {
     switch(selectedPeriod) {
@@ -63,9 +198,29 @@ const Dashboard = ({ userType }: DashboardProps) => {
     setSelectedMetric(metricType);
   };
 
-  const handleTransactionClick = (transaction: any) => {
+  const handleTransactionClick = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
   };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-collector-orange border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-collector-black/70">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50">
@@ -133,10 +288,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-xl lg:text-2xl font-playfair font-bold text-collector-black">
-                    ${individualMetrics.income.amount.toLocaleString()}
+                    {formatCurrency(metrics.income || 0)}
                   </div>
-                  <p className="text-xs text-green-600 font-medium">
-                    {individualMetrics.income.change} from last {selectedPeriod}
+                  <p className="text-xs text-collector-black/60">
+                    {getPeriodLabel().toLowerCase()}
                   </p>
                 </CardContent>
               </Card>
@@ -153,10 +308,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-xl lg:text-2xl font-playfair font-bold text-collector-black">
-                    ${individualMetrics.expenses.amount.toLocaleString()}
+                    {formatCurrency(metrics.expenses || 0)}
                   </div>
-                  <p className="text-xs text-green-600 font-medium">
-                    {individualMetrics.expenses.change} from last {selectedPeriod}
+                  <p className="text-xs text-collector-black/60">
+                    {getPeriodLabel().toLowerCase()}
                   </p>
                 </CardContent>
               </Card>
@@ -173,10 +328,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-xl lg:text-2xl font-playfair font-bold text-collector-black">
-                    ${individualMetrics.savings.amount.toLocaleString()}
+                    {formatCurrency(metrics.savings || 0)}
                   </div>
-                  <p className="text-xs text-green-600 font-medium">
-                    {individualMetrics.savings.change} from last {selectedPeriod}
+                  <p className="text-xs text-collector-black/60">
+                    {getPeriodLabel().toLowerCase()}
                   </p>
                 </CardContent>
               </Card>
@@ -193,19 +348,18 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-xl lg:text-2xl font-playfair font-bold text-collector-black">
-                    {individualMetrics.budget.used}%
+                    {metrics.budget?.used || 0}%
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                     <div 
                       className="bg-orange-gradient h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${individualMetrics.budget.used}%` }}
+                      style={{ width: `${metrics.budget?.used || 0}%` }}
                     ></div>
                   </div>
                 </CardContent>
               </Card>
             </>
           ) : (
-            // ... keep existing code (organization metrics with click handlers)
             <>
               <Card 
                 className="border-2 border-collector-gold/30 hover-lift bg-white/90 backdrop-blur-sm shadow-md cursor-pointer hover:border-collector-blue transition-all"
@@ -219,10 +373,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-xl lg:text-2xl font-playfair font-bold text-collector-black">
-                    ${organizationMetrics.revenue.amount.toLocaleString()}
+                    {formatCurrency(metrics.revenue || 0)}
                   </div>
-                  <p className="text-xs text-green-600 font-medium">
-                    {organizationMetrics.revenue.change} from last {selectedPeriod}
+                  <p className="text-xs text-collector-black/60">
+                    {getPeriodLabel().toLowerCase()}
                   </p>
                 </CardContent>
               </Card>
@@ -239,10 +393,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-xl lg:text-2xl font-playfair font-bold text-collector-black">
-                    ${organizationMetrics.expenses.amount.toLocaleString()}
+                    {formatCurrency(metrics.expenses || 0)}
                   </div>
-                  <p className="text-xs text-red-600 font-medium">
-                    {organizationMetrics.expenses.change} from last {selectedPeriod}
+                  <p className="text-xs text-collector-black/60">
+                    {getPeriodLabel().toLowerCase()}
                   </p>
                 </CardContent>
               </Card>
@@ -259,10 +413,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-xl lg:text-2xl font-playfair font-bold text-collector-black">
-                    ${organizationMetrics.profit.amount.toLocaleString()}
+                    {formatCurrency(metrics.profit || 0)}
                   </div>
-                  <p className="text-xs text-green-600 font-medium">
-                    {organizationMetrics.profit.change} from last {selectedPeriod}
+                  <p className="text-xs text-collector-black/60">
+                    {getPeriodLabel().toLowerCase()}
                   </p>
                 </CardContent>
               </Card>
@@ -279,10 +433,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-xl lg:text-2xl font-playfair font-bold text-collector-black">
-                    ${organizationMetrics.payroll.amount.toLocaleString()}
+                    {formatCurrency(metrics.payroll?.amount || 0)}
                   </div>
                   <p className="text-xs text-collector-black/70">
-                    {organizationMetrics.payroll.employees} employees
+                    {metrics.payroll?.employees || 0} employees
                   </p>
                 </CardContent>
               </Card>
@@ -388,33 +542,50 @@ const Dashboard = ({ userType }: DashboardProps) => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {transactions.map((transaction, index) => (
-                <div 
-                  key={index} 
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border-2 border-collector-gold/20 rounded-lg hover:bg-collector-white/50 transition-colors gap-3 shadow-sm cursor-pointer hover:border-collector-blue"
-                  onClick={() => handleTransactionClick(transaction)}
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
-                      transaction.type === 'income' ? 'bg-green-100 border-green-300' : 'bg-red-100 border-red-300'
-                    }`}>
-                      {transaction.type === 'income' ? 
-                        <TrendingUp className="w-5 h-5 text-green-600" /> :
-                        <TrendingDown className="w-5 h-5 text-red-600" />
-                      }
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-collector-black text-sm lg:text-base">{transaction.description}</p>
-                      <p className="text-sm text-collector-black/60">{transaction.category} • {transaction.date}</p>
-                    </div>
-                  </div>
-                  <div className={`text-lg lg:text-xl font-playfair font-semibold ${
-                    transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                  } text-right sm:text-left`}>
-                    {transaction.type === 'income' ? '+' : '-'}${transaction.amount}
-                  </div>
+              {transactions.length === 0 ? (
+                <div className="text-center py-8 text-collector-black/60">
+                  <p>No transactions found. Add your first transaction to get started!</p>
+                  <Button 
+                    className="mt-4 bg-blue-gradient hover:bg-blue-600 text-white"
+                    onClick={() => setShowAddTransaction(true)}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Transaction
+                  </Button>
                 </div>
-              ))}
+              ) : (
+                transactions.map((transaction) => (
+                  <div 
+                    key={transaction.id} 
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border-2 border-collector-gold/20 rounded-lg hover:bg-collector-white/50 transition-colors gap-3 shadow-sm cursor-pointer hover:border-collector-blue"
+                    onClick={() => handleTransactionClick(transaction)}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+                        transaction.type === 'income' ? 'bg-green-100 border-green-300' : 'bg-red-100 border-red-300'
+                      }`}>
+                        {transaction.type === 'income' ? 
+                          <TrendingUp className="w-5 h-5 text-green-600" /> :
+                          <TrendingDown className="w-5 h-5 text-red-600" />
+                        }
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-collector-black text-sm lg:text-base">
+                          {transaction.title || 'No title'}
+                        </p>
+                        <p className="text-sm text-collector-black/60">
+                          {transaction.category} • {new Date(transaction.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className={`text-lg lg:text-xl font-playfair font-semibold ${
+                      transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                    } text-right sm:text-left`}>
+                      {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
@@ -454,6 +625,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
         metricType={selectedMetric}
         userType={userType}
         period={selectedPeriod}
+        metrics={metrics}
       />
       <TransactionDetailsModal
         open={!!selectedTransaction}

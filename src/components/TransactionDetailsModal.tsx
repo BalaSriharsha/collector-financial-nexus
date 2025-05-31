@@ -1,48 +1,70 @@
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Calendar, Tag, FileText, MapPin } from "lucide-react";
+import { TrendingUp, TrendingDown, Calendar, Tag, FileText, MapPin, CreditCard } from "lucide-react";
+
+interface Transaction {
+  id: string;
+  title: string;
+  description: string | null;
+  amount: number;
+  type: 'income' | 'expense';
+  category: string;
+  date: string;
+  created_at: string;
+}
 
 interface TransactionDetailsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  transaction: any;
+  transaction: Transaction | null;
 }
 
 const TransactionDetailsModal = ({ open, onOpenChange, transaction }: TransactionDetailsModalProps) => {
   if (!transaction) return null;
 
-  const getTransactionDetails = () => {
-    // Mock additional details for the transaction
-    return {
-      ...transaction,
-      reference: `TXN-${transaction.id.toString().padStart(6, '0')}`,
-      method: transaction.type === 'income' ? 'Bank Transfer' : 'Debit Card',
-      location: transaction.type === 'income' ? 'Direct Deposit' : 'Local Store',
-      notes: transaction.type === 'income' 
-        ? 'Monthly salary payment from employer' 
-        : 'Weekly grocery shopping for household items',
-      tags: transaction.type === 'income' ? ['salary', 'primary-income'] : ['groceries', 'essential', 'food'],
-      status: 'Completed',
-      balance: transaction.type === 'income' ? '+$2,500.00' : '-$450.00'
-    };
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
   };
 
-  const details = getTransactionDetails();
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
+  const getTransactionReference = (id: string) => {
+    return `TXN-${id.substring(0, 8).toUpperCase()}`;
+  };
+
+  const getPaymentMethod = (type: 'income' | 'expense') => {
+    return type === 'income' ? 'Bank Transfer' : 'Debit Card';
+  };
+
+  const getStatus = () => {
+    return 'Completed';
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg border-2 border-collector-gold/30">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-xl font-playfair">
-            {details.type === 'income' ? 
+            {transaction.type === 'income' ? 
               <TrendingUp className="w-6 h-6 text-green-600" /> :
               <TrendingDown className="w-6 h-6 text-red-600" />
             }
             Transaction Details
           </DialogTitle>
           <DialogDescription>
-            Reference: {details.reference}
+            Reference: {getTransactionReference(transaction.id)}
           </DialogDescription>
         </DialogHeader>
 
@@ -52,11 +74,11 @@ const TransactionDetailsModal = ({ open, onOpenChange, transaction }: Transactio
               <div className="text-center">
                 <p className="text-sm text-collector-black/60 uppercase tracking-wide">Amount</p>
                 <p className={`text-3xl font-playfair font-bold ${
-                  details.type === 'income' ? 'text-green-600' : 'text-red-600'
+                  transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
                 }`}>
-                  {details.type === 'income' ? '+' : '-'}${details.amount.toLocaleString()}
+                  {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
                 </p>
-                <p className="text-sm text-collector-black/60 mt-1">{details.status}</p>
+                <p className="text-sm text-collector-black/60 mt-1">{getStatus()}</p>
               </div>
             </CardContent>
           </Card>
@@ -67,19 +89,35 @@ const TransactionDetailsModal = ({ open, onOpenChange, transaction }: Transactio
                 <div className="flex items-center gap-3">
                   <FileText className="w-5 h-5 text-collector-blue" />
                   <div>
-                    <p className="font-medium text-collector-black">{details.description}</p>
-                    <p className="text-sm text-collector-black/60">Description</p>
+                    <p className="font-medium text-collector-black">
+                      {transaction.title || 'No title provided'}
+                    </p>
+                    <p className="text-sm text-collector-black/60">Title</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
+
+            {transaction.description && (
+              <Card className="border border-collector-gold/20">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <FileText className="w-5 h-5 text-collector-blue mt-0.5" />
+                    <div>
+                      <p className="font-medium text-collector-black">{transaction.description}</p>
+                      <p className="text-sm text-collector-black/60">Description</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             <Card className="border border-collector-gold/20">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <Calendar className="w-5 h-5 text-collector-blue" />
                   <div>
-                    <p className="font-medium text-collector-black">{details.date}</p>
+                    <p className="font-medium text-collector-black">{formatDate(transaction.date)}</p>
                     <p className="text-sm text-collector-black/60">Transaction Date</p>
                   </div>
                 </div>
@@ -91,7 +129,7 @@ const TransactionDetailsModal = ({ open, onOpenChange, transaction }: Transactio
                 <div className="flex items-center gap-3">
                   <Tag className="w-5 h-5 text-collector-blue" />
                   <div>
-                    <p className="font-medium text-collector-black">{details.category}</p>
+                    <p className="font-medium text-collector-black capitalize">{transaction.category}</p>
                     <p className="text-sm text-collector-black/60">Category</p>
                   </div>
                 </div>
@@ -101,45 +139,29 @@ const TransactionDetailsModal = ({ open, onOpenChange, transaction }: Transactio
             <Card className="border border-collector-gold/20">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <MapPin className="w-5 h-5 text-collector-blue" />
+                  <CreditCard className="w-5 h-5 text-collector-blue" />
                   <div>
-                    <p className="font-medium text-collector-black">{details.location}</p>
-                    <p className="text-sm text-collector-black/60">Location</p>
+                    <p className="font-medium text-collector-black">{getPaymentMethod(transaction.type)}</p>
+                    <p className="text-sm text-collector-black/60">Payment Method</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border border-collector-gold/20">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <Calendar className="w-5 h-5 text-collector-blue" />
+                  <div>
+                    <p className="font-medium text-collector-black">
+                      {formatDate(transaction.created_at)}
+                    </p>
+                    <p className="text-sm text-collector-black/60">Created At</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
-
-          <Card className="border border-collector-gold/20">
-            <CardContent className="p-4">
-              <h4 className="font-medium text-collector-black mb-2">Payment Method</h4>
-              <p className="text-sm text-collector-black/70">{details.method}</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border border-collector-gold/20">
-            <CardContent className="p-4">
-              <h4 className="font-medium text-collector-black mb-2">Notes</h4>
-              <p className="text-sm text-collector-black/70">{details.notes}</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border border-collector-gold/20">
-            <CardContent className="p-4">
-              <h4 className="font-medium text-collector-black mb-2">Tags</h4>
-              <div className="flex flex-wrap gap-2">
-                {details.tags.map((tag: string, index: number) => (
-                  <span 
-                    key={index}
-                    className="px-2 py-1 bg-collector-blue/10 text-collector-blue text-xs rounded-full border border-collector-blue/20"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </DialogContent>
     </Dialog>

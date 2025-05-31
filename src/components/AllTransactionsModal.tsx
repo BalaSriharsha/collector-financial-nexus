@@ -1,37 +1,97 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TrendingUp, TrendingDown, Search, Filter } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Transaction {
+  id: string;
+  title: string;
+  description: string | null;
+  amount: number;
+  type: 'income' | 'expense';
+  category: string;
+  date: string;
+  created_at: string;
+}
 
 interface AllTransactionsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  transactions: any[];
+  transactions: Transaction[];
 }
 
-const AllTransactionsModal = ({ open, onOpenChange, transactions }: AllTransactionsModalProps) => {
+const AllTransactionsModal = ({ open, onOpenChange }: AllTransactionsModalProps) => {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Generate more mock transactions for the full view
-  const allTransactions = [
-    ...transactions,
-    { id: 5, type: 'expense', amount: 89, description: 'Coffee Shop', date: '2024-01-11', category: 'Food' },
-    { id: 6, type: 'income', amount: 1200, description: 'Bonus Payment', date: '2024-01-10', category: 'Work' },
-    { id: 7, type: 'expense', amount: 250, description: 'Internet Bill', date: '2024-01-09', category: 'Bills' },
-    { id: 8, type: 'expense', amount: 35, description: 'Lunch', date: '2024-01-08', category: 'Food' },
-    { id: 9, type: 'income', amount: 300, description: 'Side Project', date: '2024-01-07', category: 'Work' },
-    { id: 10, type: 'expense', amount: 75, description: 'Gas Station', date: '2024-01-06', category: 'Transportation' },
-  ];
+  useEffect(() => {
+    if (open && user) {
+      fetchAllTransactions();
+    }
+  }, [open, user]);
+
+  const fetchAllTransactions = async () => {
+    if (!user) return;
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching transactions:', error);
+        return;
+      }
+
+      setAllTransactions(data || []);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredTransactions = allTransactions.filter(transaction => {
-    const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.category.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = 
+      transaction.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      transaction.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      transaction.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterType === "all" || transaction.type === filterType;
     return matchesSearch && matchesFilter;
   });
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const getTransactionReference = (id: string) => {
+    return `TXN-${id.substring(0, 8).toUpperCase()}`;
+  };
+
+  const totalIncome = filteredTransactions
+    .filter(t => t.type === 'income')
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  const totalExpenses = filteredTransactions
+    .filter(t => t.type === 'expense')
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  const netAmount = totalIncome - totalExpenses;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -71,9 +131,19 @@ const AllTransactionsModal = ({ open, onOpenChange, transactions }: AllTransacti
 
           {/* Transactions List */}
           <div className="space-y-3">
-            {filteredTransactions.length === 0 ? (
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="w-6 h-6 border-2 border-collector-orange border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-collector-black/60">Loading transactions...</p>
+              </div>
+            ) : filteredTransactions.length === 0 ? (
               <div className="text-center py-8 text-collector-black/60">
-                <p>No transactions found matching your criteria.</p>
+                <p>
+                  {allTransactions.length === 0 
+                    ? "No transactions found. Start by adding your first transaction!" 
+                    : "No transactions found matching your criteria."
+                  }
+                </p>
               </div>
             ) : (
               filteredTransactions.map((transaction) => (
@@ -89,18 +159,27 @@ const AllTransactionsModal = ({ open, onOpenChange, transactions }: AllTransacti
                         }
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-collector-black truncate">{transaction.description}</h4>
+                        <h4 className="font-medium text-collector-black truncate">
+                          {transaction.title || 'No title'}
+                        </h4>
                         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-collector-black/60">
                           <span className="capitalize">{transaction.category}</span>
-                          <span>{transaction.date}</span>
-                          <span className="uppercase text-xs font-medium">TXN-{transaction.id.toString().padStart(6, '0')}</span>
+                          <span>{new Date(transaction.date).toLocaleDateString()}</span>
+                          <span className="uppercase text-xs font-medium">
+                            {getTransactionReference(transaction.id)}
+                          </span>
                         </div>
+                        {transaction.description && (
+                          <p className="text-sm text-collector-black/50 truncate mt-1">
+                            {transaction.description}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className={`text-lg lg:text-xl font-playfair font-semibold ${
                       transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
                     } text-right`}>
-                      {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toLocaleString()}
+                      {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
                     </div>
                   </div>
                 </div>
@@ -109,40 +188,30 @@ const AllTransactionsModal = ({ open, onOpenChange, transactions }: AllTransacti
           </div>
 
           {/* Summary */}
-          <div className="border-t-2 border-collector-gold/30 pt-4 mt-6">
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <p className="text-sm text-collector-black/60">Total Income</p>
-                <p className="text-lg font-semibold text-green-600">
-                  +${filteredTransactions
-                    .filter(t => t.type === 'income')
-                    .reduce((sum, t) => sum + t.amount, 0)
-                    .toLocaleString()}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-collector-black/60">Total Expenses</p>
-                <p className="text-lg font-semibold text-red-600">
-                  -${filteredTransactions
-                    .filter(t => t.type === 'expense')
-                    .reduce((sum, t) => sum + t.amount, 0)
-                    .toLocaleString()}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-collector-black/60">Net Amount</p>
-                <p className="text-lg font-semibold text-collector-black">
-                  ${(filteredTransactions
-                    .filter(t => t.type === 'income')
-                    .reduce((sum, t) => sum + t.amount, 0) -
-                    filteredTransactions
-                    .filter(t => t.type === 'expense')
-                    .reduce((sum, t) => sum + t.amount, 0))
-                    .toLocaleString()}
-                </p>
+          {filteredTransactions.length > 0 && (
+            <div className="border-t-2 border-collector-gold/30 pt-4 mt-6">
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <p className="text-sm text-collector-black/60">Total Income</p>
+                  <p className="text-lg font-semibold text-green-600">
+                    +{formatCurrency(totalIncome)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-collector-black/60">Total Expenses</p>
+                  <p className="text-lg font-semibold text-red-600">
+                    -{formatCurrency(totalExpenses)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-collector-black/60">Net Amount</p>
+                  <p className={`text-lg font-semibold ${netAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {formatCurrency(netAmount)}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
