@@ -49,7 +49,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50">
       {/* Header */}
-      <header className="w-full py-4 px-4 border-b border-collector-gold/20 bg-white/80 backdrop-blur-sm">
+      <header className="w-full py-4 px-4 border-b-2 border-collector-gold/30 bg-white/90 backdrop-blur-sm shadow-sm">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
             <div>
@@ -62,13 +62,13 @@ const Dashboard = ({ userType }: DashboardProps) => {
             </div>
             
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <div className="flex bg-white rounded-lg border border-collector-gold/20 overflow-hidden">
+              <div className="flex bg-white rounded-lg border-2 border-collector-gold/30 overflow-hidden shadow-sm">
                 {(['day', 'week', 'month', 'year'] as const).map((period) => (
                   <Button
                     key={period}
                     variant={selectedPeriod === period ? 'default' : 'ghost'}
-                    className={`rounded-none text-xs sm:text-sm px-2 sm:px-4 ${
-                      selectedPeriod === period ? 'bg-blue-gradient text-white' : 'text-collector-black'
+                    className={`rounded-none text-xs sm:text-sm px-2 sm:px-4 border-r border-collector-gold/20 last:border-r-0 ${
+                      selectedPeriod === period ? 'bg-blue-gradient text-white border-2 border-blue-400' : 'text-collector-black hover:bg-collector-blue/10'
                     }`}
                     onClick={() => setSelectedPeriod(period)}
                   >
@@ -78,7 +78,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
               </div>
               
               <Button 
-                className="bg-orange-gradient hover:bg-orange-600 text-white text-sm"
+                className="bg-orange-gradient hover:bg-orange-600 text-white text-sm border-2 border-transparent hover:border-orange-300 shadow-md"
                 onClick={() => setShowAddTransaction(true)}
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -95,7 +95,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
           {userType === 'individual' ? (
             <>
-              <Card className="ancient-border hover-lift bg-white/90 backdrop-blur-sm">
+              <Card className="border-2 border-collector-gold/30 hover-lift bg-white/90 backdrop-blur-sm shadow-md">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-collector-black/70">
                     Income
@@ -112,7 +112,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardContent>
               </Card>
 
-              <Card className="ancient-border hover-lift bg-white/90 backdrop-blur-sm">
+              <Card className="border-2 border-collector-gold/30 hover-lift bg-white/90 backdrop-blur-sm shadow-md">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-collector-black/70">
                     Expenses
@@ -129,7 +129,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardContent>
               </Card>
 
-              <Card className="ancient-border hover-lift bg-white/90 backdrop-blur-sm">
+              <Card className="border-2 border-collector-gold/30 hover-lift bg-white/90 backdrop-blur-sm shadow-md">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-collector-black/70">
                     Savings
@@ -146,7 +146,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardContent>
               </Card>
 
-              <Card className="ancient-border hover-lift bg-white/90 backdrop-blur-sm">
+              <Card className="border-2 border-collector-gold/30 hover-lift bg-white/90 backdrop-blur-sm shadow-md">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-collector-black/70">
                     Budget Used
@@ -168,7 +168,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
             </>
           ) : (
             <>
-              <Card className="ancient-border hover-lift bg-white/90 backdrop-blur-sm">
+              <Card className="border-2 border-collector-gold/30 hover-lift bg-white/90 backdrop-blur-sm shadow-md">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-collector-black/70">
                     Revenue
@@ -185,7 +185,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardContent>
               </Card>
 
-              <Card className="ancient-border hover-lift bg-white/90 backdrop-blur-sm">
+              <Card className="border-2 border-collector-gold/30 hover-lift bg-white/90 backdrop-blur-sm shadow-md">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-collector-black/70">
                     Expenses
@@ -202,7 +202,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardContent>
               </Card>
 
-              <Card className="ancient-border hover-lift bg-white/90 backdrop-blur-sm">
+              <Card className="border-2 border-collector-gold/30 hover-lift bg-white/90 backdrop-blur-sm shadow-md">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-collector-black/70">
                     Profit
@@ -219,7 +219,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardContent>
               </Card>
 
-              <Card className="ancient-border hover-lift bg-white/90 backdrop-blur-sm">
+              <Card className="border-2 border-collector-gold/30 hover-lift bg-white/90 backdrop-blur-sm shadow-md">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-collector-black/70">
                     Payroll
@@ -241,7 +241,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">
-          <Card className="ancient-border bg-white/90 backdrop-blur-sm">
+          <Card className="border-2 border-collector-gold/30 bg-white/90 backdrop-blur-sm shadow-md">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2 text-lg">
                 <Plus className="w-5 h-5 text-collector-orange" />
@@ -251,14 +251,14 @@ const Dashboard = ({ userType }: DashboardProps) => {
             </CardHeader>
             <CardContent className="space-y-3">
               <Button 
-                className="w-full justify-start bg-green-600 hover:bg-green-700 text-white text-sm"
+                className="w-full justify-start bg-green-600 hover:bg-green-700 text-white text-sm border-2 border-transparent hover:border-green-400 shadow-sm"
                 onClick={() => setShowAddTransaction(true)}
               >
                 <TrendingUp className="w-4 h-4 mr-2" />
                 Add Income
               </Button>
               <Button 
-                className="w-full justify-start bg-red-600 hover:bg-red-700 text-white text-sm"
+                className="w-full justify-start bg-red-600 hover:bg-red-700 text-white text-sm border-2 border-transparent hover:border-red-400 shadow-sm"
                 onClick={() => setShowAddTransaction(true)}
               >
                 <TrendingDown className="w-4 h-4 mr-2" />
@@ -267,7 +267,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
             </CardContent>
           </Card>
 
-          <Card className="ancient-border bg-white/90 backdrop-blur-sm">
+          <Card className="border-2 border-collector-gold/30 bg-white/90 backdrop-blur-sm shadow-md">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2 text-lg">
                 <FileText className="w-5 h-5 text-collector-gold" />
@@ -277,14 +277,14 @@ const Dashboard = ({ userType }: DashboardProps) => {
             </CardHeader>
             <CardContent className="space-y-3">
               <Button 
-                className="w-full justify-start bg-collector-blue hover:bg-collector-blue-dark text-white text-sm"
+                className="w-full justify-start bg-collector-blue hover:bg-collector-blue-dark text-white text-sm border-2 border-transparent hover:border-blue-400 shadow-sm"
                 onClick={() => setShowUploadInvoice(true)}
               >
                 <FileText className="w-4 h-4 mr-2" />
                 Upload Invoice
               </Button>
               <Button 
-                className="w-full justify-start bg-collector-gold hover:bg-collector-gold-dark text-white text-sm"
+                className="w-full justify-start bg-collector-gold hover:bg-collector-gold-dark text-white text-sm border-2 border-transparent hover:border-yellow-400 shadow-sm"
                 onClick={() => setShowViewArchive(true)}
               >
                 <Calendar className="w-4 h-4 mr-2" />
@@ -293,7 +293,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
             </CardContent>
           </Card>
 
-          <Card className="ancient-border bg-white/90 backdrop-blur-sm">
+          <Card className="border-2 border-collector-gold/30 bg-white/90 backdrop-blur-sm shadow-md">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2 text-lg">
                 <Users className="w-5 h-5 text-collector-blue" />
@@ -303,14 +303,14 @@ const Dashboard = ({ userType }: DashboardProps) => {
             </CardHeader>
             <CardContent className="space-y-3">
               <Button 
-                className="w-full justify-start bg-purple-600 hover:bg-purple-700 text-white text-sm"
+                className="w-full justify-start bg-purple-600 hover:bg-purple-700 text-white text-sm border-2 border-transparent hover:border-purple-400 shadow-sm"
                 onClick={() => setShowExpenseSharing(true)}
               >
                 <Users className="w-4 h-4 mr-2" />
                 Share Expense
               </Button>
               <Button 
-                className="w-full justify-start bg-orange-gradient hover:bg-orange-600 text-white text-sm"
+                className="w-full justify-start bg-orange-gradient hover:bg-orange-600 text-white text-sm border-2 border-transparent hover:border-orange-300 shadow-sm"
                 onClick={() => setShowCreateBudget(true)}
               >
                 <PieChart className="w-4 h-4 mr-2" />
@@ -321,11 +321,11 @@ const Dashboard = ({ userType }: DashboardProps) => {
         </div>
 
         {/* Recent Transactions */}
-        <Card className="ancient-border bg-white/90 backdrop-blur-sm">
+        <Card className="border-2 border-collector-gold/30 bg-white/90 backdrop-blur-sm shadow-md">
           <CardHeader>
             <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <span className="text-lg lg:text-xl">Recent Transactions</span>
-              <Button variant="outline" size="sm" className="w-full sm:w-auto">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto border-2 border-collector-gold/30 hover:border-collector-orange hover:bg-collector-orange/5">
                 View All
               </Button>
             </CardTitle>
@@ -338,10 +338,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 { type: 'expense', amount: 120, description: 'Utilities Bill', date: '2024-01-13', category: 'Bills' },
                 { type: 'income', amount: 500, description: 'Freelance Project', date: '2024-01-12', category: 'Work' },
               ].map((transaction, index) => (
-                <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border border-collector-gold/20 rounded-lg hover:bg-collector-white/50 transition-colors gap-3">
+                <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border-2 border-collector-gold/20 rounded-lg hover:bg-collector-white/50 transition-colors gap-3 shadow-sm">
                   <div className="flex items-center space-x-4">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      transaction.type === 'income' ? 'bg-green-100' : 'bg-red-100'
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+                      transaction.type === 'income' ? 'bg-green-100 border-green-300' : 'bg-red-100 border-red-300'
                     }`}>
                       {transaction.type === 'income' ? 
                         <TrendingUp className="w-5 h-5 text-green-600" /> :
