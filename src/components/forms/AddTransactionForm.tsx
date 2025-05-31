@@ -9,7 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const transactionSchema = z.object({
   type: z.enum(["income", "expense"]),
@@ -29,6 +31,8 @@ interface AddTransactionFormProps {
 
 const AddTransactionForm = ({ open, onOpenChange }: AddTransactionFormProps) => {
   const [activeTab, setActiveTab] = useState("income");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
 
   const form = useForm<TransactionFormData>({
     resolver: zodResolver(transactionSchema),
@@ -42,10 +46,47 @@ const AddTransactionForm = ({ open, onOpenChange }: AddTransactionFormProps) => 
     },
   });
 
-  const onSubmit = (data: TransactionFormData) => {
-    console.log("Transaction submitted:", data);
-    onOpenChange(false);
-    form.reset();
+  const onSubmit = async (data: TransactionFormData) => {
+    if (!user) {
+      toast.error("You must be logged in to create transactions");
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      console.log("Submitting transaction:", data);
+      
+      const { error } = await supabase
+        .from('transactions')
+        .insert({
+          user_id: user.id,
+          title: data.description, // Using description as title since that's what the schema expects
+          description: data.notes || null,
+          amount: data.amount,
+          type: data.type,
+          category: data.category,
+          date: data.date,
+        });
+
+      if (error) {
+        console.error("Error creating transaction:", error);
+        toast.error("Failed to create transaction: " + error.message);
+        return;
+      }
+
+      toast.success("Transaction created successfully!");
+      onOpenChange(false);
+      form.reset();
+      
+      // Refresh the page to show updated data
+      window.location.reload();
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleTabChange = (value: string) => {
@@ -201,11 +242,21 @@ const AddTransactionForm = ({ open, onOpenChange }: AddTransactionFormProps) => 
                 />
 
                 <div className="flex gap-3 pt-4">
-                  <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => onOpenChange(false)} 
+                    className="flex-1"
+                    disabled={isSubmitting}
+                  >
                     Cancel
                   </Button>
-                  <Button type="submit" className="flex-1 bg-orange-gradient hover:bg-orange-600 text-white">
-                    Add {activeTab === "income" ? "Income" : "Expense"}
+                  <Button 
+                    type="submit" 
+                    className="flex-1 bg-orange-gradient hover:bg-orange-600 text-white"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Adding..." : `Add ${activeTab === "income" ? "Income" : "Expense"}`}
                   </Button>
                 </div>
               </form>

@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -7,20 +8,18 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { PieChart, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
-
-const budgetCategorySchema = z.object({
-  name: z.string().min(1, "Category name is required"),
-  amount: z.number().min(0, "Amount must be positive"),
-});
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const budgetSchema = z.object({
   name: z.string().min(1, "Budget name is required"),
-  period: z.enum(["monthly", "yearly"]),
-  totalIncome: z.number().min(0, "Income must be positive"),
-  categories: z.array(budgetCategorySchema).min(1, "At least one category is required"),
-  description: z.string().optional(),
+  amount: z.number().min(0.01, "Amount must be greater than 0"),
+  category: z.string().min(1, "Category is required"),
+  period: z.enum(["weekly", "monthly", "yearly"]),
+  start_date: z.string(),
+  end_date: z.string(),
 });
 
 type BudgetFormData = z.infer<typeof budgetSchema>;
@@ -31,50 +30,77 @@ interface CreateBudgetFormProps {
 }
 
 const CreateBudgetForm = ({ open, onOpenChange }: CreateBudgetFormProps) => {
-  const [categories, setCategories] = useState([{ name: "", amount: 0 }]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
 
   const form = useForm<BudgetFormData>({
     resolver: zodResolver(budgetSchema),
     defaultValues: {
       name: "",
+      amount: 0,
+      category: "",
       period: "monthly",
-      totalIncome: 0,
-      categories: [{ name: "", amount: 0 }],
-      description: "",
+      start_date: new Date().toISOString().split('T')[0],
+      end_date: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0],
     },
   });
 
-  const addCategory = () => {
-    setCategories([...categories, { name: "", amount: 0 }]);
-  };
-
-  const removeCategory = (index: number) => {
-    if (categories.length > 1) {
-      const newCategories = categories.filter((_, i) => i !== index);
-      setCategories(newCategories);
+  const onSubmit = async (data: BudgetFormData) => {
+    if (!user) {
+      toast.error("You must be logged in to create budgets");
+      return;
     }
-  };
 
-  const onSubmit = (data: BudgetFormData) => {
-    console.log("Budget created:", { ...data, categories });
-    onOpenChange(false);
-    form.reset();
-    setCategories([{ name: "", amount: 0 }]);
+    setIsSubmitting(true);
+    
+    try {
+      console.log("Submitting budget:", data);
+      
+      const { error } = await supabase
+        .from('budgets')
+        .insert({
+          user_id: user.id,
+          name: data.name,
+          amount: data.amount,
+          category: data.category,
+          period: data.period,
+          start_date: data.start_date,
+          end_date: data.end_date,
+        });
+
+      if (error) {
+        console.error("Error creating budget:", error);
+        toast.error("Failed to create budget: " + error.message);
+        return;
+      }
+
+      toast.success("Budget created successfully!");
+      onOpenChange(false);
+      form.reset();
+      
+      // Refresh the page to show updated data
+      window.location.reload();
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto border-2 border-collector-gold/30 bg-white">
+      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
           <SheetTitle className="font-playfair text-collector-black">Create Budget</SheetTitle>
           <SheetDescription>
-            Plan your financial future with detailed budget categories and allocations.
+            Set up a budget to track your spending in specific categories.
           </SheetDescription>
         </SheetHeader>
 
         <div className="mt-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -82,129 +108,26 @@ const CreateBudgetForm = ({ open, onOpenChange }: CreateBudgetFormProps) => {
                   <FormItem>
                     <FormLabel>Budget Name</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="Monthly Budget 2024, Q1 Planning" 
-                        {...field} 
-                        className="border-2 border-collector-gold/30 focus:border-collector-blue"
-                      />
+                      <Input placeholder="Monthly Food Budget" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="period"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Period</FormLabel>
-                      <FormControl>
-                        <select 
-                          {...field} 
-                          className="flex h-10 w-full rounded-md border-2 border-collector-gold/30 bg-background px-3 py-2 text-sm focus:border-collector-blue"
-                        >
-                          <option value="monthly">Monthly</option>
-                          <option value="yearly">Yearly</option>
-                        </select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="totalIncome"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Expected Income ($)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="5000.00"
-                          {...field}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                          className="border-2 border-collector-gold/30 focus:border-collector-blue"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-playfair font-semibold text-collector-black">Budget Categories</h3>
-                  <Button 
-                    type="button" 
-                    onClick={addCategory} 
-                    size="sm" 
-                    className="bg-green-600 hover:bg-green-700 text-white border-2 border-transparent hover:border-green-400"
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    Add
-                  </Button>
-                </div>
-
-                <div className="space-y-3 border-2 border-collector-gold/20 rounded-lg p-4 bg-collector-white/50">
-                  {categories.map((category, index) => (
-                    <div key={index} className="flex gap-2 items-end">
-                      <div className="flex-1">
-                        <Input
-                          placeholder="Category name (Food, Housing, etc.)"
-                          value={category.name}
-                          onChange={(e) => {
-                            const newCategories = [...categories];
-                            newCategories[index].name = e.target.value;
-                            setCategories(newCategories);
-                          }}
-                          className="border-2 border-collector-gold/30 focus:border-collector-blue"
-                        />
-                      </div>
-                      <div className="w-24">
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          value={category.amount}
-                          onChange={(e) => {
-                            const newCategories = [...categories];
-                            newCategories[index].amount = parseFloat(e.target.value) || 0;
-                            setCategories(newCategories);
-                          }}
-                          className="border-2 border-collector-gold/30 focus:border-collector-blue"
-                        />
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => removeCategory(index)}
-                        disabled={categories.length === 1}
-                        className="text-red-600 hover:text-red-700 border-2 border-red-300 hover:border-red-500"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
 
               <FormField
                 control={form.control}
-                name="description"
+                name="amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description (Optional)</FormLabel>
+                    <FormLabel>Budget Amount ($)</FormLabel>
                     <FormControl>
-                      <Textarea 
-                        placeholder="Budget goals and notes..." 
-                        {...field} 
-                        className="border-2 border-collector-gold/30 focus:border-collector-blue"
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        {...field}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -212,21 +135,87 @@ const CreateBudgetForm = ({ open, onOpenChange }: CreateBudgetFormProps) => {
                 )}
               />
 
-              <div className="flex gap-3 pt-4 border-t-2 border-collector-gold/30">
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Food, Housing, Transportation, etc." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="period"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Budget Period</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a period" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                        <SelectItem value="yearly">Yearly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="start_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Start Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="end_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>End Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex gap-3 pt-4">
                 <Button 
                   type="button" 
                   variant="outline" 
                   onClick={() => onOpenChange(false)} 
-                  className="flex-1 border-2 border-collector-gold/30 hover:border-collector-orange"
+                  className="flex-1"
+                  disabled={isSubmitting}
                 >
                   Cancel
                 </Button>
                 <Button 
                   type="submit" 
-                  className="flex-1 bg-gold-gradient hover:bg-amber-600 text-white border-2 border-transparent hover:border-amber-300"
+                  className="flex-1 bg-orange-gradient hover:bg-orange-600 text-white"
+                  disabled={isSubmitting}
                 >
-                  <PieChart className="w-4 h-4 mr-2" />
-                  Create Budget
+                  {isSubmitting ? "Creating..." : "Create Budget"}
                 </Button>
               </div>
             </form>
