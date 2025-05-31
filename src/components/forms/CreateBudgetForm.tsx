@@ -5,7 +5,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -144,9 +143,27 @@ const CreateBudgetForm = ({ open, onOpenChange }: CreateBudgetFormProps) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Food, Housing, Transportation, etc." {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="food">Food</SelectItem>
+                        <SelectItem value="transport">Transport</SelectItem>
+                        <SelectItem value="entertainment">Entertainment</SelectItem>
+                        <SelectItem value="utilities">Utilities</SelectItem>
+                        <SelectItem value="healthcare">Healthcare</SelectItem>
+                        <SelectItem value="shopping">Shopping</SelectItem>
+                        <SelectItem value="education">Education</SelectItem>
+                        <SelectItem value="investment">Investment</SelectItem>
+                        <SelectItem value="salary">Salary</SelectItem>
+                        <SelectItem value="freelance">Freelance</SelectItem>
+                        <SelectItem value="business">Business</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

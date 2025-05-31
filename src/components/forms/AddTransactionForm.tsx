@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -157,9 +159,20 @@ const AddTransactionForm = ({ open, onOpenChange }: AddTransactionFormProps) => 
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Category</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Work, Investment, Business" {...field} />
-                        </FormControl>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a category" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="salary">Salary</SelectItem>
+                            <SelectItem value="freelance">Freelance</SelectItem>
+                            <SelectItem value="business">Business</SelectItem>
+                            <SelectItem value="investment">Investment</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -207,9 +220,23 @@ const AddTransactionForm = ({ open, onOpenChange }: AddTransactionFormProps) => 
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Category</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Food, Housing, Transportation" {...field} />
-                        </FormControl>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a category" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="food">Food</SelectItem>
+                            <SelectItem value="transport">Transport</SelectItem>
+                            <SelectItem value="entertainment">Entertainment</SelectItem>
+                            <SelectItem value="utilities">Utilities</SelectItem>
+                            <SelectItem value="healthcare">Healthcare</SelectItem>
+                            <SelectItem value="shopping">Shopping</SelectItem>
+                            <SelectItem value="education">Education</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
