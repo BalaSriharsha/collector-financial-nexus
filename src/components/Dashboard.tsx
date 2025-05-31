@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -393,7 +392,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
       />
       <UploadInvoiceForm open={uploadInvoiceOpen} onOpenChange={setUploadInvoiceOpen} />
       <ExpenseSharingForm open={expenseSharingOpen} onOpenChange={setExpenseSharingOpen} userType={userType} />
-      <ViewReportsForm open={viewReportsOpen} onOpenChange={setViewReportsForm} />
+      <ViewReportsForm open={viewReportsOpen} onOpenChange={setViewReportsOpen} />
       <ViewArchiveForm open={viewArchiveOpen} onOpenChange={setViewArchiveOpen} />
       <AllTransactionsModal 
         open={allTransactionsOpen} 
