@@ -33,19 +33,17 @@ const ViewArchiveForm = ({ open, onOpenChange }: ViewArchiveFormProps) => {
 
   const handleViewDocument = (doc: typeof mockDocuments[0]) => {
     console.log("Viewing document:", doc.name);
-    // In a real app, this would open the document in a viewer
     alert(`Viewing ${doc.name}`);
   };
 
   const handleDownloadDocument = (doc: typeof mockDocuments[0]) => {
     console.log("Downloading document:", doc.name);
-    // In a real app, this would trigger the download
     alert(`Downloading ${doc.name}`);
   };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
+      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto border-2 border-collector-gold/30 bg-white">
         <SheetHeader>
           <SheetTitle className="font-playfair text-collector-black">Document Archive</SheetTitle>
           <SheetDescription>
@@ -62,7 +60,7 @@ const ViewArchiveForm = ({ open, onOpenChange }: ViewArchiveFormProps) => {
                 placeholder="Search documents..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 border-2 border-collector-gold/30 focus:border-collector-blue"
               />
             </div>
             <div className="relative">
@@ -70,7 +68,7 @@ const ViewArchiveForm = ({ open, onOpenChange }: ViewArchiveFormProps) => {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background pl-10 pr-8 py-2 text-sm capitalize"
+                className="flex h-10 w-full rounded-md border-2 border-collector-gold/30 bg-background pl-10 pr-8 py-2 text-sm capitalize focus:border-collector-blue"
               >
                 {categories.map(category => (
                   <option key={category} value={category}>
@@ -83,7 +81,7 @@ const ViewArchiveForm = ({ open, onOpenChange }: ViewArchiveFormProps) => {
 
           {/* Category Tabs */}
           <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-4 border-2 border-collector-gold/30">
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="business">Business</TabsTrigger>
               <TabsTrigger value="personal">Personal</TabsTrigger>
@@ -94,16 +92,16 @@ const ViewArchiveForm = ({ open, onOpenChange }: ViewArchiveFormProps) => {
               {/* Documents List */}
               <div className="space-y-3">
                 {filteredDocuments.length === 0 ? (
-                  <div className="text-center py-8 text-collector-black/60">
+                  <div className="text-center py-8 text-collector-black/60 border-2 border-collector-gold/20 rounded-lg bg-collector-white/50">
                     <FileText className="w-12 h-12 mx-auto mb-4 opacity-40" />
                     <p>No documents found matching your criteria.</p>
                   </div>
                 ) : (
                   filteredDocuments.map((doc) => (
-                    <div key={doc.id} className="border border-collector-gold/20 rounded-lg p-4 hover:bg-collector-white/50 transition-colors">
+                    <div key={doc.id} className="border-2 border-collector-gold/20 rounded-lg p-4 hover:bg-collector-white/50 transition-colors hover:border-collector-blue">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3 flex-1">
-                          <div className="w-10 h-10 bg-blue-gradient rounded-lg flex items-center justify-center">
+                          <div className="w-10 h-10 bg-blue-gradient rounded-lg flex items-center justify-center border-2 border-blue-300">
                             <FileText className="w-5 h-5 text-white" />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -119,7 +117,7 @@ const ViewArchiveForm = ({ open, onOpenChange }: ViewArchiveFormProps) => {
                           <Button 
                             size="sm" 
                             variant="outline" 
-                            className="text-collector-blue hover:text-collector-blue-dark"
+                            className="text-collector-blue hover:text-collector-blue-dark border-2 border-collector-blue/30 hover:border-collector-blue"
                             onClick={() => handleViewDocument(doc)}
                           >
                             <Eye className="w-4 h-4" />
@@ -127,7 +125,7 @@ const ViewArchiveForm = ({ open, onOpenChange }: ViewArchiveFormProps) => {
                           <Button 
                             size="sm" 
                             variant="outline" 
-                            className="text-collector-gold hover:text-collector-gold-dark"
+                            className="text-collector-gold hover:text-collector-gold-dark border-2 border-collector-gold/30 hover:border-collector-gold"
                             onClick={() => handleDownloadDocument(doc)}
                           >
                             <Download className="w-4 h-4" />
@@ -141,8 +139,12 @@ const ViewArchiveForm = ({ open, onOpenChange }: ViewArchiveFormProps) => {
             </TabsContent>
           </Tabs>
 
-          <div className="flex justify-end pt-4">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <div className="flex justify-end pt-4 border-t-2 border-collector-gold/30">
+            <Button 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              className="border-2 border-collector-gold/30 hover:border-collector-orange"
+            >
               Close
             </Button>
           </div>

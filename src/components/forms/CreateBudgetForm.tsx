@@ -64,7 +64,7 @@ const CreateBudgetForm = ({ open, onOpenChange }: CreateBudgetFormProps) => {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+      <SheetContent className="w-full sm:max-w-lg overflow-y-auto border-2 border-collector-gold/30 bg-white">
         <SheetHeader>
           <SheetTitle className="font-playfair text-collector-black">Create Budget</SheetTitle>
           <SheetDescription>
@@ -82,7 +82,11 @@ const CreateBudgetForm = ({ open, onOpenChange }: CreateBudgetFormProps) => {
                   <FormItem>
                     <FormLabel>Budget Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Monthly Budget 2024, Q1 Planning" {...field} />
+                      <Input 
+                        placeholder="Monthly Budget 2024, Q1 Planning" 
+                        {...field} 
+                        className="border-2 border-collector-gold/30 focus:border-collector-blue"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -97,7 +101,10 @@ const CreateBudgetForm = ({ open, onOpenChange }: CreateBudgetFormProps) => {
                     <FormItem>
                       <FormLabel>Period</FormLabel>
                       <FormControl>
-                        <select {...field} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                        <select 
+                          {...field} 
+                          className="flex h-10 w-full rounded-md border-2 border-collector-gold/30 bg-background px-3 py-2 text-sm focus:border-collector-blue"
+                        >
                           <option value="monthly">Monthly</option>
                           <option value="yearly">Yearly</option>
                         </select>
@@ -120,6 +127,7 @@ const CreateBudgetForm = ({ open, onOpenChange }: CreateBudgetFormProps) => {
                           placeholder="5000.00"
                           {...field}
                           onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          className="border-2 border-collector-gold/30 focus:border-collector-blue"
                         />
                       </FormControl>
                       <FormMessage />
@@ -131,50 +139,59 @@ const CreateBudgetForm = ({ open, onOpenChange }: CreateBudgetFormProps) => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-playfair font-semibold text-collector-black">Budget Categories</h3>
-                  <Button type="button" onClick={addCategory} size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                  <Button 
+                    type="button" 
+                    onClick={addCategory} 
+                    size="sm" 
+                    className="bg-green-600 hover:bg-green-700 text-white border-2 border-transparent hover:border-green-400"
+                  >
                     <Plus className="w-4 h-4 mr-1" />
                     Add
                   </Button>
                 </div>
 
-                {categories.map((category, index) => (
-                  <div key={index} className="flex gap-2 items-end">
-                    <div className="flex-1">
-                      <Input
-                        placeholder="Category name (Food, Housing, etc.)"
-                        value={category.name}
-                        onChange={(e) => {
-                          const newCategories = [...categories];
-                          newCategories[index].name = e.target.value;
-                          setCategories(newCategories);
-                        }}
-                      />
+                <div className="space-y-3 border-2 border-collector-gold/20 rounded-lg p-4 bg-collector-white/50">
+                  {categories.map((category, index) => (
+                    <div key={index} className="flex gap-2 items-end">
+                      <div className="flex-1">
+                        <Input
+                          placeholder="Category name (Food, Housing, etc.)"
+                          value={category.name}
+                          onChange={(e) => {
+                            const newCategories = [...categories];
+                            newCategories[index].name = e.target.value;
+                            setCategories(newCategories);
+                          }}
+                          className="border-2 border-collector-gold/30 focus:border-collector-blue"
+                        />
+                      </div>
+                      <div className="w-24">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={category.amount}
+                          onChange={(e) => {
+                            const newCategories = [...categories];
+                            newCategories[index].amount = parseFloat(e.target.value) || 0;
+                            setCategories(newCategories);
+                          }}
+                          className="border-2 border-collector-gold/30 focus:border-collector-blue"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => removeCategory(index)}
+                        disabled={categories.length === 1}
+                        className="text-red-600 hover:text-red-700 border-2 border-red-300 hover:border-red-500"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
-                    <div className="w-24">
-                      <Input
-                        type="number"
-                        step="0.01"
-                        placeholder="0.00"
-                        value={category.amount}
-                        onChange={(e) => {
-                          const newCategories = [...categories];
-                          newCategories[index].amount = parseFloat(e.target.value) || 0;
-                          setCategories(newCategories);
-                        }}
-                      />
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => removeCategory(index)}
-                      disabled={categories.length === 1}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
 
               <FormField
@@ -184,18 +201,30 @@ const CreateBudgetForm = ({ open, onOpenChange }: CreateBudgetFormProps) => {
                   <FormItem>
                     <FormLabel>Description (Optional)</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Budget goals and notes..." {...field} />
+                      <Textarea 
+                        placeholder="Budget goals and notes..." 
+                        {...field} 
+                        className="border-2 border-collector-gold/30 focus:border-collector-blue"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <div className="flex gap-3 pt-4">
-                <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
+              <div className="flex gap-3 pt-4 border-t-2 border-collector-gold/30">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => onOpenChange(false)} 
+                  className="flex-1 border-2 border-collector-gold/30 hover:border-collector-orange"
+                >
                   Cancel
                 </Button>
-                <Button type="submit" className="flex-1 bg-gold-gradient hover:bg-amber-600 text-white">
+                <Button 
+                  type="submit" 
+                  className="flex-1 bg-gold-gradient hover:bg-amber-600 text-white border-2 border-transparent hover:border-amber-300"
+                >
                   <PieChart className="w-4 h-4 mr-2" />
                   Create Budget
                 </Button>
