@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Coins, Menu, LogOut, User as UserIcon, Settings } from "lucide-react";
+import { Coins, Menu, LogOut, User as UserIcon, Settings, Users } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -77,6 +77,13 @@ const Navigation = () => {
                 <Link to="/dashboard">
                   <Button className="bg-blue-gradient hover:bg-blue-600 text-white px-6 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-2 border-transparent hover:border-blue-300">
                     Dashboard
+                  </Button>
+                </Link>
+                
+                <Link to="/groups">
+                  <Button variant="outline" className="border-collector-gold/30 text-collector-black hover:bg-collector-orange/5">
+                    <Users className="w-4 h-4 mr-2" />
+                    Groups
                   </Button>
                 </Link>
                 
@@ -189,6 +196,16 @@ const Navigation = () => {
                   <Link to="/dashboard" onClick={() => setIsOpen(false)}>
                     <Button className="bg-blue-gradient hover:bg-blue-600 text-white w-full py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] border-2 border-transparent hover:border-blue-300">
                       Dashboard
+                    </Button>
+                  </Link>
+                  
+                  <Link to="/groups" onClick={() => setIsOpen(false)}>
+                    <Button 
+                      variant="outline"
+                      className="w-full py-3 rounded-xl border-2 border-collector-gold/30 text-collector-black hover:bg-collector-orange/5"
+                    >
+                      <Users className="w-4 h-4 mr-2" />
+                      Groups
                     </Button>
                   </Link>
                   

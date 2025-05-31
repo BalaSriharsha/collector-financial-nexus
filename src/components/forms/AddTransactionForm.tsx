@@ -1,298 +1,244 @@
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useState, useEffect } from "react";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { Database } from "@/integrations/supabase/types";
-
-type TransactionCategory = Database["public"]["Enums"]["transaction_category"];
-type TransactionType = Database["public"]["Enums"]["transaction_type"];
-
-const transactionSchema = z.object({
-  type: z.enum(["income", "expense"]),
-  amount: z.number().min(0.01, "Amount must be greater than 0"),
-  description: z.string().min(1, "Description is required"),
-  category: z.enum(["food", "transport", "entertainment", "utilities", "healthcare", "shopping", "education", "investment", "salary", "freelance", "business", "other"]),
-  date: z.string(),
-  notes: z.string().optional(),
-});
-
-type TransactionFormData = z.infer<typeof transactionSchema>;
+import { useQueryClient } from "@tanstack/react-query";
 
 interface AddTransactionFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  userType: 'individual' | 'organization';
+  editingTransaction?: any;
+  onClose?: () => void;
 }
 
-const AddTransactionForm = ({ open, onOpenChange }: AddTransactionFormProps) => {
-  const [activeTab, setActiveTab] = useState("income");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const AddTransactionForm = ({ open, onOpenChange, userType, editingTransaction, onClose }: AddTransactionFormProps) => {
   const { user } = useAuth();
-
-  const form = useForm<TransactionFormData>({
-    resolver: zodResolver(transactionSchema),
-    defaultValues: {
-      type: "income",
-      amount: 0,
-      description: "",
-      category: "other",
-      date: new Date().toISOString().split('T')[0],
-      notes: "",
-    },
+  const queryClient = useQueryClient();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    title: "",
+    amount: "",
+    type: "expense" as "income" | "expense",
+    category: "",
+    date: new Date().toISOString().split('T')[0],
+    description: "",
   });
 
-  const onSubmit = async (data: TransactionFormData) => {
-    if (!user) {
-      toast.error("You must be logged in to create transactions");
-      return;
+  const incomeCategories = ["salary", "freelance", "business", "investment", "other"];
+  const expenseCategories = ["food", "transport", "entertainment", "utilities", "healthcare", "shopping", "education", "other"];
+
+  // Reset form when modal opens/closes or editing transaction changes
+  useEffect(() => {
+    if (editingTransaction) {
+      setFormData({
+        title: editingTransaction.title || "",
+        amount: editingTransaction.amount?.toString() || "",
+        type: editingTransaction.type || "expense",
+        category: editingTransaction.category || "",
+        date: editingTransaction.date || new Date().toISOString().split('T')[0],
+        description: editingTransaction.description || "",
+      });
+    } else {
+      setFormData({
+        title: "",
+        amount: "",
+        type: "expense",
+        category: "",
+        date: new Date().toISOString().split('T')[0],
+        description: "",
+      });
     }
+  }, [editingTransaction, open]);
 
-    setIsSubmitting(true);
-    
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    setLoading(true);
     try {
-      console.log("Submitting transaction:", data);
-      
-      const { error } = await supabase
-        .from('transactions')
-        .insert({
-          user_id: user.id,
-          title: data.description,
-          description: data.notes || null,
-          amount: data.amount,
-          type: data.type as TransactionType,
-          category: data.category as TransactionCategory,
-          date: data.date,
-        });
+      const transactionData = {
+        title: formData.title,
+        amount: parseFloat(formData.amount),
+        type: formData.type,
+        category: formData.category,
+        date: formData.date,
+        description: formData.description,
+        user_id: user.id,
+        organization_id: userType === 'organization' ? null : null, // Will be set when organization features are implemented
+      };
 
-      if (error) {
-        console.error("Error creating transaction:", error);
-        toast.error("Failed to create transaction: " + error.message);
-        return;
+      let error;
+      if (editingTransaction) {
+        // Update existing transaction
+        const result = await supabase
+          .from('transactions')
+          .update(transactionData)
+          .eq('id', editingTransaction.id);
+        error = result.error;
+        
+        if (!error) {
+          toast.success('Transaction updated successfully!');
+        }
+      } else {
+        // Create new transaction
+        const result = await supabase
+          .from('transactions')
+          .insert([transactionData]);
+        error = result.error;
+        
+        if (!error) {
+          toast.success('Transaction added successfully!');
+        }
       }
 
-      toast.success("Transaction created successfully!");
-      onOpenChange(false);
-      form.reset();
-      
-      // Refresh the page to show updated data
-      window.location.reload();
-    } catch (error) {
-      console.error("Unexpected error:", error);
-      toast.error("An unexpected error occurred");
+      if (error) throw error;
+
+      // Reset form
+      setFormData({
+        title: "",
+        amount: "",
+        type: "expense",
+        category: "",
+        date: new Date().toISOString().split('T')[0],
+        description: "",
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      onClose ? onClose() : onOpenChange(false);
+    } catch (error: any) {
+      console.error('Error saving transaction:', error);
+      toast.error(error.message || 'Failed to save transaction');
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    form.setValue("type", value as "income" | "expense");
+  const getCurrentCategories = () => {
+    return formData.type === 'income' ? incomeCategories : expenseCategories;
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={onClose || onOpenChange}>
       <SheetContent className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
-          <SheetTitle className="font-playfair text-collector-black">Add Transaction</SheetTitle>
+          <SheetTitle className="font-playfair text-collector-black">
+            {editingTransaction ? 'Edit Transaction' : 'Add Transaction'}
+          </SheetTitle>
           <SheetDescription>
-            Record your income or expenses with detailed information.
+            {editingTransaction ? 'Update your transaction details' : 'Record a new income or expense transaction.'}
           </SheetDescription>
         </SheetHeader>
 
-        <div className="mt-6">
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="income" className="text-green-600">Income</TabsTrigger>
-              <TabsTrigger value="expense" className="text-red-600">Expense</TabsTrigger>
-            </TabsList>
+        <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+          {/* Transaction Type */}
+          <div className="space-y-2">
+            <Label htmlFor="type">Transaction Type</Label>
+            <Select value={formData.type} onValueChange={(value: "income" | "expense") => {
+              setFormData(prev => ({ ...prev, type: value, category: "" }));
+            }}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="income">Income</SelectItem>
+                <SelectItem value="expense">Expense</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <TabsContent value="income" className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="amount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Amount ($)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="0.00"
-                            {...field}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+          {/* Title */}
+          <div className="space-y-2">
+            <Label htmlFor="title">Title</Label>
+            <Input
+              id="title"
+              placeholder="e.g., Grocery shopping, Salary payment..."
+              value={formData.title}
+              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              required
+            />
+          </div>
 
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Salary, freelance work, etc." {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+          {/* Amount */}
+          <div className="space-y-2">
+            <Label htmlFor="amount">Amount ($)</Label>
+            <Input
+              id="amount"
+              type="number"
+              step="0.01"
+              placeholder="0.00"
+              value={formData.amount}
+              onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+              required
+            />
+          </div>
 
-                  <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Category</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a category" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="salary">Salary</SelectItem>
-                            <SelectItem value="freelance">Freelance</SelectItem>
-                            <SelectItem value="business">Business</SelectItem>
-                            <SelectItem value="investment">Investment</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </TabsContent>
+          {/* Category */}
+          <div className="space-y-2">
+            <Label htmlFor="category">Category</Label>
+            <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {getCurrentCategories().map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category.charAt(0).toUpperCase() + category.slice(1)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-                <TabsContent value="expense" className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="amount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Amount ($)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="0.00"
-                            {...field}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+          {/* Date */}
+          <div className="space-y-2">
+            <Label htmlFor="date">Date</Label>
+            <Input
+              id="date"
+              type="date"
+              value={formData.date}
+              onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+              required
+            />
+          </div>
 
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Groceries, rent, utilities, etc." {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+          {/* Description */}
+          <div className="space-y-2">
+            <Label htmlFor="description">Description (Optional)</Label>
+            <Textarea
+              id="description"
+              placeholder="Add any additional notes..."
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              rows={3}
+            />
+          </div>
 
-                  <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Category</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a category" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="food">Food</SelectItem>
-                            <SelectItem value="transport">Transport</SelectItem>
-                            <SelectItem value="entertainment">Entertainment</SelectItem>
-                            <SelectItem value="utilities">Utilities</SelectItem>
-                            <SelectItem value="healthcare">Healthcare</SelectItem>
-                            <SelectItem value="shopping">Shopping</SelectItem>
-                            <SelectItem value="education">Education</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </TabsContent>
-
-                <FormField
-                  control={form.control}
-                  name="date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Notes (Optional)</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Additional details..." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="flex gap-3 pt-4">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => onOpenChange(false)} 
-                    className="flex-1"
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    className="flex-1 bg-orange-gradient hover:bg-orange-600 text-white"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Adding..." : `Add ${activeTab === "income" ? "Income" : "Expense"}`}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </Tabs>
-        </div>
+          <div className="flex gap-3 pt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => onClose ? onClose() : onOpenChange(false)} 
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={loading} 
+              className="flex-1 bg-blue-gradient hover:bg-blue-600 text-white"
+            >
+              {loading ? 'Saving...' : editingTransaction ? 'Update Transaction' : 'Add Transaction'}
+            </Button>
+          </div>
+        </form>
       </SheetContent>
     </Sheet>
   );

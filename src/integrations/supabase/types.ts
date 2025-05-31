@@ -105,6 +105,106 @@ export type Database = {
           },
         ]
       }
+      group_invitations: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          group_id: string
+          id: string
+          invited_by: string
+          invited_email: string | null
+          invited_user_id: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          group_id: string
+          id?: string
+          invited_by: string
+          invited_email?: string | null
+          invited_user_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          group_id?: string
+          id?: string
+          invited_by?: string
+          invited_email?: string | null
+          invited_user_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_invitations_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_members: {
+        Row: {
+          group_id: string
+          id: string
+          joined_at: string
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          joined_at?: string
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          joined_at?: string
+          role?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      groups: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount: number
@@ -328,6 +428,7 @@ export type Database = {
           created_at: string | null
           created_by: string
           description: string | null
+          group_id: string | null
           id: string
           title: string
           total_amount: number
@@ -336,6 +437,7 @@ export type Database = {
           created_at?: string | null
           created_by: string
           description?: string | null
+          group_id?: string | null
           id?: string
           title: string
           total_amount: number
@@ -344,6 +446,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string
           description?: string | null
+          group_id?: string | null
           id?: string
           title?: string
           total_amount?: number
@@ -354,6 +457,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shared_expenses_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
             referencedColumns: ["id"]
           },
         ]

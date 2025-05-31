@@ -1,246 +1,247 @@
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useState, useEffect } from "react";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { Database } from "@/integrations/supabase/types";
-
-type TransactionCategory = Database["public"]["Enums"]["transaction_category"];
-
-const budgetSchema = z.object({
-  name: z.string().min(1, "Budget name is required"),
-  amount: z.number().min(0.01, "Amount must be greater than 0"),
-  category: z.enum(["food", "transport", "entertainment", "utilities", "healthcare", "shopping", "education", "investment", "salary", "freelance", "business", "other"]),
-  period: z.enum(["weekly", "monthly", "yearly"]),
-  start_date: z.string(),
-  end_date: z.string(),
-});
-
-type BudgetFormData = z.infer<typeof budgetSchema>;
+import { useQueryClient } from "@tanstack/react-query";
 
 interface CreateBudgetFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  userType: 'individual' | 'organization';
+  editingBudget?: any;
+  onClose?: () => void;
 }
 
-const CreateBudgetForm = ({ open, onOpenChange }: CreateBudgetFormProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose }: CreateBudgetFormProps) => {
   const { user } = useAuth();
-
-  const form = useForm<BudgetFormData>({
-    resolver: zodResolver(budgetSchema),
-    defaultValues: {
-      name: "",
-      amount: 0,
-      category: "other",
-      period: "monthly",
-      start_date: new Date().toISOString().split('T')[0],
-      end_date: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0],
-    },
+  const queryClient = useQueryClient();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    amount: "",
+    category: "",
+    period: "monthly",
+    start_date: new Date().toISOString().split('T')[0],
+    end_date: "",
   });
 
-  const onSubmit = async (data: BudgetFormData) => {
-    if (!user) {
-      toast.error("You must be logged in to create budgets");
-      return;
-    }
+  const categories = ["food", "transport", "entertainment", "utilities", "healthcare", "shopping", "education", "other"];
 
-    setIsSubmitting(true);
-    
-    try {
-      console.log("Submitting budget:", data);
+  // Reset form when modal opens/closes or editing budget changes
+  useEffect(() => {
+    if (editingBudget) {
+      setFormData({
+        name: editingBudget.name || "",
+        amount: editingBudget.amount?.toString() || "",
+        category: editingBudget.category || "",
+        period: editingBudget.period || "monthly",
+        start_date: editingBudget.start_date || new Date().toISOString().split('T')[0],
+        end_date: editingBudget.end_date || "",
+      });
+    } else {
+      // Calculate default end date (1 month from start date)
+      const startDate = new Date();
+      const endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + 1);
       
-      const { error } = await supabase
-        .from('budgets')
-        .insert({
-          user_id: user.id,
-          name: data.name,
-          amount: data.amount,
-          category: data.category as TransactionCategory,
-          period: data.period,
-          start_date: data.start_date,
-          end_date: data.end_date,
-        });
+      setFormData({
+        name: "",
+        amount: "",
+        category: "",
+        period: "monthly",
+        start_date: startDate.toISOString().split('T')[0],
+        end_date: endDate.toISOString().split('T')[0],
+      });
+    }
+  }, [editingBudget, open]);
 
-      if (error) {
-        console.error("Error creating budget:", error);
-        toast.error("Failed to create budget: " + error.message);
-        return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    setLoading(true);
+    try {
+      const budgetData = {
+        name: formData.name,
+        amount: parseFloat(formData.amount),
+        category: formData.category,
+        period: formData.period,
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+        user_id: user.id,
+        organization_id: userType === 'organization' ? null : null, // Will be set when organization features are implemented
+      };
+
+      let error;
+      if (editingBudget) {
+        // Update existing budget
+        const result = await supabase
+          .from('budgets')
+          .update(budgetData)
+          .eq('id', editingBudget.id);
+        error = result.error;
+        
+        if (!error) {
+          toast.success('Budget updated successfully!');
+        }
+      } else {
+        // Create new budget
+        const result = await supabase
+          .from('budgets')
+          .insert([budgetData]);
+        error = result.error;
+        
+        if (!error) {
+          toast.success('Budget created successfully!');
+        }
       }
 
-      toast.success("Budget created successfully!");
-      onOpenChange(false);
-      form.reset();
+      if (error) throw error;
+
+      // Reset form
+      const startDate = new Date();
+      const endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + 1);
       
-      // Refresh the page to show updated data
-      window.location.reload();
-    } catch (error) {
-      console.error("Unexpected error:", error);
-      toast.error("An unexpected error occurred");
+      setFormData({
+        name: "",
+        amount: "",
+        category: "",
+        period: "monthly",
+        start_date: startDate.toISOString().split('T')[0],
+        end_date: endDate.toISOString().split('T')[0],
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
+      onClose ? onClose() : onOpenChange(false);
+    } catch (error: any) {
+      console.error('Error saving budget:', error);
+      toast.error(error.message || 'Failed to save budget');
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={onClose || onOpenChange}>
       <SheetContent className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
-          <SheetTitle className="font-playfair text-collector-black">Create Budget</SheetTitle>
+          <SheetTitle className="font-playfair text-collector-black">
+            {editingBudget ? 'Edit Budget' : 'Create Budget'}
+          </SheetTitle>
           <SheetDescription>
-            Set up a budget to track your spending in specific categories.
+            {editingBudget ? 'Update your budget details' : 'Set up a new budget to track your spending.'}
           </SheetDescription>
         </SheetHeader>
 
-        <div className="mt-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Budget Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Monthly Food Budget" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+        <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+          {/* Budget Name */}
+          <div className="space-y-2">
+            <Label htmlFor="name">Budget Name</Label>
+            <Input
+              id="name"
+              placeholder="e.g., Monthly Groceries, Entertainment..."
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              required
+            />
+          </div>
 
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Budget Amount ($)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        placeholder="0.00"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          {/* Amount */}
+          <div className="space-y-2">
+            <Label htmlFor="amount">Budget Amount ($)</Label>
+            <Input
+              id="amount"
+              type="number"
+              step="0.01"
+              placeholder="0.00"
+              value={formData.amount}
+              onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+              required
+            />
+          </div>
 
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="food">Food</SelectItem>
-                        <SelectItem value="transport">Transport</SelectItem>
-                        <SelectItem value="entertainment">Entertainment</SelectItem>
-                        <SelectItem value="utilities">Utilities</SelectItem>
-                        <SelectItem value="healthcare">Healthcare</SelectItem>
-                        <SelectItem value="shopping">Shopping</SelectItem>
-                        <SelectItem value="education">Education</SelectItem>
-                        <SelectItem value="investment">Investment</SelectItem>
-                        <SelectItem value="salary">Salary</SelectItem>
-                        <SelectItem value="freelance">Freelance</SelectItem>
-                        <SelectItem value="business">Business</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          {/* Category */}
+          <div className="space-y-2">
+            <Label htmlFor="category">Category</Label>
+            <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category.charAt(0).toUpperCase() + category.slice(1)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-              <FormField
-                control={form.control}
-                name="period"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Budget Period</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a period" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="weekly">Weekly</SelectItem>
-                        <SelectItem value="monthly">Monthly</SelectItem>
-                        <SelectItem value="yearly">Yearly</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          {/* Period */}
+          <div className="space-y-2">
+            <Label htmlFor="period">Budget Period</Label>
+            <Select value={formData.period} onValueChange={(value) => setFormData(prev => ({ ...prev, period: value }))}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="weekly">Weekly</SelectItem>
+                <SelectItem value="monthly">Monthly</SelectItem>
+                <SelectItem value="quarterly">Quarterly</SelectItem>
+                <SelectItem value="yearly">Yearly</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-              <FormField
-                control={form.control}
-                name="start_date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Start Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          {/* Start Date */}
+          <div className="space-y-2">
+            <Label htmlFor="start_date">Start Date</Label>
+            <Input
+              id="start_date"
+              type="date"
+              value={formData.start_date}
+              onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
+              required
+            />
+          </div>
 
-              <FormField
-                control={form.control}
-                name="end_date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>End Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          {/* End Date */}
+          <div className="space-y-2">
+            <Label htmlFor="end_date">End Date</Label>
+            <Input
+              id="end_date"
+              type="date"
+              value={formData.end_date}
+              onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
+              required
+            />
+          </div>
 
-              <div className="flex gap-3 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => onOpenChange(false)} 
-                  className="flex-1"
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  className="flex-1 bg-orange-gradient hover:bg-orange-600 text-white"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Creating..." : "Create Budget"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </div>
+          <div className="flex gap-3 pt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => onClose ? onClose() : onOpenChange(false)} 
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={loading} 
+              className="flex-1 bg-blue-gradient hover:bg-blue-600 text-white"
+            >
+              {loading ? 'Saving...' : editingBudget ? 'Update Budget' : 'Create Budget'}
+            </Button>
+          </div>
+        </form>
       </SheetContent>
     </Sheet>
   );
