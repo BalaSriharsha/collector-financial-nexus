@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -282,37 +283,39 @@ const Dashboard = ({ userType }: DashboardProps) => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {transactionsData?.slice(0, 5).map((transaction) => (
-                  <div key={transaction.id} className="flex items-center justify-between p-3 bg-white/60 rounded-lg">
-                    <div className="flex-1">
-                      <p className="font-medium text-collector-black">{transaction.title}</p>
-                      <p className="text-sm text-collector-black/60">{transaction.category}</p>
+                {transactionsData && transactionsData.length > 0 ? (
+                  transactionsData.slice(0, 5).map((transaction) => (
+                    <div key={transaction.id} className="flex items-center justify-between p-3 bg-white/60 rounded-lg">
+                      <div className="flex-1">
+                        <p className="font-medium text-collector-black">{transaction.title}</p>
+                        <p className="text-sm text-collector-black/60">{transaction.category}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`font-medium ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                          {transaction.type === 'income' ? '+' : '-'}${Number(transaction.amount).toFixed(2)}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditingTransaction(transaction);
+                            setAddTransactionOpen(true);
+                          }}
+                        >
+                          <Edit className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeleteTransaction(transaction.id)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`font-medium ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                        {transaction.type === 'income' ? '+' : '-'}${Number(transaction.amount).toFixed(2)}
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setEditingTransaction(transaction);
-                          setAddTransactionOpen(true);
-                        }}
-                      >
-                        <Edit className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDeleteTransaction(transaction.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                )) || (
+                  ))
+                ) : (
                   <p className="text-collector-black/60 text-center py-4">No transactions yet</p>
                 )}
               </div>
@@ -326,37 +329,39 @@ const Dashboard = ({ userType }: DashboardProps) => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {budgetsData?.slice(0, 5).map((budget) => (
-                  <div key={budget.id} className="flex items-center justify-between p-3 bg-white/60 rounded-lg">
-                    <div className="flex-1">
-                      <p className="font-medium text-collector-black">{budget.name}</p>
-                      <p className="text-sm text-collector-black/60">{budget.category}</p>
+                {budgetsData && budgetsData.length > 0 ? (
+                  budgetsData.slice(0, 5).map((budget) => (
+                    <div key={budget.id} className="flex items-center justify-between p-3 bg-white/60 rounded-lg">
+                      <div className="flex-1">
+                        <p className="font-medium text-collector-black">{budget.name}</p>
+                        <p className="text-sm text-collector-black/60">{budget.category}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-collector-orange">
+                          ${Number(budget.amount).toFixed(2)}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditingBudget(budget);
+                            setCreateBudgetOpen(true);
+                          }}
+                        >
+                          <Edit className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeleteBudget(budget.id)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-collector-orange">
-                        ${Number(budget.amount).toFixed(2)}
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setEditingBudget(budget);
-                          setCreateBudgetOpen(true);
-                        }}
-                      >
-                        <Edit className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDeleteBudget(budget.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                )) || (
+                  ))
+                ) : (
                   <p className="text-collector-black/60 text-center py-4">No budgets yet</p>
                 )}
               </div>
@@ -388,7 +393,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
       />
       <UploadInvoiceForm open={uploadInvoiceOpen} onOpenChange={setUploadInvoiceOpen} />
       <ExpenseSharingForm open={expenseSharingOpen} onOpenChange={setExpenseSharingOpen} userType={userType} />
-      <ViewReportsForm open={viewReportsOpen} onOpenChange={setViewReportsOpen} />
+      <ViewReportsForm open={viewReportsOpen} onOpenChange={setViewReportsForm} />
       <ViewArchiveForm open={viewArchiveOpen} onOpenChange={setViewArchiveOpen} />
       <AllTransactionsModal 
         open={allTransactionsOpen} 
@@ -400,14 +405,16 @@ const Dashboard = ({ userType }: DashboardProps) => {
         onOpenChange={setTransactionDetailsOpen}
         transaction={selectedTransaction}
       />
-      <MetricDetailsModal 
-        open={metricDetailsOpen} 
-        onOpenChange={setMetricDetailsOpen}
-        metrics={selectedMetrics}
-        metricType="income"
-        userType={userType}
-        period="month"
-      />
+      {selectedMetrics && (
+        <MetricDetailsModal 
+          open={metricDetailsOpen} 
+          onOpenChange={setMetricDetailsOpen}
+          metrics={selectedMetrics}
+          metricType="income"
+          userType={userType}
+          period="month"
+        />
+      )}
     </div>
   );
 };
