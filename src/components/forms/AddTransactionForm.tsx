@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,12 +11,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import type { Database } from "@/integrations/supabase/types";
+
+type TransactionCategory = Database["public"]["Enums"]["transaction_category"];
+type TransactionType = Database["public"]["Enums"]["transaction_type"];
 
 const transactionSchema = z.object({
   type: z.enum(["income", "expense"]),
   amount: z.number().min(0.01, "Amount must be greater than 0"),
   description: z.string().min(1, "Description is required"),
-  category: z.string().min(1, "Category is required"),
+  category: z.enum(["food", "transport", "entertainment", "utilities", "healthcare", "shopping", "education", "investment", "salary", "freelance", "business", "other"]),
   date: z.string(),
   notes: z.string().optional(),
 });
@@ -40,7 +43,7 @@ const AddTransactionForm = ({ open, onOpenChange }: AddTransactionFormProps) => 
       type: "income",
       amount: 0,
       description: "",
-      category: "",
+      category: "other",
       date: new Date().toISOString().split('T')[0],
       notes: "",
     },
@@ -61,11 +64,11 @@ const AddTransactionForm = ({ open, onOpenChange }: AddTransactionFormProps) => 
         .from('transactions')
         .insert({
           user_id: user.id,
-          title: data.description, // Using description as title since that's what the schema expects
+          title: data.description,
           description: data.notes || null,
           amount: data.amount,
-          type: data.type,
-          category: data.category,
+          type: data.type as TransactionType,
+          category: data.category as TransactionCategory,
           date: data.date,
         });
 

@@ -12,11 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import type { Database } from "@/integrations/supabase/types";
+
+type TransactionCategory = Database["public"]["Enums"]["transaction_category"];
 
 const budgetSchema = z.object({
   name: z.string().min(1, "Budget name is required"),
   amount: z.number().min(0.01, "Amount must be greater than 0"),
-  category: z.string().min(1, "Category is required"),
+  category: z.enum(["food", "transport", "entertainment", "utilities", "healthcare", "shopping", "education", "investment", "salary", "freelance", "business", "other"]),
   period: z.enum(["weekly", "monthly", "yearly"]),
   start_date: z.string(),
   end_date: z.string(),
@@ -38,7 +41,7 @@ const CreateBudgetForm = ({ open, onOpenChange }: CreateBudgetFormProps) => {
     defaultValues: {
       name: "",
       amount: 0,
-      category: "",
+      category: "other",
       period: "monthly",
       start_date: new Date().toISOString().split('T')[0],
       end_date: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0],
@@ -62,7 +65,7 @@ const CreateBudgetForm = ({ open, onOpenChange }: CreateBudgetFormProps) => {
           user_id: user.id,
           name: data.name,
           amount: data.amount,
-          category: data.category,
+          category: data.category as TransactionCategory,
           period: data.period,
           start_date: data.start_date,
           end_date: data.end_date,
