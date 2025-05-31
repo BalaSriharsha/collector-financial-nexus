@@ -227,7 +227,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
           <Button
             onClick={() => setAddTransactionOpen(true)}
-            className="bg-blue-gradient hover:bg-blue-200 text-white hover:text-collector-black flex flex-col items-center p-6 h-auto transition-all duration-200"
+            className="bg-blue-500 hover:bg-blue-200 text-white hover:text-collector-black flex flex-col items-center p-6 h-auto transition-all duration-200"
           >
             <Plus className="w-8 h-8 mb-2" />
             <span className="text-sm">Add Transaction</span>
@@ -243,7 +243,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
           <Button
             onClick={() => setUploadInvoiceOpen(true)}
-            className="bg-green-600 hover:bg-green-200 text-white hover:text-collector-black flex flex-col items-center p-6 h-auto transition-all duration-200"
+            className="bg-green-500 hover:bg-green-200 text-white hover:text-collector-black flex flex-col items-center p-6 h-auto transition-all duration-200"
           >
             <Receipt className="w-8 h-8 mb-2" />
             <span className="text-sm">Upload Invoice</span>
@@ -251,7 +251,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
           <Button
             onClick={() => setExpenseSharingOpen(true)}
-            className="bg-purple-600 hover:bg-purple-200 text-white hover:text-collector-black flex flex-col items-center p-6 h-auto transition-all duration-200"
+            className="bg-purple-500 hover:bg-purple-200 text-white hover:text-collector-black flex flex-col items-center p-6 h-auto transition-all duration-200"
           >
             <Users className="w-8 h-8 mb-2" />
             <span className="text-sm">Share Expense</span>
@@ -259,7 +259,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
           <Button
             onClick={() => setViewReportsOpen(true)}
-            className="bg-indigo-600 hover:bg-indigo-200 text-white hover:text-collector-black flex flex-col items-center p-6 h-auto transition-all duration-200"
+            className="bg-indigo-500 hover:bg-indigo-200 text-white hover:text-collector-black flex flex-col items-center p-6 h-auto transition-all duration-200"
           >
             <TrendingUp className="w-8 h-8 mb-2" />
             <span className="text-sm">View Reports</span>
@@ -267,7 +267,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
           <Button
             onClick={() => setViewArchiveOpen(true)}
-            className="bg-gray-600 hover:bg-gray-200 text-white hover:text-collector-black flex flex-col items-center p-6 h-auto transition-all duration-200"
+            className="bg-gray-500 hover:bg-gray-200 text-white hover:text-collector-black flex flex-col items-center p-6 h-auto transition-all duration-200"
           >
             <TrendingDown className="w-8 h-8 mb-2" />
             <span className="text-sm">View Archive</span>
@@ -336,7 +336,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                   variant="outline" 
                   size="sm"
                   onClick={() => setAllTransactionsOpen(true)}
-                  className="hover:bg-gray-100"
+                  className="hover:bg-gray-200 transition-all duration-200"
                 >
                   View All
                 </Button>
@@ -362,7 +362,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                             setEditingTransaction(transaction);
                             setAddTransactionOpen(true);
                           }}
-                          className="hover:bg-blue-50"
+                          className="hover:bg-blue-200 transition-all duration-200"
                         >
                           <Edit className="w-3 h-3" />
                         </Button>
@@ -370,7 +370,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                           size="sm"
                           variant="outline"
                           onClick={() => handleDeleteTransaction(transaction.id)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-200 transition-all duration-200"
                         >
                           <Trash2 className="w-3 h-3" />
                         </Button>
@@ -409,7 +409,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                             setEditingBudget(budget);
                             setCreateBudgetOpen(true);
                           }}
-                          className="hover:bg-blue-50"
+                          className="hover:bg-blue-200 transition-all duration-200"
                         >
                           <Edit className="w-3 h-3" />
                         </Button>
@@ -417,7 +417,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                           size="sm"
                           variant="outline"
                           onClick={() => handleDeleteBudget(budget.id)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-200 transition-all duration-200"
                         >
                           <Trash2 className="w-3 h-3" />
                         </Button>

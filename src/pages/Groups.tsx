@@ -47,13 +47,14 @@ const Groups = () => {
         .from('groups')
         .select(`
           *,
-          group_members(
+          group_members!inner(
             id,
             role,
             user_id,
             profiles(full_name, email)
           )
         `)
+        .eq('group_members.user_id', user.id)
         .order('created_at', { ascending: false });
       
       if (error) {
@@ -322,7 +323,7 @@ const Groups = () => {
           </div>
           <Button
             onClick={() => setShowCreateGroup(true)}
-            className="bg-blue-gradient hover:bg-blue-200 text-white hover:text-collector-black"
+            className="bg-blue-500 hover:bg-blue-200 text-white hover:text-collector-black transition-all duration-200"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Group
@@ -347,11 +348,11 @@ const Groups = () => {
                       <Button
                         size="sm"
                         onClick={() => handleAcceptInvitation(invitation.id, invitation.group_id)}
-                        className="bg-green-600 hover:bg-green-200 text-white hover:text-collector-black"
+                        className="bg-green-500 hover:bg-green-200 text-white hover:text-collector-black transition-all duration-200"
                       >
                         Accept
                       </Button>
-                      <Button size="sm" variant="outline" className="hover:bg-gray-100">
+                      <Button size="sm" variant="outline" className="hover:bg-gray-200 transition-all duration-200">
                         Decline
                       </Button>
                     </div>
@@ -382,7 +383,7 @@ const Groups = () => {
                             size="sm"
                             variant="outline"
                             onClick={() => setSelectedGroupId(group.id)}
-                            className="hover:bg-blue-50"
+                            className="hover:bg-blue-200 transition-all duration-200"
                           >
                             <UserPlus className="w-3 h-3" />
                           </Button>
@@ -407,7 +408,7 @@ const Groups = () => {
                                 className="border-2 border-collector-gold/30 focus:border-collector-orange"
                               />
                             </div>
-                            <Button type="submit" disabled={loading} className="w-full bg-blue-gradient hover:bg-blue-200 text-white hover:text-collector-black">
+                            <Button type="submit" disabled={loading} className="w-full bg-blue-500 hover:bg-blue-200 text-white hover:text-collector-black transition-all duration-200">
                               {loading ? 'Sending...' : 'Send Invitation'}
                             </Button>
                           </form>
@@ -418,7 +419,7 @@ const Groups = () => {
                           size="sm"
                           variant="outline"
                           onClick={() => handleExitGroup(group.id)}
-                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-200 transition-all duration-200"
                         >
                           <LogOut className="w-3 h-3" />
                         </Button>
@@ -428,7 +429,7 @@ const Groups = () => {
                           size="sm"
                           variant="outline"
                           onClick={() => handleDeleteGroup(group.id)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-200 transition-all duration-200"
                         >
                           <Trash2 className="w-3 h-3" />
                         </Button>
@@ -474,7 +475,7 @@ const Groups = () => {
               <p className="text-collector-black/50 mb-4">Create your first group to start sharing expenses</p>
               <Button
                 onClick={() => setShowCreateGroup(true)}
-                className="bg-blue-gradient hover:bg-blue-200 text-white hover:text-collector-black"
+                className="bg-blue-500 hover:bg-blue-200 text-white hover:text-collector-black transition-all duration-200"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Create Group
@@ -519,11 +520,11 @@ const Groups = () => {
                   type="button"
                   variant="outline"
                   onClick={() => setShowCreateGroup(false)}
-                  className="flex-1 hover:bg-gray-100"
+                  className="flex-1 hover:bg-gray-200 transition-all duration-200"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={loading} className="flex-1 bg-blue-gradient hover:bg-blue-200 text-white hover:text-collector-black">
+                <Button type="submit" disabled={loading} className="flex-1 bg-blue-500 hover:bg-blue-200 text-white hover:text-collector-black transition-all duration-200">
                   {loading ? 'Creating...' : 'Create Group'}
                 </Button>
               </div>

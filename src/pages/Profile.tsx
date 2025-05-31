@@ -287,7 +287,7 @@ const Profile = () => {
                 <Button 
                   type="submit" 
                   disabled={loading} 
-                  className="w-full bg-blue-gradient hover:bg-blue-200 text-white hover:text-collector-black transition-all duration-200"
+                  className="w-full bg-blue-500 hover:bg-blue-200 text-white hover:text-collector-black transition-all duration-200"
                 >
                   {loading ? 'Updating...' : 'Update Profile'}
                 </Button>
