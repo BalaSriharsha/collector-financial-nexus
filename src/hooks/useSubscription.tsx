@@ -114,10 +114,14 @@ export const useSubscription = () => {
     fetchSubscription();
   }, [user]);
 
-  // Refresh subscription status (useful after checkout)
+  // Refresh subscription status (useful after checkout) with debouncing
   const refreshSubscription = async () => {
     console.log('Refreshing subscription status...');
     setLoading(true);
+    
+    // Add a small delay to allow webhook processing
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     await fetchSubscription();
   };
 

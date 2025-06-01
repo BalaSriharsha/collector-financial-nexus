@@ -90,30 +90,40 @@ const Dashboard = ({ userType }: DashboardProps) => {
   // Get currency symbol based on user profile
   const currencySymbol = getCurrencySymbol(profile?.currency || 'USD');
 
-  // Check subscription status periodically and after potential payments
+  // Enhanced subscription status checking with more frequent updates after potential payments
   useEffect(() => {
     const checkSubscriptionStatus = () => {
+      console.log('Checking subscription status...');
       refreshSubscription();
     };
 
     // Check immediately
     checkSubscriptionStatus();
 
-    // Check every 30 seconds for subscription updates
-    const interval = setInterval(checkSubscriptionStatus, 30000);
+    // Check every 10 seconds for subscription updates (more frequent for better UX)
+    const interval = setInterval(checkSubscriptionStatus, 10000);
 
     // Check when user returns to the page (useful after payment)
     const handleVisibilityChange = () => {
       if (!document.hidden) {
+        console.log('Page became visible, checking subscription status...');
         checkSubscriptionStatus();
       }
     };
 
+    // Check when window regains focus (useful after payment in new tab)
+    const handleFocus = () => {
+      console.log('Window focused, checking subscription status...');
+      checkSubscriptionStatus();
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
 
     return () => {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
     };
   }, [refreshSubscription]);
 
@@ -275,7 +285,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen bg-gray-50">
         <Navigation />
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="text-center py-8">
@@ -288,7 +298,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50">
       <Navigation />
       
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
@@ -420,7 +430,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                             onClick={() => handleEditTransaction(transaction.id)}
                             className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-gray-400 text-gray-800 hover:bg-gray-100"
                           >
-                            <Edit className="w-3 h-3" />
+                            <Edit className="w-3 h-3 text-gray-700" />
                           </Button>
                           <Button
                             size="sm"
@@ -441,8 +451,8 @@ const Dashboard = ({ userType }: DashboardProps) => {
                       onClick={() => setShowAddTransaction(true)}
                       className="flex-1 border-gray-400 text-gray-800 hover:bg-gray-100 text-xs sm:text-sm"
                     >
-                      <PlusCircle className="w-4 h-4 mr-2" />
-                      Add Transaction
+                      <PlusCircle className="w-4 h-4 mr-2 text-gray-700" />
+                      <span className="text-gray-700">Add Transaction</span>
                     </Button>
                     <Button 
                       variant="outline" 
@@ -450,8 +460,8 @@ const Dashboard = ({ userType }: DashboardProps) => {
                       onClick={() => setShowViewArchive(true)}
                       className="flex-1 border-gray-400 text-gray-800 hover:bg-gray-100 text-xs sm:text-sm"
                     >
-                      <Archive className="w-4 h-4 mr-2" />
-                      View Archive
+                      <Archive className="w-4 h-4 mr-2 text-gray-700" />
+                      <span className="text-gray-700">View Archive</span>
                     </Button>
                   </div>
                 </div>
@@ -510,9 +520,9 @@ const Dashboard = ({ userType }: DashboardProps) => {
                     variant="outline" 
                     size="sm" 
                     onClick={() => setShowCreateBudget(true)}
-                    className="border-gray-400 text-gray-800 hover:bg-gray-100"
+                    className="border-gray-400 hover:bg-gray-100"
                   >
-                    Create Budget
+                    <span className="text-gray-700">Create Budget</span>
                   </Button>
                 </div>
               )}

@@ -85,11 +85,12 @@ serve(async (req) => {
         logStep("Subscriber updated successfully", { data: subscriberData });
       }
 
-      // Update profiles table
+      // Update profiles table to ensure consistency
       const { data: profileData, error: profileError } = await supabaseClient
         .from("profiles")
         .update({
-          subscription_tier: planType
+          subscription_tier: planType,
+          updated_at: new Date().toISOString()
         })
         .eq("id", userId)
         .select();
