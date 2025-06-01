@@ -19,16 +19,13 @@ import UploadInvoiceForm from "./forms/UploadInvoiceForm";
 import ViewArchiveForm from "./forms/ViewArchiveForm";
 import ViewReportsForm from "./forms/ViewReportsForm";
 import OrganizationTeams from "./OrganizationTeams";
-import TransactionDetailsModal from "./TransactionDetailsModal";
-import MetricDetailsModal from "./MetricDetailsModal";
-import AllTransactionsModal from "./AllTransactionsModal";
 import { getCurrencySymbol } from "@/utils/currency";
 
 interface DashboardProps {
   userType: 'individual' | 'organization';
 }
 
-interface DashboardTransaction {
+interface Transaction {
   id: string;
   title: string;
   amount: number;
@@ -56,11 +53,6 @@ interface Budget {
   end_date: string;
 }
 
-interface DashboardMetrics {
-  value: number;
-  label: string;
-}
-
 const Dashboard = ({ userType }: DashboardProps) => {
   const { user } = useAuth();
   const { profile } = useProfile();
@@ -72,12 +64,9 @@ const Dashboard = ({ userType }: DashboardProps) => {
     balance: 0,
     transactionCount: 0
   });
-  const [recentTransactions, setRecentTransactions] = useState<DashboardTransaction[]>([]);
+  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTransaction, setSelectedTransaction] = useState<DashboardTransaction | null>(null);
-  const [selectedMetrics, setSelectedMetrics] = useState<DashboardMetrics | null>(null);
-  const [showAllTransactions, setShowAllTransactions] = useState(false);
   const [showAddTransaction, setShowAddTransaction] = useState(false);
   const [showCreateBudget, setShowCreateBudget] = useState(false);
   const [showGenerateInvoice, setShowGenerateInvoice] = useState(false);
@@ -114,7 +103,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
         transactionCount: transactions?.length || 0
       });
 
-      // Map transactions to DashboardTransaction type
+      // Map transactions to the interface
       const mappedTransactions = transactions?.slice(0, 5).map(t => ({
         id: t.id,
         title: t.title,
@@ -153,10 +142,6 @@ const Dashboard = ({ userType }: DashboardProps) => {
   const handleRefresh = () => {
     setLoading(true);
     fetchDashboardData();
-  };
-
-  const handleMetricClick = (value: number, label: string) => {
-    setSelectedMetrics({ value, label });
   };
 
   const handleTransactionSuccess = () => {
@@ -211,7 +196,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
           </div>
         </div>
 
-        {/* Quick Actions - Moved to top */}
+        {/* Quick Actions */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="text-xl text-collector-black">Quick Actions</CardTitle>
@@ -277,10 +262,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card 
-            className="cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => handleMetricClick(stats.totalIncome, 'Total Income')}
-          >
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-collector-black">Total Income</CardTitle>
               <TrendingUp className="h-5 w-5 text-green-600" />
@@ -292,10 +274,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
             </CardContent>
           </Card>
 
-          <Card 
-            className="cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => handleMetricClick(stats.totalExpense, 'Total Expenses')}
-          >
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-collector-black">Total Expenses</CardTitle>
               <TrendingDown className="h-5 w-5 text-red-600" />
@@ -307,10 +286,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
             </CardContent>
           </Card>
 
-          <Card 
-            className="cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => handleMetricClick(stats.balance, 'Net Balance')}
-          >
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-collector-black">Balance</CardTitle>
               <DollarSign className="h-5 w-5 text-blue-600" />
@@ -322,10 +298,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
             </CardContent>
           </Card>
 
-          <Card 
-            className="cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => setShowAllTransactions(true)}
-          >
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-collector-black">Transactions</CardTitle>
               <FileText className="h-5 w-5 text-collector-orange" />
@@ -358,16 +331,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
               {/* Recent Transactions */}
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-xl text-collector-black">Recent Transactions</CardTitle>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setShowAllTransactions(true)}
-                    >
-                      View All
-                    </Button>
-                  </div>
+                  <CardTitle className="text-xl text-collector-black">Recent Transactions</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {recentTransactions.length > 0 ? (
@@ -375,8 +339,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                       {recentTransactions.map((transaction) => (
                         <div 
                           key={transaction.id}
-                          className="flex items-center justify-between p-4 rounded-lg border hover:bg-gray-50 cursor-pointer transition-colors"
-                          onClick={() => setSelectedTransaction(transaction)}
+                          className="flex items-center justify-between p-4 rounded-lg border hover:bg-gray-50 transition-colors"
                         >
                           <div className="flex-1">
                             <div className="font-semibold text-collector-black text-sm mb-1">{transaction.title}</div>
@@ -458,19 +421,33 @@ const Dashboard = ({ userType }: DashboardProps) => {
           </TabsContent>
 
           <TabsContent value="transactions">
-            <AddTransactionForm 
-              open={showAddTransaction} 
-              onOpenChange={setShowAddTransaction} 
-              userType={userType}
-            />
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl text-collector-black">Add New Transaction</CardTitle>
+                <CardDescription>Record your income or expense transactions</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={() => setShowAddTransaction(true)}>
+                  <PlusCircle className="w-4 h-4 mr-2" />
+                  Add Transaction
+                </Button>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="budgets">
-            <CreateBudgetForm 
-              open={showCreateBudget} 
-              onOpenChange={setShowCreateBudget} 
-              userType={userType}
-            />
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl text-collector-black">Budget Management</CardTitle>
+                <CardDescription>Create and manage your budgets</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={() => setShowCreateBudget(true)}>
+                  <Target className="w-4 h-4 mr-2" />
+                  Create Budget
+                </Button>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="invoices">
@@ -526,63 +503,41 @@ const Dashboard = ({ userType }: DashboardProps) => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ExpenseSharingForm 
-                open={showExpenseSharing} 
-                onOpenChange={setShowExpenseSharing} 
-                userType={userType} 
-              />
+              <Button onClick={() => setShowExpenseSharing(true)}>
+                <Users className="w-4 h-4 mr-2" />
+                Share Expenses
+              </Button>
             </CardContent>
           </Card>
         )}
       </div>
 
-      {/* Modals */}
-      {selectedTransaction && (
-        <TransactionDetailsModal
-          transaction={{
-            id: selectedTransaction.id,
-            title: selectedTransaction.title,
-            amount: selectedTransaction.amount,
-            type: selectedTransaction.type,
-            category: selectedTransaction.category,
-            date: selectedTransaction.date,
-            description: selectedTransaction.description,
-            created_at: selectedTransaction.created_at
-          }}
-          open={!!selectedTransaction}
-          onOpenChange={(open) => !open && setSelectedTransaction(null)}
-          currencySymbol={currencySymbol}
-        />
-      )}
+      {/* Form Modals */}
+      <AddTransactionForm 
+        open={showAddTransaction} 
+        onOpenChange={setShowAddTransaction} 
+        userType={userType}
+        onClose={() => {
+          setShowAddTransaction(false);
+          fetchDashboardData();
+        }}
+      />
 
-      {selectedMetrics && (
-        <MetricDetailsModal
-          metrics={{
-            value: selectedMetrics.value,
-            label: selectedMetrics.label
-          }}
-          open={!!selectedMetrics}
-          onOpenChange={(open) => !open && setSelectedMetrics(null)}
-          currencySymbol={currencySymbol}
-        />
-      )}
+      <CreateBudgetForm 
+        open={showCreateBudget} 
+        onOpenChange={setShowCreateBudget} 
+        userType={userType}
+        onClose={() => {
+          setShowCreateBudget(false);
+          fetchDashboardData();
+        }}
+      />
 
-      {showAllTransactions && (
-        <AllTransactionsModal
-          open={showAllTransactions}
-          onOpenChange={setShowAllTransactions}
-          transactions={recentTransactions.map(t => ({
-            id: t.id,
-            title: t.title,
-            amount: t.amount,
-            type: t.type,
-            category: t.category,
-            date: t.date,
-            description: t.description,
-            created_at: t.created_at
-          }))}
-        />
-      )}
+      <ExpenseSharingForm 
+        open={showExpenseSharing} 
+        onOpenChange={setShowExpenseSharing} 
+        userType={userType} 
+      />
     </div>
   );
 };
