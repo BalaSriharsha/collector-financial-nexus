@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,8 @@ import ViewReportsForm from "./forms/ViewReportsForm";
 import ExpenseSharingForm from "./forms/ExpenseSharingForm";
 import TransactionDetailsModal from "./TransactionDetailsModal";
 import BudgetDetailsModal from "./BudgetDetailsModal";
+import StatsDetailsModal from "./StatsDetailsModal";
+import ViewAllModal from "./ViewAllModal";
 import { getCurrencySymbol } from "@/utils/currency";
 
 interface DashboardProps {
