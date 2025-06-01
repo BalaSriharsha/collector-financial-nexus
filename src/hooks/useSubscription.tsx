@@ -26,52 +26,8 @@ export const useSubscription = () => {
     try {
       console.log('Fetching subscription status for user:', user.id);
       
-      // Call the manage-subscription function to get the latest status
-      const { data, error } = await supabase.functions.invoke('manage-subscription', {
-        body: { action: 'get_status' }
-      });
-      
-      if (error) {
-        console.error('Error from manage-subscription function:', error);
-        // Fallback to direct database query
-        await fetchSubscriptionFallback();
-        return;
-      }
-
-      console.log('Subscription data from function:', data);
-
-      setSubscription({
-        tier: (data.subscription_tier as SubscriptionTier) || 'Individual',
-        subscribed: data.subscribed || false,
-        subscriptionEnd: data.subscription_end
-      });
-    } catch (error: any) {
-      console.error('Error fetching subscription:', error);
-      await fetchSubscriptionFallback();
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchSubscriptionFallback = async () => {
-    if (!user) return;
-
-    try {
-      console.log('Using fallback subscription fetch');
-      
-      // Get profile data
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('subscription_tier')
-        .eq('id', user.id)
-        .single();
-
-      if (profileError) {
-        console.error('Profile error:', profileError);
-      }
-
-      // Get subscriber data
-      const { data: subscriber, error: subscriberError } = await supabase
+      // First check the subscribers table directly
+      const { data: subscriberData, error: subscriberError } = await supabase
         .from('subscribers')
         .select('subscribed, subscription_end, subscription_tier')
         .eq('user_id', user.id)
@@ -81,32 +37,48 @@ export const useSubscription = () => {
         console.error('Subscriber error:', subscriberError);
       }
 
-      console.log('Profile data:', profile);
-      console.log('Subscriber data:', subscriber);
+      // Also check the profiles table for subscription tier
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('subscription_tier')
+        .eq('id', user.id)
+        .maybeSingle();
 
-      const tierFromSubscriber = subscriber?.subscription_tier;
-      const tierFromProfile = profile?.subscription_tier;
-      const finalTier = (tierFromSubscriber || tierFromProfile) as string;
-      
-      // Ensure the tier is one of the allowed values
-      const validTier: SubscriptionTier = ['Individual', 'Premium', 'Organization'].includes(finalTier) 
-        ? finalTier as SubscriptionTier 
+      if (profileError) {
+        console.error('Profile error:', profileError);
+      }
+
+      console.log('Subscriber data:', subscriberData);
+      console.log('Profile data:', profileData);
+
+      // Determine subscription status
+      const isSubscribed = subscriberData?.subscribed || false;
+      const subscriptionTier = subscriberData?.subscription_tier || profileData?.subscription_tier || 'Individual';
+      const subscriptionEnd = subscriberData?.subscription_end;
+
+      // Validate tier
+      const validTier: SubscriptionTier = ['Individual', 'Premium', 'Organization'].includes(subscriptionTier) 
+        ? subscriptionTier as SubscriptionTier 
         : 'Individual';
 
       const subscriptionInfo = {
         tier: validTier,
-        subscribed: subscriber?.subscribed || false,
-        subscriptionEnd: subscriber?.subscription_end
+        subscribed: isSubscribed,
+        subscriptionEnd: subscriptionEnd
       };
 
       console.log('Final subscription info:', subscriptionInfo);
       setSubscription(subscriptionInfo);
-    } catch (fallbackError: any) {
-      console.error('Error in fallback subscription fetch:', fallbackError);
+
+    } catch (error: any) {
+      console.error('Error fetching subscription:', error);
+      // Set default subscription info on error
       setSubscription({
         tier: 'Individual',
         subscribed: false
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -114,13 +86,13 @@ export const useSubscription = () => {
     fetchSubscription();
   }, [user]);
 
-  // Refresh subscription status (useful after checkout) with debouncing
+  // Refresh subscription status with debouncing
   const refreshSubscription = async () => {
     console.log('Refreshing subscription status...');
     setLoading(true);
     
     // Add a small delay to allow webhook processing
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
     await fetchSubscription();
   };

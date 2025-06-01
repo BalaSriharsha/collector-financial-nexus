@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -91,8 +90,12 @@ const RazorpayCheckout = ({ planType, onSuccess }: RazorpayCheckoutProps) => {
         handler: async function (response: any) {
           console.log('Payment successful:', response);
           toast.success('Payment successful! Your subscription is now active.');
-          await refreshSubscription();
-          onSuccess?.();
+          
+          // Wait a bit for webhook processing, then refresh subscription
+          setTimeout(async () => {
+            await refreshSubscription();
+            onSuccess?.();
+          }, 3000);
         },
         modal: {
           ondismiss: function() {
