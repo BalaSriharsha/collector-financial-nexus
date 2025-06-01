@@ -7,7 +7,11 @@ import { toast } from 'sonner';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, metadata?: any) => Promise<{ error: any }>;
+  signInWithGoogle: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  updateProfile: (profileData: any) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -50,6 +54,91 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const signIn = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        toast.error(error.message);
+        return { error };
+      }
+      
+      toast.success('Signed in successfully');
+      return { error: null };
+    } catch (error: any) {
+      toast.error(error.message);
+      return { error };
+    }
+  };
+
+  const signUp = async (email: string, password: string, metadata?: any) => {
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: metadata,
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+      
+      if (error) {
+        toast.error(error.message);
+        return { error };
+      }
+      
+      toast.success('Account created successfully! Please check your email for verification.');
+      return { error: null };
+    } catch (error: any) {
+      toast.error(error.message);
+      return { error };
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+        },
+      });
+      
+      if (error) {
+        toast.error(error.message);
+        return { error };
+      }
+      
+      return { error: null };
+    } catch (error: any) {
+      toast.error(error.message);
+      return { error };
+    }
+  };
+
+  const updateProfile = async (profileData: any) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update(profileData)
+        .eq('id', user?.id);
+      
+      if (error) {
+        toast.error('Failed to update profile');
+        return { error };
+      }
+      
+      toast.success('Profile updated successfully');
+      return { error: null };
+    } catch (error: any) {
+      toast.error('Failed to update profile');
+      return { error };
+    }
+  };
+
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -61,7 +150,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      signIn,
+      signUp,
+      signInWithGoogle,
+      signOut,
+      updateProfile
+    }}>
       {children}
     </AuthContext.Provider>
   );

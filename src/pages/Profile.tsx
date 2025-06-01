@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -38,12 +37,11 @@ interface Profile {
 
 const Profile = () => {
   const { user, updateProfile, signOut } = useAuth();
-  const { subscription, updateSubscription } = useSubscription();
+  const { subscription, manageSubscription } = useSubscription();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showUpgradeOptions, setShowUpgradeOptions] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -95,17 +93,22 @@ const Profile = () => {
   };
 
   const handleUpgrade = async (tier: 'Premium' | 'Organization') => {
-    const { error } = await updateSubscription(tier);
-    if (!error) {
-      setShowUpgradeOptions(false);
-      toast.success(`Upgraded to ${tier} plan!`);
-    }
-  };
-
-  const handleDowngrade = async () => {
-    const { error } = await updateSubscription('Individual');
-    if (!error) {
-      toast.success('Downgraded to Individual plan');
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { 
+          priceId: tier === 'Premium' ? 'price_premium' : 'price_organization',
+          successUrl: `${window.location.origin}/profile?success=true`,
+          cancelUrl: `${window.location.origin}/profile?canceled=true`
+        }
+      });
+      
+      if (error) throw error;
+      
+      // Redirect to Stripe checkout
+      window.location.href = data.url;
+    } catch (error: any) {
+      console.error('Error creating checkout session:', error);
+      toast.error('Failed to start upgrade process');
     }
   };
 
@@ -266,10 +269,10 @@ const Profile = () => {
                   <div className="mt-4 space-y-2">
                     <Button
                       variant="outline"
-                      onClick={handleDowngrade}
+                      onClick={() => manageSubscription()}
                       className="w-full text-sm"
                     >
-                      Downgrade to Individual
+                      Manage Subscription
                     </Button>
                     {subscription?.tier === 'Premium' && (
                       <Button
