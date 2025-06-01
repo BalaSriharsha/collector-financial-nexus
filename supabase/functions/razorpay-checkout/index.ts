@@ -56,11 +56,16 @@ serve(async (req) => {
       throw new Error("Invalid plan type");
     }
 
+    // Create shorter receipt - max 40 characters
+    const timestamp = Date.now().toString().slice(-8); // Last 8 digits
+    const userIdShort = user.id.slice(0, 8); // First 8 chars of user ID
+    const receipt = `v_${userIdShort}_${timestamp}`;
+
     // Create Razorpay order
     const orderData = {
       amount: amount,
       currency: "INR",
-      receipt: `vittas_${user.id}_${Date.now()}`,
+      receipt: receipt,
       notes: {
         user_id: user.id,
         email: user.email,
