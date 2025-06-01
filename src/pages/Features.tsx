@@ -57,34 +57,34 @@ const Features = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50 flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       <Navigation />
       
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="max-w-7xl mx-auto px-4 py-16">
-          <div className="text-center mb-16">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-playfair font-bold text-collector-black mb-6">
+        <section className="max-w-7xl mx-auto px-4 py-12 sm:py-16">
+          <div className="text-center mb-12 sm:mb-16">
+            <h1 className="text-3xl sm:text-4xl lg:text-6xl font-playfair font-bold text-collector-black mb-6">
               Powerful Features for
               <span className="gradient-text block">Financial Mastery</span>
             </h1>
-            <p className="text-lg lg:text-xl text-collector-black/70 max-w-3xl mx-auto">
-              Discover the tools that make Collector the ultimate financial management platform for both individuals and organizations.
+            <p className="text-base sm:text-lg lg:text-xl text-gray-700 max-w-3xl mx-auto">
+              Discover the tools that make Vittas the ultimate financial management platform for both individuals and organizations.
             </p>
           </div>
 
           {/* Features Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {features.map((feature, index) => (
-              <Card key={index} className="ancient-border hover-lift bg-white/90 backdrop-blur-sm">
-                <CardHeader className="text-center">
-                  <div className={`w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full flex items-center justify-center`}>
-                    <feature.icon className={`w-8 h-8 text-white`} />
+              <Card key={index} className="border-2 border-collector-gold/20 shadow-lg hover:shadow-xl transition-all duration-300 bg-white">
+                <CardHeader className="text-center pb-4">
+                  <div className={`w-12 sm:w-16 h-12 sm:h-16 mx-auto mb-4 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full flex items-center justify-center`}>
+                    <feature.icon className={`w-6 sm:w-8 h-6 sm:h-8 text-white`} />
                   </div>
-                  <CardTitle className="text-xl font-playfair">{feature.title}</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl font-playfair text-collector-black">{feature.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <CardDescription className="text-center text-collector-black/70">
+                  <CardDescription className="text-center text-sm sm:text-base text-gray-700">
                     {feature.description}
                   </CardDescription>
                 </CardContent>
@@ -94,15 +94,15 @@ const Features = () => {
         </section>
 
         {/* CTA Section */}
-        <section className="max-w-7xl mx-auto px-4 py-16 text-center">
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 lg:p-12 ancient-border">
-            <h2 className="text-3xl lg:text-4xl font-playfair font-bold text-collector-black mb-4">
+        <section className="max-w-7xl mx-auto px-4 py-12 sm:py-16 text-center">
+          <div className="bg-gray-50 rounded-2xl p-6 sm:p-8 lg:p-12 border-2 border-collector-gold/20">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-playfair font-bold text-collector-black mb-4">
               Ready to Master Your Finances?
             </h2>
-            <p className="text-lg text-collector-black/70 mb-8 max-w-2xl mx-auto">
-              Join thousands of users who have transformed their financial lives with Collector's powerful features.
+            <p className="text-base sm:text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
+              Join thousands of users who have transformed their financial lives with Vittas's powerful features.
             </p>
-            <button className="bg-blue-gradient hover:bg-blue-600 text-white px-8 py-4 text-lg font-playfair rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+            <button className="bg-blue-gradient hover:bg-blue-600 text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-playfair rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
               Start Your Journey
             </button>
           </div>

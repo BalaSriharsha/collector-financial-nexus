@@ -62,26 +62,26 @@ const Pricing = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50 flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       <Navigation />
       
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="max-w-7xl mx-auto px-4 py-16">
-          <div className="text-center mb-16">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-playfair font-bold text-collector-black mb-6">
+        <section className="max-w-7xl mx-auto px-4 py-12 sm:py-16">
+          <div className="text-center mb-12 sm:mb-16">
+            <h1 className="text-3xl sm:text-4xl lg:text-6xl font-playfair font-bold text-collector-black mb-6">
               Choose Your
               <span className="gradient-text block">Financial Plan</span>
             </h1>
-            <p className="text-lg lg:text-xl text-collector-black/70 max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg lg:text-xl text-gray-700 max-w-3xl mx-auto">
               From individual users to large organizations, we have the perfect plan to help you master your finances.
             </p>
           </div>
 
           {/* Pricing Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
             {plans.map((plan, index) => (
-              <Card key={index} className={`ancient-border hover-lift bg-white/90 backdrop-blur-sm relative ${plan.popular ? 'ring-2 ring-collector-orange' : ''}`}>
+              <Card key={index} className={`border-2 border-collector-gold/20 shadow-lg hover:shadow-xl transition-all duration-300 bg-white relative ${plan.popular ? 'ring-2 ring-collector-orange' : ''}`}>
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                     <span className="bg-orange-gradient text-white px-4 py-2 rounded-full text-sm font-medium">
@@ -90,12 +90,12 @@ const Pricing = () => {
                   </div>
                 )}
                 
-                <CardHeader className="text-center pb-8">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full flex items-center justify-center">
-                    <plan.icon className="w-8 h-8 text-white" />
+                <CardHeader className="text-center pb-6 sm:pb-8">
+                  <div className="w-12 sm:w-16 h-12 sm:h-16 mx-auto mb-4 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full flex items-center justify-center">
+                    <plan.icon className="w-6 sm:w-8 h-6 sm:h-8 text-white" />
                   </div>
-                  <CardTitle className="text-2xl font-playfair">{plan.name}</CardTitle>
-                  <div className="text-3xl font-bold text-collector-black mt-4">
+                  <CardTitle className="text-xl sm:text-2xl font-playfair text-collector-black">{plan.name}</CardTitle>
+                  <div className="text-2xl sm:text-3xl font-bold text-collector-black mt-4">
                     {plan.price}
                   </div>
                   {plan.trial && (
@@ -103,7 +103,7 @@ const Pricing = () => {
                       7-day free trial included
                     </div>
                   )}
-                  <CardDescription className="text-collector-black/70 mt-2">
+                  <CardDescription className="text-gray-700 mt-2 text-sm sm:text-base">
                     {plan.description}
                   </CardDescription>
                 </CardHeader>
@@ -112,14 +112,14 @@ const Pricing = () => {
                   <ul className="space-y-3">
                     {plan.features.map((feature, featureIndex) => (
                       <li key={featureIndex} className="flex items-center space-x-3">
-                        <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
-                        <span className="text-collector-black/80 text-sm">{feature}</span>
+                        <Check className="w-4 sm:w-5 h-4 sm:h-5 text-green-600 flex-shrink-0" />
+                        <span className="text-gray-700 text-sm sm:text-base">{feature}</span>
                       </li>
                     ))}
                   </ul>
                   
                   <Button 
-                    className={`w-full ${plan.popular ? 'bg-orange-gradient hover:bg-orange-600' : 'bg-blue-gradient hover:bg-blue-600'} text-white`}
+                    className={`w-full text-sm sm:text-base ${plan.popular ? 'bg-orange-gradient hover:bg-orange-600' : 'bg-blue-gradient hover:bg-blue-600'} text-white`}
                   >
                     {plan.cta}
                   </Button>
@@ -130,14 +130,14 @@ const Pricing = () => {
         </section>
 
         {/* FAQ Section */}
-        <section className="max-w-4xl mx-auto px-4 py-16">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-playfair font-bold text-collector-black mb-4">
+        <section className="max-w-4xl mx-auto px-4 py-12 sm:py-16">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-playfair font-bold text-collector-black mb-4">
               Frequently Asked Questions
             </h2>
           </div>
           
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {[
               {
                 question: "Can I switch plans anytime?",
@@ -156,12 +156,12 @@ const Pricing = () => {
                 answer: "We offer a 30-day money-back guarantee for all paid plans. No questions asked."
               }
             ].map((faq, index) => (
-              <Card key={index} className="ancient-border bg-white/90 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="text-lg">{faq.question}</CardTitle>
+              <Card key={index} className="border-2 border-collector-gold/20 bg-white shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base sm:text-lg text-collector-black">{faq.question}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-collector-black/70">{faq.answer}</p>
+                  <p className="text-gray-700 text-sm sm:text-base">{faq.answer}</p>
                 </CardContent>
               </Card>
             ))}
