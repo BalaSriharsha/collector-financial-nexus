@@ -99,6 +99,44 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-playfair;
   }
+
+  /* Compact theme styles */
+  .compact-theme {
+    --radius: 0.25rem;
+  }
+
+  .compact-theme .card {
+    @apply border border-gray-300 bg-white shadow-sm;
+  }
+
+  .compact-theme .button {
+    @apply text-sm px-2 py-1;
+  }
+
+  .compact-theme .input {
+    @apply border border-gray-300 text-sm px-2 py-1;
+  }
+
+  .compact-theme .table {
+    @apply border-collapse border border-gray-300;
+  }
+
+  .compact-theme .table th,
+  .compact-theme .table td {
+    @apply border border-gray-300 px-2 py-1 text-sm;
+  }
+
+  .compact-theme .table th {
+    @apply bg-gray-100 font-semibold;
+  }
+
+  .compact-theme .card-header {
+    @apply px-3 py-2 border-b border-gray-300;
+  }
+
+  .compact-theme .card-content {
+    @apply px-3 py-2;
+  }
 }
 
 @layer components {

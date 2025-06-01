@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useTheme } from "@/contexts/ThemeContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,8 +11,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { User, CreditCard, Trash2, Crown, Gem } from "lucide-react";
+import { User, CreditCard, Trash2, Crown, Gem, Palette, Monitor, Moon, Sun } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import RazorpayCheckout from "@/components/RazorpayCheckout";
@@ -40,6 +42,7 @@ interface Profile {
 const Profile = () => {
   const { user, updateProfile, signOut } = useAuth();
   const { subscription, manageSubscription, refreshSubscription } = useSubscription();
+  const { mode, style, setMode, setStyle } = useTheme();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -203,83 +206,142 @@ const Profile = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Profile Information */}
-          <Card className="shadow-sm border-collector-gold/20">
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-2">
-                <User className="w-5 h-5 text-collector-orange" />
-                <CardTitle className="text-lg">Personal Information</CardTitle>
-              </div>
-              <CardDescription className="text-sm">
-                Update your personal details and preferences
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="full_name" className="text-sm font-medium">Full Name</Label>
-                  <Input
-                    id="full_name"
-                    name="full_name"
-                    defaultValue={profile.full_name || ""}
-                    className="border-collector-gold/30 focus:border-collector-orange text-sm"
-                  />
+          <div className="space-y-6">
+            <Card className="shadow-sm border-collector-gold/20">
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-2">
+                  <User className="w-5 h-5 text-collector-orange" />
+                  <CardTitle className="text-lg">Personal Information</CardTitle>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium">Email</Label>
-                  <Input
-                    id="email"
-                    value={profile.email || ""}
-                    disabled
-                    className="bg-gray-50 text-sm"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <CardDescription className="text-sm">
+                  Update your personal details and preferences
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="currency" className="text-sm font-medium">Currency</Label>
-                    <Select name="currency" defaultValue={profile.currency || "INR"}>
-                      <SelectTrigger className="border-collector-gold/30 focus:border-collector-orange text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="INR">INR (₹)</SelectItem>
-                        <SelectItem value="USD">USD ($)</SelectItem>
-                        <SelectItem value="EUR">EUR (€)</SelectItem>
-                        <SelectItem value="GBP">GBP (£)</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="full_name" className="text-sm font-medium">Full Name</Label>
+                    <Input
+                      id="full_name"
+                      name="full_name"
+                      defaultValue={profile.full_name || ""}
+                      className="border-collector-gold/30 focus:border-collector-orange text-sm"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+                    <Input
+                      id="email"
+                      value={profile.email || ""}
+                      disabled
+                      className="bg-gray-50 text-sm"
+                    />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="country" className="text-sm font-medium">Country</Label>
-                    <Select name="country" defaultValue={profile.country || "IND"}>
-                      <SelectTrigger className="border-collector-gold/30 focus:border-collector-orange text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="IND">India</SelectItem>
-                        <SelectItem value="USA">United States</SelectItem>
-                        <SelectItem value="CAN">Canada</SelectItem>
-                        <SelectItem value="GBR">United Kingdom</SelectItem>
-                        <SelectItem value="DEU">Germany</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="currency" className="text-sm font-medium">Currency</Label>
+                      <Select name="currency" defaultValue={profile.currency || "INR"}>
+                        <SelectTrigger className="border-collector-gold/30 focus:border-collector-orange text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="INR">INR (₹)</SelectItem>
+                          <SelectItem value="USD">USD ($)</SelectItem>
+                          <SelectItem value="EUR">EUR (€)</SelectItem>
+                          <SelectItem value="GBP">GBP (£)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="country" className="text-sm font-medium">Country</Label>
+                      <Select name="country" defaultValue={profile.country || "IND"}>
+                        <SelectTrigger className="border-collector-gold/30 focus:border-collector-orange text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="IND">India</SelectItem>
+                          <SelectItem value="USA">United States</SelectItem>
+                          <SelectItem value="CAN">Canada</SelectItem>
+                          <SelectItem value="GBR">United Kingdom</SelectItem>
+                          <SelectItem value="DEU">Germany</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
+
+                  <Button 
+                    type="submit" 
+                    disabled={loading}
+                    className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm"
+                  >
+                    {loading ? 'Updating...' : 'Update Profile'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Theme Settings */}
+            <Card className="shadow-sm border-collector-gold/20">
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-2">
+                  <Palette className="w-5 h-5 text-collector-orange" />
+                  <CardTitle className="text-lg">Theme Settings</CardTitle>
+                </div>
+                <CardDescription className="text-sm">
+                  Customize your app appearance
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Theme Mode</Label>
+                  <Select value={mode} onValueChange={setMode}>
+                    <SelectTrigger className="border-collector-gold/30 focus:border-collector-orange text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="light">
+                        <div className="flex items-center gap-2">
+                          <Sun className="w-4 h-4" />
+                          Light
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="dark">
+                        <div className="flex items-center gap-2">
+                          <Moon className="w-4 h-4" />
+                          Dark
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="system">
+                        <div className="flex items-center gap-2">
+                          <Monitor className="w-4 h-4" />
+                          System
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <Button 
-                  type="submit" 
-                  disabled={loading}
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm"
-                >
-                  {loading ? 'Updating...' : 'Update Profile'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Theme Style</Label>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Compact Theme (Excel-like)</span>
+                    <Switch
+                      checked={style === 'compact'}
+                      onCheckedChange={(checked) => setStyle(checked ? 'compact' : 'default')}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Enable for a more compact, Excel-style interface
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-          {/* Subscription Management */}
+          {/* Subscription and Danger Zone */}
           <div className="space-y-6">
             <Card className="shadow-sm border-collector-gold/20">
               <CardHeader className="pb-4">

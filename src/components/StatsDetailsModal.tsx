@@ -1,11 +1,8 @@
 
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, DollarSign, FileText, Calendar } from "lucide-react";
-import { useProfile } from "@/hooks/useProfile";
-import { getCurrencySymbol } from "@/utils/currency";
+import React from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 interface Transaction {
   id: string;
@@ -14,141 +11,122 @@ interface Transaction {
   type: 'income' | 'expense';
   category: string;
   date: string;
-  description: string;
-  created_at: string;
+  description?: string;
 }
 
 interface StatsDetailsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  type: 'income' | 'expense' | 'balance' | 'transactions';
-  value: number;
+  type: 'income' | 'expenses' | 'balance' | 'transactions';
+  title: string;
+  amount: number;
   transactions: Transaction[];
 }
 
-const StatsDetailsModal = ({ open, onOpenChange, type, value, transactions }: StatsDetailsModalProps) => {
-  const { profile } = useProfile();
-  const currencySymbol = getCurrencySymbol(profile?.currency || 'USD');
-
-  const getIcon = () => {
-    switch (type) {
-      case 'income':
-        return <TrendingUp className="w-6 h-6 text-green-600" />;
-      case 'expense':
-        return <TrendingDown className="w-6 h-6 text-red-600" />;
-      case 'balance':
-        return <DollarSign className="w-6 h-6 text-blue-600" />;
-      case 'transactions':
-        return <FileText className="w-6 h-6 text-orange-600" />;
-    }
+const StatsDetailsModal: React.FC<StatsDetailsModalProps> = ({
+  open,
+  onOpenChange,
+  type,
+  title,
+  amount,
+  transactions
+}) => {
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR'
+    }).format(value);
   };
 
-  const getTitle = () => {
-    switch (type) {
-      case 'income':
-        return 'Total Income Details';
-      case 'expense':
-        return 'Total Expenses Details';
-      case 'balance':
-        return 'Balance Details';
-      case 'transactions':
-        return 'All Transactions';
-    }
-  };
-
-  const getColor = () => {
-    switch (type) {
-      case 'income':
-        return 'text-green-600';
-      case 'expense':
-        return 'text-red-600';
-      case 'balance':
-        return value >= 0 ? 'text-green-600' : 'text-red-600';
-      case 'transactions':
-        return 'text-orange-600';
-    }
-  };
-
-  const filteredTransactions = transactions.filter(t => {
-    if (type === 'income') return t.type === 'income';
-    if (type === 'expense') return t.type === 'expense';
-    return true;
+  const filteredTransactions = transactions.filter(transaction => {
+    if (type === 'income') return transaction.type === 'income';
+    if (type === 'expenses') return transaction.type === 'expense';
+    return true; // For balance and transactions, show all
   });
+
+  const getTypeColor = (transactionType: string) => {
+    return transactionType === 'income' ? 'text-green-600' : 'text-red-600';
+  };
+
+  const getCategoryBadgeColor = (category: string) => {
+    const colors = {
+      food: 'bg-orange-100 text-orange-800',
+      transport: 'bg-blue-100 text-blue-800',
+      entertainment: 'bg-purple-100 text-purple-800',
+      utilities: 'bg-gray-100 text-gray-800',
+      healthcare: 'bg-red-100 text-red-800',
+      shopping: 'bg-pink-100 text-pink-800',
+      education: 'bg-green-100 text-green-800',
+      investment: 'bg-indigo-100 text-indigo-800',
+      salary: 'bg-emerald-100 text-emerald-800',
+      freelance: 'bg-teal-100 text-teal-800',
+      business: 'bg-yellow-100 text-yellow-800',
+      other: 'bg-slate-100 text-slate-800'
+    };
+    return colors[category as keyof typeof colors] || colors.other;
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-3 text-xl font-playfair">
-            {getIcon()}
-            {getTitle()}
-          </DialogTitle>
+          <DialogTitle className="text-xl font-semibold">{title} Details</DialogTitle>
           <DialogDescription>
-            Detailed breakdown and transaction history
+            Total amount: <span className="font-semibold">{formatCurrency(amount)}</span>
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Summary Card */}
-          <Card className="border-2 border-collector-gold/20">
-            <CardContent className="p-6">
-              <div className="text-center">
-                <p className="text-sm text-collector-black/60 uppercase tracking-wide mb-2">
-                  {type === 'transactions' ? 'Total Count' : 'Total Amount'}
-                </p>
-                <p className={`text-4xl font-playfair font-bold ${getColor()}`}>
-                  {type === 'transactions' ? value : `${currencySymbol}${value.toLocaleString()}`}
-                </p>
-                {type !== 'transactions' && (
-                  <p className="text-sm text-collector-black/60 mt-2">
-                    Based on {filteredTransactions.length} transactions
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+        <div className="space-y-4">
+          <div className="text-sm text-muted-foreground">
+            Showing {filteredTransactions.length} transactions
+          </div>
 
-          {/* Transactions List */}
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <FileText className="w-5 h-5" />
-                {type === 'transactions' ? 'All Transactions' : `${type === 'income' ? 'Income' : 'Expense'} Transactions`}
-              </h3>
-              
-              {filteredTransactions.length > 0 ? (
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {filteredTransactions.map((transaction) => (
-                    <div key={transaction.id} className="flex items-center justify-between p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-gray-800 mb-1 truncate">{transaction.title}</div>
-                        <div className="text-sm text-gray-600 truncate">{transaction.category}</div>
-                        <div className="text-xs text-gray-500 flex items-center gap-1 mt-1">
-                          <Calendar className="w-3 h-3" />
-                          {transaction.date}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className={`font-bold ${
-                          transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {transaction.type === 'income' ? '+' : '-'}{currencySymbol}{Number(transaction.amount).toLocaleString()}
-                        </div>
-                        <Badge variant="outline" className="text-xs mt-1">
-                          {transaction.type}
-                        </Badge>
-                      </div>
+          <Separator />
+
+          <div className="space-y-3">
+            {filteredTransactions.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No transactions found for {type}
+              </div>
+            ) : (
+              filteredTransactions.map((transaction) => (
+                <div
+                  key={transaction.id}
+                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-medium">{transaction.title}</h4>
+                      <Badge 
+                        variant="secondary" 
+                        className={`text-xs ${getCategoryBadgeColor(transaction.category)}`}
+                      >
+                        {transaction.category}
+                      </Badge>
                     </div>
-                  ))}
+                    {transaction.description && (
+                      <p className="text-sm text-muted-foreground mb-1">
+                        {transaction.description}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(transaction.date).toLocaleDateString('en-IN', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className={`font-semibold ${getTypeColor(transaction.type)}`}>
+                      {transaction.type === 'expense' ? '-' : '+'}
+                      {formatCurrency(transaction.amount)}
+                    </p>
+                  </div>
                 </div>
-              ) : (
-                <div className="text-center py-8 text-gray-600">
-                  <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>No transactions found</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              ))
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

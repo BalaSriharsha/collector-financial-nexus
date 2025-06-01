@@ -1,15 +1,14 @@
 
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Calendar, FileText, Target, Edit, Trash2 } from "lucide-react";
-import { useProfile } from "@/hooks/useProfile";
-import { getCurrencySymbol } from "@/utils/currency";
+import React, { useState, useMemo } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { CalendarIcon } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { format } from 'date-fns';
 
 interface Transaction {
   id: string;
@@ -18,8 +17,7 @@ interface Transaction {
   type: 'income' | 'expense';
   category: string;
   date: string;
-  description: string;
-  created_at: string;
+  description?: string;
 }
 
 interface Budget {
@@ -27,10 +25,9 @@ interface Budget {
   name: string;
   amount: number;
   category: string;
-  period: string;
   start_date: string;
   end_date: string;
-  created_at: string;
+  period?: string;
 }
 
 interface ViewAllModalProps {
@@ -38,338 +35,272 @@ interface ViewAllModalProps {
   onOpenChange: (open: boolean) => void;
   type: 'transactions' | 'budgets';
   data: Transaction[] | Budget[];
-  onEdit?: (id: string) => void;
-  onDelete?: (id: string) => void;
-  onItemClick?: (item: Transaction | Budget) => void;
+  title: string;
 }
 
-const ViewAllModal = ({ open, onOpenChange, type, data, onEdit, onDelete, onItemClick }: ViewAllModalProps) => {
-  const { profile } = useProfile();
-  const currencySymbol = getCurrencySymbol(profile?.currency || 'USD');
-  const [filteredData, setFilteredData] = useState<Transaction[] | Budget[]>(data);
-  const [filter, setFilter] = useState('all');
-  const [customStartDate, setCustomStartDate] = useState('');
-  const [customEndDate, setCustomEndDate] = useState('');
+type FilterPeriod = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'half-yearly' | 'yearly' | 'custom';
 
-  useEffect(() => {
-    filterData();
-  }, [data, filter, customStartDate, customEndDate]);
+const ViewAllModal: React.FC<ViewAllModalProps> = ({
+  open,
+  onOpenChange,
+  type,
+  data,
+  title
+}) => {
+  const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>('monthly');
+  const [customStartDate, setCustomStartDate] = useState<Date>();
+  const [customEndDate, setCustomEndDate] = useState<Date>();
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
-  const filterData = () => {
-    let filtered: Transaction[] | Budget[];
-    const now = new Date();
-
-    if (type === 'transactions') {
-      const transactionData = data as Transaction[];
-      let filteredTransactions = [...transactionData];
-
-      switch (filter) {
-        case 'daily':
-          filteredTransactions = filteredTransactions.filter(item => {
-            const itemDate = new Date(item.date);
-            return itemDate.toDateString() === now.toDateString();
-          });
-          break;
-        case 'weekly':
-          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          filteredTransactions = filteredTransactions.filter(item => {
-            const itemDate = new Date(item.date);
-            return itemDate >= weekAgo;
-          });
-          break;
-        case 'monthly':
-          const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-          filteredTransactions = filteredTransactions.filter(item => {
-            const itemDate = new Date(item.date);
-            return itemDate >= monthAgo;
-          });
-          break;
-        case 'quarterly':
-          const quarterAgo = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
-          filteredTransactions = filteredTransactions.filter(item => {
-            const itemDate = new Date(item.date);
-            return itemDate >= quarterAgo;
-          });
-          break;
-        case 'half-yearly':
-          const halfYearAgo = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
-          filteredTransactions = filteredTransactions.filter(item => {
-            const itemDate = new Date(item.date);
-            return itemDate >= halfYearAgo;
-          });
-          break;
-        case 'yearly':
-          const yearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
-          filteredTransactions = filteredTransactions.filter(item => {
-            const itemDate = new Date(item.date);
-            return itemDate >= yearAgo;
-          });
-          break;
-        case 'custom':
-          if (customStartDate && customEndDate) {
-            const startDate = new Date(customStartDate);
-            const endDate = new Date(customEndDate);
-            filteredTransactions = filteredTransactions.filter(item => {
-              const itemDate = new Date(item.date);
-              return itemDate >= startDate && itemDate <= endDate;
-            });
-          }
-          break;
-      }
-      filtered = filteredTransactions;
-    } else {
-      const budgetData = data as Budget[];
-      let filteredBudgets = [...budgetData];
-
-      switch (filter) {
-        case 'daily':
-          filteredBudgets = filteredBudgets.filter(item => {
-            const itemDate = new Date(item.created_at);
-            return itemDate.toDateString() === now.toDateString();
-          });
-          break;
-        case 'weekly':
-          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          filteredBudgets = filteredBudgets.filter(item => {
-            const itemDate = new Date(item.created_at);
-            return itemDate >= weekAgo;
-          });
-          break;
-        case 'monthly':
-          const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-          filteredBudgets = filteredBudgets.filter(item => {
-            const itemDate = new Date(item.created_at);
-            return itemDate >= monthAgo;
-          });
-          break;
-        case 'quarterly':
-          const quarterAgo = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
-          filteredBudgets = filteredBudgets.filter(item => {
-            const itemDate = new Date(item.created_at);
-            return itemDate >= quarterAgo;
-          });
-          break;
-        case 'half-yearly':
-          const halfYearAgo = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
-          filteredBudgets = filteredBudgets.filter(item => {
-            const itemDate = new Date(item.created_at);
-            return itemDate >= halfYearAgo;
-          });
-          break;
-        case 'yearly':
-          const yearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
-          filteredBudgets = filteredBudgets.filter(item => {
-            const itemDate = new Date(item.created_at);
-            return itemDate >= yearAgo;
-          });
-          break;
-        case 'custom':
-          if (customStartDate && customEndDate) {
-            const startDate = new Date(customStartDate);
-            const endDate = new Date(customEndDate);
-            filteredBudgets = filteredBudgets.filter(item => {
-              const itemDate = new Date(item.created_at);
-              return itemDate >= startDate && itemDate <= endDate;
-            });
-          }
-          break;
-      }
-      filtered = filteredBudgets;
-    }
-
-    setFilteredData(filtered);
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR'
+    }).format(value);
   };
 
-  const renderTransactionItem = (transaction: Transaction) => (
-    <div
-      key={transaction.id}
-      className="flex items-center justify-between p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
-      onClick={() => onItemClick?.(transaction)}
-    >
-      <div className="flex-1 min-w-0">
-        <div className="font-semibold text-gray-800 mb-1 truncate">{transaction.title}</div>
-        <div className="text-sm text-gray-600 truncate">{transaction.category}</div>
-        <div className="text-xs text-gray-500 flex items-center gap-1 mt-1">
-          <Calendar className="w-3 h-3" />
-          {transaction.date}
-        </div>
-      </div>
-      <div className="flex items-center gap-3">
-        <div className="text-right">
-          <div className={`font-bold ${
-            transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-          }`}>
-            {transaction.type === 'income' ? '+' : '-'}{currencySymbol}{Number(transaction.amount).toLocaleString()}
-          </div>
-          <Badge variant="outline" className="text-xs mt-1">
-            {transaction.type}
-          </Badge>
-        </div>
-        <div className="flex flex-col gap-1">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit?.(transaction.id);
-            }}
-            className="h-6 w-6 p-0 border-gray-400 text-gray-800 hover-navy transition-colors"
-          >
-            <Edit className="w-3 h-3" />
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete?.(transaction.id);
-            }}
-            className="h-6 w-6 p-0 border-red-400 text-red-600 hover-black transition-colors"
-          >
-            <Trash2 className="w-3 h-3" />
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
+  const getDateRange = (period: FilterPeriod) => {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    switch (period) {
+      case 'daily':
+        return { start: startOfDay, end: now };
+      case 'weekly':
+        const weekStart = new Date(startOfDay);
+        weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+        return { start: weekStart, end: now };
+      case 'monthly':
+        return { start: new Date(now.getFullYear(), now.getMonth(), 1), end: now };
+      case 'quarterly':
+        const quarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+        return { start: quarterStart, end: now };
+      case 'half-yearly':
+        const halfYearStart = new Date(now.getFullYear(), now.getMonth() < 6 ? 0 : 6, 1);
+        return { start: halfYearStart, end: now };
+      case 'yearly':
+        return { start: new Date(now.getFullYear(), 0, 1), end: now };
+      case 'custom':
+        return { 
+          start: customStartDate || new Date(now.getFullYear(), now.getMonth(), 1), 
+          end: customEndDate || now 
+        };
+      default:
+        return { start: new Date(now.getFullYear(), now.getMonth(), 1), end: now };
+    }
+  };
 
-  const renderBudgetItem = (budget: Budget) => (
-    <div
-      key={budget.id}
-      className="p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
-      onClick={() => onItemClick?.(budget)}
-    >
-      <div className="flex items-center justify-between mb-2">
-        <span className="font-semibold text-gray-800 truncate flex-1">{budget.name}</span>
-        <div className="flex items-center gap-2 ml-2">
-          <span className="text-sm font-bold text-orange-600">{currencySymbol}{Number(budget.amount).toLocaleString()}</span>
-          <div className="flex flex-col gap-1">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit?.(budget.id);
-              }}
-              className="h-5 w-5 p-0 border-gray-400 text-gray-800 hover-navy transition-colors"
-            >
-              <Edit className="w-3 h-3" />
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete?.(budget.id);
-              }}
-              className="h-5 w-5 p-0 border-red-400 text-red-600 hover-black transition-colors"
-            >
-              <Trash2 className="w-3 h-3" />
-            </Button>
-          </div>
-        </div>
-      </div>
-      <div className="text-xs text-gray-600 flex items-center gap-4">
-        <span>{budget.category}</span>
-        <span>•</span>
-        <span className="capitalize">{budget.period}</span>
-        <span>•</span>
-        <span className="flex items-center gap-1">
-          <Calendar className="w-3 h-3" />
-          {new Date(budget.start_date).toLocaleDateString()}
-        </span>
-      </div>
-    </div>
-  );
+  const filteredData = useMemo(() => {
+    const { start, end } = getDateRange(filterPeriod);
+    
+    return data.filter(item => {
+      const itemDate = new Date(type === 'transactions' ? (item as Transaction).date : (item as Budget).start_date);
+      const dateInRange = itemDate >= start && itemDate <= end;
+      
+      if (categoryFilter === 'all') return dateInRange;
+      
+      const itemCategory = type === 'transactions' ? (item as Transaction).category : (item as Budget).category;
+      return dateInRange && itemCategory === categoryFilter;
+    });
+  }, [data, filterPeriod, customStartDate, customEndDate, categoryFilter, type]);
+
+  const categories = useMemo(() => {
+    const cats = new Set(data.map(item => 
+      type === 'transactions' ? (item as Transaction).category : (item as Budget).category
+    ));
+    return Array.from(cats);
+  }, [data, type]);
+
+  const getCategoryBadgeColor = (category: string) => {
+    const colors = {
+      food: 'bg-orange-100 text-orange-800',
+      transport: 'bg-blue-100 text-blue-800',
+      entertainment: 'bg-purple-100 text-purple-800',
+      utilities: 'bg-gray-100 text-gray-800',
+      healthcare: 'bg-red-100 text-red-800',
+      shopping: 'bg-pink-100 text-pink-800',
+      education: 'bg-green-100 text-green-800',
+      investment: 'bg-indigo-100 text-indigo-800',
+      salary: 'bg-emerald-100 text-emerald-800',
+      freelance: 'bg-teal-100 text-teal-800',
+      business: 'bg-yellow-100 text-yellow-800',
+      other: 'bg-slate-100 text-slate-800'
+    };
+    return colors[category as keyof typeof colors] || colors.other;
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-3 text-xl font-playfair">
-            {type === 'transactions' ? <FileText className="w-6 h-6" /> : <Target className="w-6 h-6" />}
-            View All {type === 'transactions' ? 'Transactions' : 'Budgets'}
-          </DialogTitle>
+          <DialogTitle className="text-xl font-semibold">{title}</DialogTitle>
           <DialogDescription>
-            Filter and view all your {type === 'transactions' ? 'transactions' : 'budgets'} with detailed information
+            Showing {filteredData.length} {type} with advanced filtering options
           </DialogDescription>
         </DialogHeader>
 
-        {/* Filters */}
-        <div className="space-y-4 border-b pb-4">
-          <div className="flex flex-wrap gap-4 items-end">
-            <div className="min-w-48">
-              <Label htmlFor="filter">Time Period</Label>
-              <Select value={filter} onValueChange={setFilter}>
+        <div className="space-y-4">
+          {/* Filters */}
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-sm font-medium mb-2 block">Time Period</label>
+              <Select value={filterPeriod} onValueChange={(value) => setFilterPeriod(value as FilterPeriod)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select period" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Time</SelectItem>
-                  <SelectItem value="daily">Today</SelectItem>
-                  <SelectItem value="weekly">This Week</SelectItem>
-                  <SelectItem value="monthly">This Month</SelectItem>
-                  <SelectItem value="quarterly">Last 3 Months</SelectItem>
-                  <SelectItem value="half-yearly">Last 6 Months</SelectItem>
-                  <SelectItem value="yearly">This Year</SelectItem>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="quarterly">Quarterly</SelectItem>
+                  <SelectItem value="half-yearly">Half-Yearly</SelectItem>
+                  <SelectItem value="yearly">Yearly</SelectItem>
                   <SelectItem value="custom">Custom Range</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {filter === 'custom' && (
-              <>
-                <div>
-                  <Label htmlFor="start-date">Start Date</Label>
-                  <Input
-                    id="start-date"
-                    type="date"
-                    value={customStartDate}
-                    onChange={(e) => setCustomStartDate(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="end-date">End Date</Label>
-                  <Input
-                    id="end-date"
-                    type="date"
-                    value={customEndDate}
-                    onChange={(e) => setCustomEndDate(e.target.value)}
-                  />
-                </div>
-              </>
-            )}
-          </div>
-          
-          <div className="text-sm text-gray-600">
-            Showing {filteredData.length} of {data.length} {type}
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto">
-          {filteredData.length > 0 ? (
-            <div className="space-y-3 pr-2">
-              {type === 'transactions'
-                ? (filteredData as Transaction[]).map(renderTransactionItem)
-                : (filteredData as Budget[]).map(renderBudgetItem)
-              }
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-sm font-medium mb-2 block">Category</label>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map(category => (
+                    <SelectItem key={category} value={category}>
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          ) : (
-            <div className="text-center py-12 text-gray-600">
-              {type === 'transactions' ? (
-                <>
-                  <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>No transactions found for the selected period</p>
-                </>
-              ) : (
-                <>
-                  <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>No budgets found for the selected period</p>
-                </>
-              )}
+          </div>
+
+          {/* Custom Date Range */}
+          {filterPeriod === 'custom' && (
+            <div className="flex flex-wrap gap-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Start Date</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-[200px] justify-start text-left font-normal">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {customStartDate ? format(customStartDate, "PPP") : "Pick a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={customStartDate}
+                      onSelect={setCustomStartDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">End Date</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-[200px] justify-start text-left font-normal">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {customEndDate ? format(customEndDate, "PPP") : "Pick a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={customEndDate}
+                      onSelect={setCustomEndDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
           )}
+
+          <Separator />
+
+          {/* Data Display */}
+          <div className="space-y-3">
+            {filteredData.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No {type} found for the selected filters
+              </div>
+            ) : (
+              filteredData.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  {type === 'transactions' ? (
+                    <>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-medium">{(item as Transaction).title}</h4>
+                          <Badge 
+                            variant="secondary" 
+                            className={`text-xs ${getCategoryBadgeColor((item as Transaction).category)}`}
+                          >
+                            {(item as Transaction).category}
+                          </Badge>
+                        </div>
+                        {(item as Transaction).description && (
+                          <p className="text-sm text-muted-foreground mb-1">
+                            {(item as Transaction).description}
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          {new Date((item as Transaction).date).toLocaleDateString('en-IN', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-semibold ${(item as Transaction).type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                          {(item as Transaction).type === 'expense' ? '-' : '+'}
+                          {formatCurrency((item as Transaction).amount)}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-medium">{(item as Budget).name}</h4>
+                          <Badge 
+                            variant="secondary" 
+                            className={`text-xs ${getCategoryBadgeColor((item as Budget).category)}`}
+                          >
+                            {(item as Budget).category}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date((item as Budget).start_date).toLocaleDateString('en-IN')} - {new Date((item as Budget).end_date).toLocaleDateString('en-IN')}
+                        </p>
+                        {(item as Budget).period && (
+                          <p className="text-xs text-muted-foreground">
+                            Period: {(item as Budget).period}
+                          </p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-blue-600">
+                          {formatCurrency((item as Budget).amount)}
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
