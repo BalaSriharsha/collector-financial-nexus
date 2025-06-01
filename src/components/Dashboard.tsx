@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -89,23 +90,42 @@ const Dashboard = ({ userType }: DashboardProps) => {
   // Get currency symbol based on user profile
   const currencySymbol = getCurrencySymbol(profile?.currency || 'USD');
 
-  // Only check subscription status when window gains focus (reduce frequency)
+  // Enhanced subscription status checking with more frequent updates after potential payments
   useEffect(() => {
-    const handleFocus = () => {
-      console.log('Window focused, checking subscription status...');
-      refreshSubscription(true);
+    const checkSubscriptionStatus = () => {
+      console.log('Checking subscription status...');
+      refreshSubscription();
     };
 
-    // Add a longer delay before attaching the focus listener to prevent immediate calls
-    const timer = setTimeout(() => {
-      window.addEventListener('focus', handleFocus);
-    }, 5000);
-    
+    // Check immediately
+    checkSubscriptionStatus();
+
+    // Check every 5 seconds for subscription updates (more frequent for better UX)
+    const interval = setInterval(checkSubscriptionStatus, 5000);
+
+    // Check when user returns to the page (useful after payment)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('Page became visible, checking subscription status...');
+        refreshSubscription(true); // Force refresh when page becomes visible
+      }
+    };
+
+    // Check when window regains focus (useful after payment in new tab)
+    const handleFocus = () => {
+      console.log('Window focused, checking subscription status...');
+      refreshSubscription(true); // Force refresh when window gains focus
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
     return () => {
-      clearTimeout(timer);
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };
-  }, []);
+  }, [refreshSubscription]);
 
   const fetchDashboardData = async () => {
     if (!user) return;

@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,39 +18,24 @@ const SubscriptionCard = ({ onUpgrade }: SubscriptionCardProps) => {
   const navigate = useNavigate();
   const [showManagement, setShowManagement] = useState(false);
 
-  // Reduced frequency auto-refresh to prevent infinite loops
+  // Auto-refresh subscription when component mounts or becomes visible
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         console.log('SubscriptionCard: Page became visible, refreshing subscription...');
-        // Add delay and only refresh if subscription is null or individual
-        setTimeout(() => {
-          if (!subscription || subscription.tier === 'Individual') {
-            refreshSubscription(true);
-          }
-        }, 2000);
+        refreshSubscription(true);
       }
     };
 
-    // Only refresh when component mounts if we don't have subscription data
-    if (!subscription) {
-      const timer = setTimeout(() => {
-        refreshSubscription(true);
-      }, 1000);
-
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-      
-      return () => {
-        clearTimeout(timer);
-        document.removeEventListener('visibilitychange', handleVisibilityChange);
-      };
-    }
+    // Refresh when component mounts
+    refreshSubscription(true);
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [subscription]);
+  }, [refreshSubscription]);
 
   if (loading) {
     return (
