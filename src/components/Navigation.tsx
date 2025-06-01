@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -64,7 +63,7 @@ const Navigation = () => {
       case 'Organization':
         return 'text-purple-600 border-purple-200';
       default:
-        return 'text-blue-600 border-blue-200 cursor-pointer hover:bg-blue-50';
+        return 'text-blue-600 border-blue-200 cursor-pointer hover-navy';
     }
   };
 
@@ -135,17 +134,17 @@ const Navigation = () => {
                 )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full hover:bg-navy-500 hover:text-orange-500 transition-colors">
+                    <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full hover-navy transition-colors">
                       <User className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem onClick={() => navigate('/profile')} className="hover:bg-navy-500 hover:text-orange-500 transition-colors">
+                    <DropdownMenuItem onClick={() => navigate('/profile')}>
                       <User className="mr-2 h-4 w-4" />
                       Profile
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut} className="hover:bg-navy-500 hover:text-orange-500 transition-colors">
+                    <DropdownMenuItem onClick={handleSignOut}>
                       <LogOut className="mr-2 h-4 w-4" />
                       Sign Out
                     </DropdownMenuItem>
@@ -179,7 +178,7 @@ const Navigation = () => {
               variant="ghost"
               size="sm"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="h-8 w-8 p-0 hover:bg-navy-500 hover:text-orange-500 transition-colors"
+              className="h-8 w-8 p-0 hover-navy transition-colors"
             >
               {isMobileMenuOpen ? (
                 <X className="h-5 w-5" />
@@ -215,7 +214,7 @@ const Navigation = () => {
                       key={link.to}
                       to={link.to}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className={`block px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-navy-500 hover:text-orange-500 ${
+                      className={`block px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover-navy ${
                         isActivePath(link.to)
                           ? 'text-collector-orange bg-orange-50'
                           : 'text-collector-black/70'
@@ -229,7 +228,7 @@ const Navigation = () => {
                     <Link
                       to="/profile"
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="block px-3 py-2 text-sm font-medium text-collector-black/70 hover:bg-navy-500 hover:text-orange-500 rounded-md transition-colors"
+                      className="block px-3 py-2 text-sm font-medium text-collector-black/70 hover-navy rounded-md transition-colors"
                     >
                       <User className="inline mr-2 h-4 w-4" />
                       Profile
@@ -239,7 +238,7 @@ const Navigation = () => {
                         setIsMobileMenuOpen(false);
                         handleSignOut();
                       }}
-                      className="block w-full text-left px-3 py-2 text-sm font-medium text-collector-black/70 hover:bg-navy-500 hover:text-orange-500 rounded-md transition-colors"
+                      className="block w-full text-left px-3 py-2 text-sm font-medium text-collector-black/70 hover-navy rounded-md transition-colors"
                     >
                       <LogOut className="inline mr-2 h-4 w-4" />
                       Sign Out
@@ -253,7 +252,7 @@ const Navigation = () => {
                       key={link.to}
                       to={link.to}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className={`block px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-navy-500 hover:text-orange-500 ${
+                      className={`block px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover-navy ${
                         isActivePath(link.to)
                           ? 'text-collector-orange bg-orange-50'
                           : 'text-collector-black/70'
@@ -271,7 +270,7 @@ const Navigation = () => {
                         setIsMobileMenuOpen(false);
                         navigate('/auth');
                       }}
-                      className="w-full justify-start text-collector-black/70 hover:bg-navy-500 hover:text-orange-500 transition-colors"
+                      className="w-full justify-start text-collector-black/70 hover-navy transition-colors"
                     >
                       Sign In
                     </Button>

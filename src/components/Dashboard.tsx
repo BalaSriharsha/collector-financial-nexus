@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -104,20 +103,15 @@ const Dashboard = ({ userType }: DashboardProps) => {
   // Get currency symbol based on user profile
   const currencySymbol = getCurrencySymbol(profile?.currency || 'USD');
 
-  // Enhanced subscription status checking with more frequent updates after potential payments
   useEffect(() => {
     const checkSubscriptionStatus = () => {
       console.log('Checking subscription status...');
       refreshSubscription();
     };
 
-    // Check immediately
     checkSubscriptionStatus();
-
-    // Check every 10 seconds for subscription updates (more frequent for better UX)
     const interval = setInterval(checkSubscriptionStatus, 10000);
 
-    // Check when user returns to the page (useful after payment)
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         console.log('Page became visible, checking subscription status...');
@@ -125,7 +119,6 @@ const Dashboard = ({ userType }: DashboardProps) => {
       }
     };
 
-    // Check when window regains focus (useful after payment in new tab)
     const handleFocus = () => {
       console.log('Window focused, checking subscription status...');
       checkSubscriptionStatus();
@@ -137,7 +130,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
     return () => {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('focus', handleVisibilityChange);
     };
   }, [refreshSubscription]);
 
@@ -145,7 +138,6 @@ const Dashboard = ({ userType }: DashboardProps) => {
     if (!user) return;
 
     try {
-      // Fetch transactions
       const { data: transactions, error: transError } = await supabase
         .from('transactions')
         .select('*')
@@ -154,7 +146,6 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
       if (transError) throw transError;
 
-      // Calculate stats
       const totalIncome = transactions?.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0) || 0;
       const totalExpense = transactions?.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0) || 0;
       const balance = totalIncome - totalExpense;
@@ -166,7 +157,6 @@ const Dashboard = ({ userType }: DashboardProps) => {
         transactionCount: transactions?.length || 0
       });
 
-      // Map transactions to the interface
       const mappedTransactions = transactions?.slice(0, 5).map(t => ({
         id: t.id,
         title: t.title,
@@ -181,7 +171,6 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
       setRecentTransactions(mappedTransactions);
 
-      // Fetch budgets
       const { data: budgetData, error: budgetError } = await supabase
         .from('budgets')
         .select('*')
@@ -286,105 +275,6 @@ const Dashboard = ({ userType }: DashboardProps) => {
     navigate('/pricing');
   };
 
-  // Quick menu items configuration
-  const quickMenuItems = [
-    {
-      icon: PlusCircle,
-      label: "Add Transaction",
-      onClick: () => setShowAddTransaction(true),
-      bgColor: "bg-blue-500/20",
-      iconColor: "text-blue-600",
-      hoverColor: "hover:bg-blue-500/30"
-    },
-    {
-      icon: Target,
-      label: "Create Budget",
-      onClick: () => setShowCreateBudget(true),
-      bgColor: "bg-orange-500/20",
-      iconColor: "text-orange-600",
-      hoverColor: "hover:bg-orange-500/30"
-    },
-    ...(userType === 'organization' ? [{
-      icon: FileText,
-      label: "Generate Invoice",
-      onClick: () => setShowGenerateInvoice(true),
-      bgColor: "bg-green-500/20",
-      iconColor: "text-green-600",
-      hoverColor: "hover:bg-green-500/30"
-    }] : []),
-    {
-      icon: Upload,
-      label: "Upload",
-      onClick: () => setShowUploadInvoice(true),
-      bgColor: "bg-purple-500/20",
-      iconColor: "text-purple-600",
-      hoverColor: "hover:bg-purple-500/30"
-    },
-    {
-      icon: Users,
-      label: "Expense Share",
-      onClick: handleExpenseShareClick,
-      bgColor: "bg-pink-500/20",
-      iconColor: "text-pink-600",
-      hoverColor: "hover:bg-pink-500/30"
-    },
-    {
-      icon: BarChart3,
-      label: "Reports",
-      onClick: () => setShowViewReports(true),
-      bgColor: "bg-cyan-500/20",
-      iconColor: "text-cyan-600",
-      hoverColor: "hover:bg-cyan-500/30"
-    },
-    {
-      icon: Archive,
-      label: "Archive",
-      onClick: () => setShowViewArchive(true),
-      bgColor: "bg-gray-500/20",
-      iconColor: "text-gray-700",
-      hoverColor: "hover:bg-gray-500/30"
-    }
-  ];
-
-  // Mobile bottom navigation items
-  const mobileNavItems = [
-    {
-      icon: PlusCircle,
-      label: "Add Transaction",
-      onClick: () => setShowAddTransaction(true)
-    },
-    {
-      icon: Target,
-      label: "Create Budget",
-      onClick: () => setShowCreateBudget(true)
-    },
-    {
-      icon: Upload,
-      label: "Upload",
-      onClick: () => setShowUploadInvoice(true)
-    },
-    {
-      icon: BarChart3,
-      label: "Reports",
-      onClick: () => setShowViewReports(true)
-    },
-    {
-      icon: Archive,
-      label: "Archive",
-      onClick: () => setShowViewArchive(true)
-    },
-    {
-      icon: Users,
-      label: "Expense Share",
-      onClick: handleExpenseShareClick
-    },
-    {
-      icon: User,
-      label: "Profile",
-      onClick: () => navigate('/profile')
-    }
-  ];
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -433,7 +323,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
             <Button
               onClick={() => setShowAddTransaction(true)}
               variant="ghost"
-              className="bg-blue-500/20 hover:bg-blue-500/30 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200"
+              className="bg-blue-500/20 hover-navy border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200"
             >
               <PlusCircle className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
               <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
@@ -444,7 +334,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
             <Button
               onClick={() => setShowCreateBudget(true)}
               variant="ghost"
-              className="bg-orange-500/20 hover:bg-orange-500/30 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200"
+              className="bg-orange-500/20 hover-navy border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200"
             >
               <Target className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
               <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
@@ -456,7 +346,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
               <Button
                 onClick={() => setShowGenerateInvoice(true)}
                 variant="ghost"
-                className="bg-green-500/20 hover:bg-green-500/30 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200"
+                className="bg-green-500/20 hover-navy border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200"
               >
                 <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
                 <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
@@ -468,7 +358,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
             <Button
               onClick={() => setShowUploadInvoice(true)}
               variant="ghost"
-              className="bg-purple-500/20 hover:bg-purple-500/30 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200"
+              className="bg-purple-500/20 hover-navy border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200"
             >
               <Upload className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
               <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
@@ -479,7 +369,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
             <Button
               onClick={handleExpenseShareClick}
               variant="ghost"
-              className="bg-pink-500/20 hover:bg-pink-500/30 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200"
+              className="bg-pink-500/20 hover-navy border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200"
             >
               <Users className="w-5 h-5 sm:w-6 sm:h-6 text-pink-600" />
               <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
@@ -490,7 +380,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
             <Button
               onClick={() => setShowViewReports(true)}
               variant="ghost"
-              className="bg-cyan-500/20 hover:bg-cyan-500/30 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200"
+              className="bg-cyan-500/20 hover-navy border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200"
             >
               <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-600" />
               <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
@@ -501,7 +391,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
             <Button
               onClick={() => setShowViewArchive(true)}
               variant="ghost"
-              className="bg-gray-500/20 hover:bg-gray-500/30 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200"
+              className="bg-gray-500/20 hover-navy border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200"
             >
               <Archive className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
               <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
@@ -511,15 +401,15 @@ const Dashboard = ({ userType }: DashboardProps) => {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        {/* Stats Cards - 2x2 Grid */}
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <Card className="bg-white/90 border-gray-200 backdrop-blur-sm hover:bg-gray-50 transition-colors">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
               <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Total Income</CardTitle>
               <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600 mb-1">
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600 mb-1">
                 {currencySymbol}{stats.totalIncome.toLocaleString()}
               </div>
             </CardContent>
@@ -531,7 +421,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
               <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-red-600 mb-1">
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-red-600 mb-1">
                 {currencySymbol}{stats.totalExpense.toLocaleString()}
               </div>
             </CardContent>
@@ -543,7 +433,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
               <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
             </CardHeader>
             <CardContent className="pt-0">
-              <div className={`text-xl sm:text-2xl lg:text-3xl font-bold mb-1 ${stats.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`text-lg sm:text-xl lg:text-2xl font-bold mb-1 ${stats.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {currencySymbol}{stats.balance.toLocaleString()}
               </div>
             </CardContent>
@@ -555,7 +445,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
               <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-orange-600 mb-1">
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-orange-600 mb-1">
                 {stats.transactionCount}
               </div>
             </CardContent>
@@ -599,7 +489,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                               e.stopPropagation();
                               handleEditTransaction(transaction.id);
                             }}
-                            className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-gray-400 text-gray-800 hover:bg-navy-500 hover:text-orange-500 transition-colors"
+                            className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-gray-400 text-gray-800 hover-navy transition-colors"
                           >
                             <Edit className="w-3 h-3 text-gray-700" />
                           </Button>
@@ -610,7 +500,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                               e.stopPropagation();
                               handleDeleteTransaction(transaction.id);
                             }}
-                            className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-red-400 text-red-600 hover:bg-black hover:text-white transition-colors"
+                            className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-red-400 text-red-600 hover-black transition-colors"
                           >
                             <Trash2 className="w-3 h-3" />
                           </Button>
@@ -654,7 +544,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                                 e.stopPropagation();
                                 handleEditBudget(budget.id);
                               }}
-                              className="h-5 w-5 p-0 border-gray-400 text-gray-800 hover:bg-navy-500 hover:text-orange-500 transition-colors"
+                              className="h-5 w-5 p-0 border-gray-400 text-gray-800 hover-navy transition-colors"
                             >
                               <Edit className="w-3 h-3" />
                             </Button>
@@ -665,7 +555,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                                 e.stopPropagation();
                                 handleDeleteBudget(budget.id);
                               }}
-                              className="h-5 w-5 p-0 border-red-400 text-red-600 hover:bg-black hover:text-white transition-colors"
+                              className="h-5 w-5 p-0 border-red-400 text-red-600 hover-black transition-colors"
                             >
                               <Trash2 className="w-3 h-3" />
                             </Button>
@@ -681,7 +571,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="w-full border-gray-400 text-gray-800 hover:bg-navy-500 hover:text-orange-500 text-xs sm:text-sm transition-colors"
+                      className="w-full border-gray-400 text-gray-800 hover-navy text-xs sm:text-sm transition-colors"
                       onClick={() => setShowCreateBudget(true)}
                     >
                       View All Budgets
@@ -696,7 +586,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                     variant="outline" 
                     size="sm" 
                     onClick={() => setShowCreateBudget(true)}
-                    className="border-gray-400 hover:bg-navy-500 hover:text-orange-500 transition-colors"
+                    className="border-gray-400 hover-navy transition-colors"
                   >
                     <span className="text-gray-700">Create Budget</span>
                   </Button>
@@ -707,64 +597,64 @@ const Dashboard = ({ userType }: DashboardProps) => {
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-50">
-        <div className="grid grid-cols-7 gap-1 p-2">
+      {/* Mobile Bottom Navigation - Updated for cleaner design */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 md:hidden z-50 shadow-lg">
+        <div className="grid grid-cols-7 h-16">
           <Button
             onClick={() => setShowAddTransaction(true)}
             variant="ghost"
-            className="flex flex-col items-center gap-1 p-2 h-auto text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+            className="flex flex-col items-center justify-center gap-1 h-full text-gray-600 hover:text-blue-600 hover:bg-blue-50/80 transition-colors rounded-none"
           >
-            <PlusCircle className="w-5 h-5" />
-            <span className="text-xs leading-tight text-center">Add Transaction</span>
+            <PlusCircle className="w-4 h-4" />
+            <span className="text-[10px] leading-none">Add</span>
           </Button>
           <Button
             onClick={() => setShowCreateBudget(true)}
             variant="ghost"
-            className="flex flex-col items-center gap-1 p-2 h-auto text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+            className="flex flex-col items-center justify-center gap-1 h-full text-gray-600 hover:text-orange-600 hover:bg-orange-50/80 transition-colors rounded-none"
           >
-            <Target className="w-5 h-5" />
-            <span className="text-xs leading-tight text-center">Create Budget</span>
+            <Target className="w-4 h-4" />
+            <span className="text-[10px] leading-none">Budget</span>
           </Button>
           <Button
             onClick={() => setShowUploadInvoice(true)}
             variant="ghost"
-            className="flex flex-col items-center gap-1 p-2 h-auto text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+            className="flex flex-col items-center justify-center gap-1 h-full text-gray-600 hover:text-purple-600 hover:bg-purple-50/80 transition-colors rounded-none"
           >
-            <Upload className="w-5 h-5" />
-            <span className="text-xs leading-tight text-center">Upload</span>
+            <Upload className="w-4 h-4" />
+            <span className="text-[10px] leading-none">Upload</span>
           </Button>
           <Button
             onClick={handleExpenseShareClick}
             variant="ghost"
-            className="flex flex-col items-center gap-1 p-2 h-auto text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+            className="flex flex-col items-center justify-center gap-1 h-full text-gray-600 hover:text-pink-600 hover:bg-pink-50/80 transition-colors rounded-none"
           >
-            <Users className="w-5 h-5" />
-            <span className="text-xs leading-tight text-center">Expense Share</span>
+            <Users className="w-4 h-4" />
+            <span className="text-[10px] leading-none">Share</span>
           </Button>
           <Button
             onClick={() => setShowViewReports(true)}
             variant="ghost"
-            className="flex flex-col items-center gap-1 p-2 h-auto text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+            className="flex flex-col items-center justify-center gap-1 h-full text-gray-600 hover:text-cyan-600 hover:bg-cyan-50/80 transition-colors rounded-none"
           >
-            <BarChart3 className="w-5 h-5" />
-            <span className="text-xs leading-tight text-center">Reports</span>
+            <BarChart3 className="w-4 h-4" />
+            <span className="text-[10px] leading-none">Reports</span>
           </Button>
           <Button
             onClick={() => setShowViewArchive(true)}
             variant="ghost"
-            className="flex flex-col items-center gap-1 p-2 h-auto text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+            className="flex flex-col items-center justify-center gap-1 h-full text-gray-600 hover:text-gray-700 hover:bg-gray-50/80 transition-colors rounded-none"
           >
-            <Archive className="w-5 h-5" />
-            <span className="text-xs leading-tight text-center">Archive</span>
+            <Archive className="w-4 h-4" />
+            <span className="text-[10px] leading-none">Archive</span>
           </Button>
           <Button
             onClick={() => navigate('/profile')}
             variant="ghost"
-            className="flex flex-col items-center gap-1 p-2 h-auto text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+            className="flex flex-col items-center justify-center gap-1 h-full text-gray-600 hover:text-green-600 hover:bg-green-50/80 transition-colors rounded-none"
           >
-            <User className="w-5 h-5" />
-            <span className="text-xs leading-tight text-center">Profile</span>
+            <User className="w-4 h-4" />
+            <span className="text-[10px] leading-none">Profile</span>
           </Button>
         </div>
       </div>
@@ -784,7 +674,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 <Crown className="w-4 h-4 mr-2" />
                 Upgrade to Premium
               </Button>
-              <Button onClick={() => setShowUpgradePrompt(false)} variant="outline" className="w-full hover:bg-navy-500 hover:text-orange-500 transition-colors">
+              <Button onClick={() => setShowUpgradePrompt(false)} variant="outline" className="w-full hover-navy transition-colors">
                 Cancel
               </Button>
             </CardContent>
@@ -806,7 +696,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
         onOpenChange={setShowCreateBudget} 
         userType={userType}
         onClose={handleBudgetSuccess}
-        editingBudgetId={editingBudgetId}
+        editingBudget={editingBudgetId}
       />
 
       {userType === 'organization' && (
@@ -846,7 +736,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
         transaction={selectedTransaction}
         open={showTransactionDetails}
         onOpenChange={setShowTransactionDetails}
-        onEdit={handleEditTransaction}
+        onEdit={(transactionId: string) => {
+          setShowTransactionDetails(false);
+          handleEditTransaction(transactionId);
+        }}
         onDelete={handleDeleteTransaction}
       />
 
