@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -6,14 +5,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Check, Crown, Gem } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import RazorpayCheckout from "@/components/RazorpayCheckout";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const Pricing = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<'Premium' | 'Organization' | null>(null);
+  const [showCheckout, setShowCheckout] = useState(false);
 
   const handleSubscribe = async (planType: string) => {
     if (!user) {
@@ -26,23 +27,14 @@ const Pricing = () => {
       return;
     }
 
-    setLoading(planType);
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { planType }
-      });
+    setSelectedPlan(planType as 'Premium' | 'Organization');
+    setShowCheckout(true);
+  };
 
-      if (error) throw error;
-
-      // Open Stripe checkout in a new tab
-      window.open(data.url, '_blank');
-    } catch (error: any) {
-      console.error('Error creating checkout:', error);
-      toast.error(error.message || 'Failed to create checkout session');
-    } finally {
-      setLoading(null);
-    }
+  const handleCheckoutSuccess = () => {
+    setShowCheckout(false);
+    setSelectedPlan(null);
+    navigate('/dashboard');
   };
 
   const plans = [
@@ -65,7 +57,7 @@ const Pricing = () => {
     },
     {
       name: "Premium",
-      price: "$9.99/month",
+      price: "₹749/month",
       description: "Advanced features for serious users",
       icon: Crown,
       features: [
@@ -84,7 +76,7 @@ const Pricing = () => {
     },
     {
       name: "Organization",
-      price: "$29.99/month",
+      price: "₹2,249/month",
       description: "Complete solution for businesses",
       icon: Crown,
       features: [
@@ -118,6 +110,11 @@ const Pricing = () => {
             <p className="text-base sm:text-lg lg:text-xl text-gray-700 max-w-3xl mx-auto">
               From individual users to large organizations, we have the perfect plan to help you master your finances.
             </p>
+            <div className="mt-4 text-sm text-gray-600">
+              <span className="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full">
+                🇮🇳 Proudly accepting payments in INR via UPI, Cards & Net Banking
+              </span>
+            </div>
           </div>
 
           {/* Pricing Grid */}
@@ -163,13 +160,33 @@ const Pricing = () => {
                   <Button 
                     className={`w-full text-sm sm:text-base ${plan.popular ? 'bg-gradient-to-r from-orange-400 to-amber-400 hover:from-orange-500 hover:to-amber-500' : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'} text-white`}
                     onClick={() => handleSubscribe(plan.planType)}
-                    disabled={loading === plan.planType}
                   >
-                    {loading === plan.planType ? 'Processing...' : plan.cta}
+                    {plan.cta}
                   </Button>
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </section>
+
+        {/* Payment Methods Section */}
+        <section className="max-w-4xl mx-auto px-4 py-8">
+          <div className="text-center mb-8">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Secure Payment Options</h3>
+            <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600">
+              <span className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
+                💳 Credit & Debit Cards
+              </span>
+              <span className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
+                🏦 Net Banking
+              </span>
+              <span className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
+                📱 UPI (PhonePe, GPay, Paytm)
+              </span>
+              <span className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
+                💰 Digital Wallets
+              </span>
+            </div>
           </div>
         </section>
 
@@ -212,6 +229,21 @@ const Pricing = () => {
           </div>
         </section>
       </main>
+
+      {/* Checkout Dialog */}
+      <Dialog open={showCheckout} onOpenChange={setShowCheckout}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Complete Your Subscription</DialogTitle>
+          </DialogHeader>
+          {selectedPlan && (
+            <RazorpayCheckout 
+              planType={selectedPlan} 
+              onSuccess={handleCheckoutSuccess}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>

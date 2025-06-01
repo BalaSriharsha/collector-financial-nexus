@@ -22,8 +22,10 @@ export const useSubscription = () => {
     }
 
     try {
-      // Use the check-subscription function to get the latest status
-      const { data, error } = await supabase.functions.invoke('check-subscription');
+      // Use the manage-subscription function to get the latest status
+      const { data, error } = await supabase.functions.invoke('manage-subscription', {
+        body: { action: 'get_status' }
+      });
       
       if (error) throw error;
 
@@ -99,15 +101,17 @@ export const useSubscription = () => {
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('customer-portal');
+      const { data, error } = await supabase.functions.invoke('manage-subscription', {
+        body: { action: 'cancel' }
+      });
       
       if (error) throw error;
 
-      // Open customer portal in new tab
-      window.open(data.url, '_blank');
+      toast.success('Subscription cancelled successfully');
+      await refreshSubscription();
     } catch (error: any) {
-      console.error('Error opening customer portal:', error);
-      toast.error(error.message || 'Failed to open customer portal');
+      console.error('Error managing subscription:', error);
+      toast.error(error.message || 'Failed to manage subscription');
     }
   };
 
