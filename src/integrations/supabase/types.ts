@@ -392,6 +392,8 @@ export type Database = {
           gender: string | null
           id: string
           subscription_tier: string | null
+          theme_mode: string | null
+          theme_style: string | null
           updated_at: string | null
           user_type: string | null
         }
@@ -406,6 +408,8 @@ export type Database = {
           gender?: string | null
           id: string
           subscription_tier?: string | null
+          theme_mode?: string | null
+          theme_style?: string | null
           updated_at?: string | null
           user_type?: string | null
         }
@@ -420,6 +424,8 @@ export type Database = {
           gender?: string | null
           id?: string
           subscription_tier?: string | null
+          theme_mode?: string | null
+          theme_style?: string | null
           updated_at?: string | null
           user_type?: string | null
         }

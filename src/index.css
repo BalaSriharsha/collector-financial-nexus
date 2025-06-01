@@ -99,6 +99,69 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-playfair;
   }
+
+  /* Compact Theme Styles */
+  .compact-theme {
+    --radius: 0.25rem;
+  }
+
+  .compact-theme .card {
+    @apply border border-gray-300 dark:border-gray-600;
+    box-shadow: none;
+  }
+
+  .compact-theme .card-header {
+    @apply py-2 px-3 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800;
+  }
+
+  .compact-theme .card-content {
+    @apply p-3;
+  }
+
+  .compact-theme .card-title {
+    @apply text-sm font-medium;
+  }
+
+  .compact-theme .card-description {
+    @apply text-xs;
+  }
+
+  .compact-theme button {
+    @apply h-8 text-xs px-2;
+  }
+
+  .compact-theme input,
+  .compact-theme select {
+    @apply h-8 text-xs;
+  }
+
+  .compact-theme .text-2xl {
+    @apply text-lg;
+  }
+
+  .compact-theme .text-3xl {
+    @apply text-xl;
+  }
+
+  .compact-theme .space-y-6 > * + * {
+    margin-top: 1rem;
+  }
+
+  .compact-theme .space-y-4 > * + * {
+    margin-top: 0.75rem;
+  }
+
+  .compact-theme .py-8 {
+    @apply py-4;
+  }
+
+  .compact-theme .py-6 {
+    @apply py-3;
+  }
+
+  .compact-theme .gap-6 {
+    @apply gap-4;
+  }
 }
 
 @layer components {
