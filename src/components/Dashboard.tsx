@@ -15,7 +15,8 @@ import {
   Upload,
   Crown,
   Edit,
-  Trash2
+  Trash2,
+  Users
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
@@ -29,6 +30,7 @@ import GenerateInvoiceForm from "./forms/GenerateInvoiceForm";
 import UploadInvoiceForm from "./forms/UploadInvoiceForm";
 import ViewArchiveForm from "./forms/ViewArchiveForm";
 import ViewReportsForm from "./forms/ViewReportsForm";
+import ExpenseSharingForm from "./forms/ExpenseSharingForm";
 import { getCurrencySymbol } from "@/utils/currency";
 
 interface DashboardProps {
@@ -66,7 +68,7 @@ interface Budget {
 const Dashboard = ({ userType }: DashboardProps) => {
   const { user } = useAuth();
   const { profile } = useProfile();
-  const { subscription, canAccess } = useSubscription();
+  const { subscription, canAccess, refreshSubscription } = useSubscription();
   const [stats, setStats] = useState<DashboardStats>({
     totalIncome: 0,
     totalExpense: 0,
@@ -82,10 +84,38 @@ const Dashboard = ({ userType }: DashboardProps) => {
   const [showUploadInvoice, setShowUploadInvoice] = useState(false);
   const [showViewReports, setShowViewReports] = useState(false);
   const [showViewArchive, setShowViewArchive] = useState(false);
+  const [showExpenseSharing, setShowExpenseSharing] = useState(false);
   const [editingTransactionId, setEditingTransactionId] = useState<string | null>(null);
 
   // Get currency symbol based on user profile
   const currencySymbol = getCurrencySymbol(profile?.currency || 'USD');
+
+  // Check subscription status periodically and after potential payments
+  useEffect(() => {
+    const checkSubscriptionStatus = () => {
+      refreshSubscription();
+    };
+
+    // Check immediately
+    checkSubscriptionStatus();
+
+    // Check every 30 seconds for subscription updates
+    const interval = setInterval(checkSubscriptionStatus, 30000);
+
+    // Check when user returns to the page (useful after payment)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        checkSubscriptionStatus();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [refreshSubscription]);
 
   const fetchDashboardData = async () => {
     if (!user) return;
@@ -190,7 +220,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
       label: "Add Transaction",
       onClick: () => setShowAddTransaction(true),
       bgColor: "bg-blue-500/20",
-      iconColor: "text-blue-400",
+      iconColor: "text-blue-600",
       hoverColor: "hover:bg-blue-500/30"
     },
     {
@@ -198,7 +228,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
       label: "Create Budget",
       onClick: () => setShowCreateBudget(true),
       bgColor: "bg-orange-500/20",
-      iconColor: "text-orange-400",
+      iconColor: "text-orange-600",
       hoverColor: "hover:bg-orange-500/30"
     },
     ...(userType === 'organization' ? [{
@@ -206,7 +236,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
       label: "Generate Invoice",
       onClick: () => setShowGenerateInvoice(true),
       bgColor: "bg-green-500/20",
-      iconColor: "text-green-400",
+      iconColor: "text-green-600",
       hoverColor: "hover:bg-green-500/30"
     }] : []),
     {
@@ -214,7 +244,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
       label: "Upload",
       onClick: () => setShowUploadInvoice(true),
       bgColor: "bg-purple-500/20",
-      iconColor: "text-purple-400",
+      iconColor: "text-purple-600",
       hoverColor: "hover:bg-purple-500/30"
     },
     {
@@ -222,7 +252,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
       label: "Reports",
       onClick: () => setShowViewReports(true),
       bgColor: "bg-cyan-500/20",
-      iconColor: "text-cyan-400",
+      iconColor: "text-cyan-600",
       hoverColor: "hover:bg-cyan-500/30"
     },
     {
@@ -230,14 +260,22 @@ const Dashboard = ({ userType }: DashboardProps) => {
       label: "Archive",
       onClick: () => setShowViewArchive(true),
       bgColor: "bg-gray-500/20",
-      iconColor: "text-gray-300",
+      iconColor: "text-gray-700",
       hoverColor: "hover:bg-gray-500/30"
-    }
+    },
+    ...(canAccess('expense-sharing') ? [{
+      icon: Users,
+      label: "Expense Sharing",
+      onClick: () => setShowExpenseSharing(true),
+      bgColor: "bg-pink-500/20",
+      iconColor: "text-pink-600",
+      hoverColor: "hover:bg-pink-500/30"
+    }] : [])
   ];
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
+      <div className="min-h-screen bg-gray-100">
         <Navigation />
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="text-center py-8">
@@ -250,7 +288,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gray-100">
       <Navigation />
       
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
@@ -279,7 +317,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
         {/* Quick Menu */}
         <div className="mb-6 sm:mb-8">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 xl:grid-cols-7 gap-3 sm:gap-4">
             {quickMenuItems.map((item, index) => (
               <Button
                 key={index}
@@ -288,7 +326,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 className={`${item.bgColor} ${item.hoverColor} border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200`}
               >
                 <item.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${item.iconColor}`} />
-                <span className="text-xs sm:text-sm font-medium text-center leading-tight">
+                <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
                   {item.label}
                 </span>
               </Button>
@@ -298,7 +336,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <Card className="bg-white/80 border-gray-200 backdrop-blur-sm">
+          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
               <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Total Income</CardTitle>
               <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
@@ -310,7 +348,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/80 border-gray-200 backdrop-blur-sm">
+          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
               <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Total Expenses</CardTitle>
               <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
@@ -322,7 +360,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/80 border-gray-200 backdrop-blur-sm">
+          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
               <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Balance</CardTitle>
               <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
@@ -334,7 +372,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/80 border-gray-200 backdrop-blur-sm">
+          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
               <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Transactions</CardTitle>
               <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
@@ -350,7 +388,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
           {/* Recent Transactions */}
-          <Card className="bg-white/80 border-gray-200 backdrop-blur-sm">
+          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="text-lg sm:text-xl text-gray-800">Recent Transactions</CardTitle>
             </CardHeader>
@@ -380,7 +418,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                             size="sm"
                             variant="outline"
                             onClick={() => handleEditTransaction(transaction.id)}
-                            className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-gray-400 text-gray-700 hover:bg-gray-100"
+                            className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-gray-400 text-gray-800 hover:bg-gray-100"
                           >
                             <Edit className="w-3 h-3" />
                           </Button>
@@ -401,7 +439,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                       variant="outline" 
                       size="sm" 
                       onClick={() => setShowAddTransaction(true)}
-                      className="flex-1 border-gray-400 text-gray-700 hover:bg-gray-100 text-xs sm:text-sm"
+                      className="flex-1 border-gray-400 text-gray-800 hover:bg-gray-100 text-xs sm:text-sm"
                     >
                       <PlusCircle className="w-4 h-4 mr-2" />
                       Add Transaction
@@ -410,7 +448,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                       variant="outline" 
                       size="sm" 
                       onClick={() => setShowViewArchive(true)}
-                      className="flex-1 border-gray-400 text-gray-700 hover:bg-gray-100 text-xs sm:text-sm"
+                      className="flex-1 border-gray-400 text-gray-800 hover:bg-gray-100 text-xs sm:text-sm"
                     >
                       <Archive className="w-4 h-4 mr-2" />
                       View Archive
@@ -425,7 +463,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                     variant="outline" 
                     size="sm" 
                     onClick={() => setShowAddTransaction(true)}
-                    className="border-gray-400 text-gray-700 hover:bg-gray-100"
+                    className="border-gray-400 text-gray-800 hover:bg-gray-100"
                   >
                     Add Transaction
                   </Button>
@@ -435,7 +473,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
           </Card>
 
           {/* Budgets Overview */}
-          <Card className="bg-white/80 border-gray-200 backdrop-blur-sm">
+          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="text-lg sm:text-xl text-gray-800">Budget Overview</CardTitle>
             </CardHeader>
@@ -457,7 +495,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="w-full border-gray-400 text-gray-700 hover:bg-gray-100 text-xs sm:text-sm"
+                      className="w-full border-gray-400 text-gray-800 hover:bg-gray-100 text-xs sm:text-sm"
                       onClick={() => setShowCreateBudget(true)}
                     >
                       View All Budgets
@@ -472,7 +510,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                     variant="outline" 
                     size="sm" 
                     onClick={() => setShowCreateBudget(true)}
-                    className="border-gray-400 text-gray-700 hover:bg-gray-100"
+                    className="border-gray-400 text-gray-800 hover:bg-gray-100"
                   >
                     Create Budget
                   </Button>
@@ -489,6 +527,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
         onOpenChange={setShowAddTransaction} 
         userType={userType}
         onClose={handleTransactionSuccess}
+        editingTransactionId={editingTransactionId}
       />
 
       <CreateBudgetForm 
@@ -518,7 +557,17 @@ const Dashboard = ({ userType }: DashboardProps) => {
       <ViewArchiveForm 
         open={showViewArchive} 
         onOpenChange={setShowViewArchive} 
+        userType={userType}
+        subscription={subscription}
       />
+
+      {canAccess('expense-sharing') && (
+        <ExpenseSharingForm 
+          open={showExpenseSharing} 
+          onOpenChange={setShowExpenseSharing} 
+          userType={userType}
+        />
+      )}
     </div>
   );
 };

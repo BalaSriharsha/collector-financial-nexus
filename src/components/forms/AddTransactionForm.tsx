@@ -5,116 +5,122 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
+import { PlusCircle, DollarSign } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
 
 interface AddTransactionFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userType: 'individual' | 'organization';
-  editingTransaction?: any;
-  onClose?: () => void;
+  onClose: () => void;
+  editingTransactionId?: string | null;
 }
 
-type TransactionCategory = "food" | "transport" | "entertainment" | "utilities" | "healthcare" | "shopping" | "education" | "investment" | "salary" | "freelance" | "business" | "other";
-
-const AddTransactionForm = ({ open, onOpenChange, userType, editingTransaction, onClose }: AddTransactionFormProps) => {
+const AddTransactionForm = ({ open, onOpenChange, userType, onClose, editingTransactionId }: AddTransactionFormProps) => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const [type, setType] = useState<'income' | 'expense'>('expense');
+  const [title, setTitle] = useState("");
+  const [amount, setAmount] = useState("");
+  const [category, setCategory] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    title: "",
-    amount: "",
-    type: "expense" as "income" | "expense",
-    category: "" as TransactionCategory | "",
-    date: new Date().toISOString().split('T')[0],
-    description: "",
-  });
 
-  const incomeCategories: TransactionCategory[] = ["salary", "freelance", "business", "investment", "other"];
-  const expenseCategories: TransactionCategory[] = ["food", "transport", "entertainment", "utilities", "healthcare", "shopping", "education", "other"];
-
-  // Reset form when modal opens/closes or editing transaction changes
+  // Fetch transaction data when editing
   useEffect(() => {
-    if (editingTransaction) {
-      setFormData({
-        title: editingTransaction.title || "",
-        amount: editingTransaction.amount?.toString() || "",
-        type: editingTransaction.type || "expense",
-        category: editingTransaction.category || "",
-        date: editingTransaction.date || new Date().toISOString().split('T')[0],
-        description: editingTransaction.description || "",
-      });
-    } else {
-      setFormData({
-        title: "",
-        amount: "",
-        type: "expense",
-        category: "",
-        date: new Date().toISOString().split('T')[0],
-        description: "",
-      });
-    }
-  }, [editingTransaction, open]);
+    const fetchTransactionData = async () => {
+      if (!editingTransactionId || !user) return;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !formData.category) return;
+      try {
+        const { data: transaction, error } = await supabase
+          .from('transactions')
+          .select('*')
+          .eq('id', editingTransactionId)
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) throw error;
+
+        if (transaction) {
+          setType(transaction.type);
+          setTitle(transaction.title);
+          setAmount(transaction.amount.toString());
+          setCategory(transaction.category);
+          setDate(transaction.date);
+          setDescription(transaction.description || "");
+        }
+      } catch (error: any) {
+        console.error('Error fetching transaction:', error);
+        toast.error('Failed to load transaction data');
+      }
+    };
+
+    if (open && editingTransactionId) {
+      fetchTransactionData();
+    } else if (open && !editingTransactionId) {
+      // Reset form for new transaction
+      setType('expense');
+      setTitle("");
+      setAmount("");
+      setCategory("");
+      setDate(new Date().toISOString().split('T')[0]);
+      setDescription("");
+    }
+  }, [open, editingTransactionId, user]);
+
+  const resetForm = () => {
+    setType('expense');
+    setTitle("");
+    setAmount("");
+    setCategory("");
+    setDate(new Date().toISOString().split('T')[0]);
+    setDescription("");
+  };
+
+  const handleSubmit = async () => {
+    if (!user || !title || !amount || !category) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
 
     setLoading(true);
     try {
       const transactionData = {
-        title: formData.title,
-        amount: parseFloat(formData.amount),
-        type: formData.type,
-        category: formData.category as TransactionCategory,
-        date: formData.date,
-        description: formData.description,
+        title,
+        amount: parseFloat(amount),
+        type,
+        category,
+        date,
+        description,
         user_id: user.id,
-        organization_id: userType === 'organization' ? null : null, // Will be set when organization features are implemented
       };
 
       let error;
-      if (editingTransaction) {
+      
+      if (editingTransactionId) {
         // Update existing transaction
-        const result = await supabase
+        const { error: updateError } = await supabase
           .from('transactions')
           .update(transactionData)
-          .eq('id', editingTransaction.id);
-        error = result.error;
-        
-        if (!error) {
-          toast.success('Transaction updated successfully!');
-        }
+          .eq('id', editingTransactionId);
+        error = updateError;
       } else {
         // Create new transaction
-        const result = await supabase
+        const { error: insertError } = await supabase
           .from('transactions')
-          .insert(transactionData);
-        error = result.error;
-        
-        if (!error) {
-          toast.success('Transaction added successfully!');
-        }
+          .insert([transactionData]);
+        error = insertError;
       }
 
       if (error) throw error;
 
-      // Reset form
-      setFormData({
-        title: "",
-        amount: "",
-        type: "expense",
-        category: "",
-        date: new Date().toISOString().split('T')[0],
-        description: "",
-      });
-
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      onClose ? onClose() : onOpenChange(false);
+      toast.success(editingTransactionId ? 'Transaction updated successfully!' : 'Transaction added successfully!');
+      resetForm();
+      onClose();
     } catch (error: any) {
       console.error('Error saving transaction:', error);
       toast.error(error.message || 'Failed to save transaction');
@@ -123,128 +129,121 @@ const AddTransactionForm = ({ open, onOpenChange, userType, editingTransaction, 
     }
   };
 
-  const getCurrentCategories = (): TransactionCategory[] => {
-    return formData.type === 'income' ? incomeCategories : expenseCategories;
+  const categories = {
+    income: ['Salary', 'Freelance', 'Investment', 'Business', 'Gift', 'Other'],
+    expense: ['Food', 'Transportation', 'Housing', 'Entertainment', 'Healthcare', 'Shopping', 'Utilities', 'Other']
   };
 
   return (
-    <Sheet open={open} onOpenChange={onClose || onOpenChange}>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
           <SheetTitle className="font-playfair text-collector-black">
-            {editingTransaction ? 'Edit Transaction' : 'Add Transaction'}
+            {editingTransactionId ? 'Edit Transaction' : 'Add Transaction'}
           </SheetTitle>
           <SheetDescription>
-            {editingTransaction ? 'Update your transaction details' : 'Record a new income or expense transaction.'}
+            {editingTransactionId ? 'Update your transaction details.' : 'Add a new income or expense transaction to track your finances.'}
           </SheetDescription>
         </SheetHeader>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+        <div className="mt-6 space-y-6">
           {/* Transaction Type */}
-          <div className="space-y-2">
-            <Label htmlFor="type">Transaction Type</Label>
-            <Select value={formData.type} onValueChange={(value: "income" | "expense") => {
-              setFormData(prev => ({ ...prev, type: value, category: "" }));
-            }}>
-              <SelectTrigger className="border-2 border-collector-gold/30 focus:border-collector-orange">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                <SelectItem value="income">Income</SelectItem>
-                <SelectItem value="expense">Expense</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="space-y-4">
+            <Label>Transaction Type</Label>
+            <RadioGroup value={type} onValueChange={(value: 'income' | 'expense') => setType(value)}>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="income" id="income" />
+                <Label htmlFor="income" className="text-green-600 font-medium">Income</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="expense" id="expense" />
+                <Label htmlFor="expense" className="text-red-600 font-medium">Expense</Label>
+              </div>
+            </RadioGroup>
           </div>
 
           {/* Title */}
-          <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+          <div>
+            <Label htmlFor="title">Title *</Label>
             <Input
               id="title"
               placeholder="e.g., Grocery shopping, Salary payment..."
-              value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              required
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               className="border-2 border-collector-gold/30 focus:border-collector-orange"
             />
           </div>
 
           {/* Amount */}
-          <div className="space-y-2">
-            <Label htmlFor="amount">Amount ($)</Label>
-            <Input
-              id="amount"
-              type="number"
-              step="0.01"
-              placeholder="0.00"
-              value={formData.amount}
-              onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-              required
-              className="border-2 border-collector-gold/30 focus:border-collector-orange"
-            />
+          <div>
+            <Label htmlFor="amount">Amount *</Label>
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-collector-black/60 w-4 h-4" />
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="pl-10 border-2 border-collector-gold/30 focus:border-collector-orange"
+              />
+            </div>
           </div>
 
           {/* Category */}
-          <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
-            <Select value={formData.category} onValueChange={(value: TransactionCategory) => setFormData(prev => ({ ...prev, category: value }))}>
+          <div>
+            <Label htmlFor="category">Category *</Label>
+            <Select value={category} onValueChange={setCategory}>
               <SelectTrigger className="border-2 border-collector-gold/30 focus:border-collector-orange">
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                {getCurrentCategories().map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category.charAt(0).toUpperCase() + category.slice(1)}
-                  </SelectItem>
+              <SelectContent>
+                {categories[type].map((cat) => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
           {/* Date */}
-          <div className="space-y-2">
-            <Label htmlFor="date">Date</Label>
+          <div>
+            <Label htmlFor="date">Date *</Label>
             <Input
               id="date"
               type="date"
-              value={formData.date}
-              onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-              required
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
               className="border-2 border-collector-gold/30 focus:border-collector-orange"
             />
           </div>
 
           {/* Description */}
-          <div className="space-y-2">
+          <div>
             <Label htmlFor="description">Description (Optional)</Label>
             <Textarea
               id="description"
               placeholder="Add any additional notes..."
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               className="border-2 border-collector-gold/30 focus:border-collector-orange"
+              rows={3}
             />
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => onClose ? onClose() : onOpenChange(false)} 
-              className="flex-1 hover:bg-gray-200 transition-all duration-200"
-            >
+            <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
               Cancel
             </Button>
             <Button 
-              type="submit" 
-              disabled={loading} 
-              className="flex-1 bg-blue-500 hover:bg-blue-200 text-white hover:text-collector-black transition-all duration-200"
+              onClick={handleSubmit} 
+              disabled={loading}
+              className="flex-1 bg-blue-gradient hover:bg-blue-600 text-white"
             >
-              {loading ? 'Saving...' : editingTransaction ? 'Update Transaction' : 'Add Transaction'}
+              {loading ? 'Saving...' : editingTransactionId ? 'Update Transaction' : 'Add Transaction'}
             </Button>
           </div>
-        </form>
+        </div>
       </SheetContent>
     </Sheet>
   );

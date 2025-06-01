@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -14,19 +13,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface ViewArchiveFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  userType: 'individual' | 'organization';
+  subscription?: {
+    tier: string;
+    subscribed: boolean;
+    subscriptionEnd?: string;
+  } | null;
 }
 
-const ViewArchiveForm = ({ open, onOpenChange }: ViewArchiveFormProps) => {
+const ViewArchiveForm = ({ open, onOpenChange, userType, subscription }: ViewArchiveFormProps) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [filterType, setFilterType] = useState<string>("all");
   const [loading, setLoading] = useState(false);
 
-  // Fetch archived items (this is a placeholder - you'll need to implement actual archiving)
+  const isPremiumUser = subscription?.tier === 'Premium' || subscription?.tier === 'Organization';
+
+  // Fetch archived items
   const { data: archivedData, isLoading } = useQuery({
-    queryKey: ['archived-items', filterType],
+    queryKey: ['archived-items', filterType, isPremiumUser],
     queryFn: async () => {
-      if (!user) return { transactions: [], budgets: [], invoices: [] };
+      if (!user) return { transactions: [], budgets: [], invoices: [], deletedTransactions: [] };
 
       const promises = [];
 
@@ -65,7 +72,7 @@ const ViewArchiveForm = ({ open, onOpenChange }: ViewArchiveFormProps) => {
       }
 
       // Fetch old invoices (paid or cancelled)
-      if (filterType === 'all' || filterType === 'invoices') {
+      if ((filterType === 'all' || filterType === 'invoices') && userType === 'organization') {
         promises.push(
           supabase
             .from('invoices')
@@ -78,7 +85,17 @@ const ViewArchiveForm = ({ open, onOpenChange }: ViewArchiveFormProps) => {
         promises.push(Promise.resolve({ data: [] }));
       }
 
-      const [transactionsResult, budgetsResult, invoicesResult] = await Promise.all(promises);
+      // For premium users, fetch deleted transactions from the last 30 days
+      // Note: This is a conceptual implementation. In a real app, you'd need a 
+      // separate table to track deleted items or use soft deletes
+      if (isPremiumUser && (filterType === 'all' || filterType === 'deleted')) {
+        // This would be implemented with a deleted_transactions table or soft deletes
+        promises.push(Promise.resolve({ data: [] }));
+      } else {
+        promises.push(Promise.resolve({ data: [] }));
+      }
+
+      const [transactionsResult, budgetsResult, invoicesResult, deletedResult] = await Promise.all(promises);
 
       if (transactionsResult.error) throw transactionsResult.error;
       if (budgetsResult.error) throw budgetsResult.error;
@@ -88,6 +105,7 @@ const ViewArchiveForm = ({ open, onOpenChange }: ViewArchiveFormProps) => {
         transactions: transactionsResult.data || [],
         budgets: budgetsResult.data || [],
         invoices: invoicesResult.data || [],
+        deletedTransactions: deletedResult.data || [],
       };
     },
     enabled: !!user && open,
@@ -163,7 +181,7 @@ const ViewArchiveForm = ({ open, onOpenChange }: ViewArchiveFormProps) => {
   };
 
   const totalArchivedItems = archivedData ? 
-    archivedData.transactions.length + archivedData.budgets.length + archivedData.invoices.length : 0;
+    archivedData.transactions.length + archivedData.budgets.length + archivedData.invoices.length + archivedData.deletedTransactions.length : 0;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -172,6 +190,7 @@ const ViewArchiveForm = ({ open, onOpenChange }: ViewArchiveFormProps) => {
           <SheetTitle className="font-playfair text-collector-black">Archive</SheetTitle>
           <SheetDescription>
             View and manage your archived financial data.
+            {isPremiumUser && " Premium users can view deleted transactions from the last 30 days."}
           </SheetDescription>
         </SheetHeader>
 
@@ -190,10 +209,26 @@ const ViewArchiveForm = ({ open, onOpenChange }: ViewArchiveFormProps) => {
                 <SelectItem value="all">All Items</SelectItem>
                 <SelectItem value="transactions">Transactions</SelectItem>
                 <SelectItem value="budgets">Budgets</SelectItem>
-                <SelectItem value="invoices">Invoices</SelectItem>
+                {userType === 'organization' && <SelectItem value="invoices">Invoices</SelectItem>}
+                {isPremiumUser && <SelectItem value="deleted">Deleted (30 days)</SelectItem>}
               </SelectContent>
             </Select>
           </div>
+
+          {/* Premium Feature Notice */}
+          {!isPremiumUser && (
+            <Card className="border-orange-200 bg-orange-50">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 text-orange-700">
+                  <Archive className="w-5 h-5" />
+                  <span className="font-medium">Premium Feature</span>
+                </div>
+                <p className="text-sm text-orange-600 mt-1">
+                  Upgrade to Premium to view deleted transactions from the last 30 days and access enhanced archive features.
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Summary */}
           <Card className="ancient-border bg-white/90">
@@ -204,7 +239,7 @@ const ViewArchiveForm = ({ open, onOpenChange }: ViewArchiveFormProps) => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-collector-blue">
                     {archivedData?.transactions.length || 0}
@@ -223,6 +258,14 @@ const ViewArchiveForm = ({ open, onOpenChange }: ViewArchiveFormProps) => {
                   </div>
                   <p className="text-sm text-collector-black/70">Archived Invoices</p>
                 </div>
+                {isPremiumUser && (
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-red-600">
+                      {archivedData?.deletedTransactions.length || 0}
+                    </div>
+                    <p className="text-sm text-collector-black/70">Deleted (30 days)</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

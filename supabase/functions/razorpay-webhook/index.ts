@@ -35,6 +35,8 @@ serve(async (req) => {
       const payment = event.payload.payment.entity;
       const order = payment.order_id;
       
+      logStep("Processing payment", { paymentId: payment.id, orderId: order });
+      
       // Get order details to extract user information
       const keyId = Deno.env.get("RAZORPAY_KEY_ID");
       const keySecret = Deno.env.get("RAZORPAY_KEY_SECRET");
@@ -51,37 +53,60 @@ serve(async (req) => {
       const planType = orderData.notes.plan_type;
       const trialDays = parseInt(orderData.notes.trial_days || "0");
       
-      logStep("Processing payment for user", { userId, email, planType });
+      logStep("Processing payment for user", { userId, email, planType, trialDays });
 
       // Calculate subscription dates
       const now = new Date();
       const subscriptionStart = trialDays > 0 ? new Date(now.getTime() + (trialDays * 24 * 60 * 60 * 1000)) : now;
       const subscriptionEnd = new Date(subscriptionStart.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 days from start
 
+      logStep("Subscription dates calculated", { 
+        subscriptionStart: subscriptionStart.toISOString(), 
+        subscriptionEnd: subscriptionEnd.toISOString() 
+      });
+
       // Update subscribers table - use upsert to handle existing records
-      const { error: subscriberError } = await supabaseClient.from("subscribers").upsert({
-        email: email,
-        user_id: userId,
-        subscribed: true,
-        subscription_tier: planType,
-        subscription_end: subscriptionEnd.toISOString(),
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id' });
+      const { data: subscriberData, error: subscriberError } = await supabaseClient
+        .from("subscribers")
+        .upsert({
+          email: email,
+          user_id: userId,
+          subscribed: true,
+          subscription_tier: planType,
+          subscription_end: subscriptionEnd.toISOString(),
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' })
+        .select();
 
       if (subscriberError) {
         logStep("Error updating subscriber", { error: subscriberError });
+        throw subscriberError;
+      } else {
+        logStep("Subscriber updated successfully", { data: subscriberData });
       }
 
       // Update profiles table
-      const { error: profileError } = await supabaseClient.from("profiles").update({
-        subscription_tier: planType
-      }).eq("id", userId);
+      const { data: profileData, error: profileError } = await supabaseClient
+        .from("profiles")
+        .update({
+          subscription_tier: planType
+        })
+        .eq("id", userId)
+        .select();
 
       if (profileError) {
         logStep("Error updating profile", { error: profileError });
+        throw profileError;
+      } else {
+        logStep("Profile updated successfully", { data: profileData });
       }
 
-      logStep("Subscription activated", { userId, planType, subscriptionEnd });
+      logStep("Subscription activated successfully", { 
+        userId, 
+        planType, 
+        subscriptionEnd: subscriptionEnd.toISOString(),
+        paymentId: payment.id 
+      });
     }
 
     return new Response("OK", {
@@ -90,7 +115,7 @@ serve(async (req) => {
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in razorpay-webhook", { message: errorMessage });
+    logStep("ERROR in razorpay-webhook", { message: errorMessage, stack: error instanceof Error ? error.stack : undefined });
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
