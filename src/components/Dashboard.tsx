@@ -16,11 +16,13 @@ import {
   Crown,
   Edit,
   Trash2,
-  Users
+  Users,
+  User
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Navigation from "./Navigation";
@@ -69,6 +71,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { subscription, canAccess, refreshSubscription } = useSubscription();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     totalIncome: 0,
     totalExpense: 0,
@@ -86,6 +89,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
   const [showViewArchive, setShowViewArchive] = useState(false);
   const [showExpenseSharing, setShowExpenseSharing] = useState(false);
   const [editingTransactionId, setEditingTransactionId] = useState<string | null>(null);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
 
   // Get currency symbol based on user profile
   const currencySymbol = getCurrencySymbol(profile?.currency || 'USD');
@@ -223,6 +227,18 @@ const Dashboard = ({ userType }: DashboardProps) => {
     }
   };
 
+  const handleExpenseShareClick = () => {
+    if (canAccess('expense-sharing')) {
+      setShowExpenseSharing(true);
+    } else {
+      setShowUpgradePrompt(true);
+    }
+  };
+
+  const handleUpgradeClick = () => {
+    navigate('/pricing');
+  };
+
   // Quick menu items configuration
   const quickMenuItems = [
     {
@@ -258,6 +274,14 @@ const Dashboard = ({ userType }: DashboardProps) => {
       hoverColor: "hover:bg-purple-500/30"
     },
     {
+      icon: Users,
+      label: "Expense Share",
+      onClick: handleExpenseShareClick,
+      bgColor: "bg-pink-500/20",
+      iconColor: "text-pink-600",
+      hoverColor: "hover:bg-pink-500/30"
+    },
+    {
       icon: BarChart3,
       label: "Reports",
       onClick: () => setShowViewReports(true),
@@ -272,15 +296,46 @@ const Dashboard = ({ userType }: DashboardProps) => {
       bgColor: "bg-gray-500/20",
       iconColor: "text-gray-700",
       hoverColor: "hover:bg-gray-500/30"
+    }
+  ];
+
+  // Mobile bottom navigation items
+  const mobileNavItems = [
+    {
+      icon: PlusCircle,
+      label: "Add Transaction",
+      onClick: () => setShowAddTransaction(true)
     },
-    ...(canAccess('expense-sharing') ? [{
+    {
+      icon: Target,
+      label: "Create Budget",
+      onClick: () => setShowCreateBudget(true)
+    },
+    {
+      icon: Upload,
+      label: "Upload",
+      onClick: () => setShowUploadInvoice(true)
+    },
+    {
+      icon: BarChart3,
+      label: "Reports",
+      onClick: () => setShowViewReports(true)
+    },
+    {
+      icon: Archive,
+      label: "Archive",
+      onClick: () => setShowViewArchive(true)
+    },
+    {
       icon: Users,
-      label: "Expense Sharing",
-      onClick: () => setShowExpenseSharing(true),
-      bgColor: "bg-pink-500/20",
-      iconColor: "text-pink-600",
-      hoverColor: "hover:bg-pink-500/30"
-    }] : [])
+      label: "Expense Share",
+      onClick: handleExpenseShareClick
+    },
+    {
+      icon: User,
+      label: "Profile",
+      onClick: () => navigate('/profile')
+    }
   ];
 
   if (loading) {
@@ -298,7 +353,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
       <Navigation />
       
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
@@ -325,8 +380,8 @@ const Dashboard = ({ userType }: DashboardProps) => {
           </div>
         </div>
 
-        {/* Quick Menu */}
-        <div className="mb-6 sm:mb-8">
+        {/* Quick Menu - Hidden on mobile */}
+        <div className="mb-6 sm:mb-8 hidden md:block">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 xl:grid-cols-7 gap-3 sm:gap-4">
             {quickMenuItems.map((item, index) => (
               <Button
@@ -444,26 +499,6 @@ const Dashboard = ({ userType }: DashboardProps) => {
                       </div>
                     </div>
                   ))}
-                  <div className="flex gap-2 pt-4">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setShowAddTransaction(true)}
-                      className="flex-1 border-gray-400 text-gray-800 hover:bg-gray-100 text-xs sm:text-sm"
-                    >
-                      <PlusCircle className="w-4 h-4 mr-2 text-gray-700" />
-                      <span className="text-gray-700">Add Transaction</span>
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setShowViewArchive(true)}
-                      className="flex-1 border-gray-400 text-gray-800 hover:bg-gray-100 text-xs sm:text-sm"
-                    >
-                      <Archive className="w-4 h-4 mr-2 text-gray-700" />
-                      <span className="text-gray-700">View Archive</span>
-                    </Button>
-                  </div>
                 </div>
               ) : (
                 <div className="text-center py-8 sm:py-12 text-gray-600">
@@ -530,6 +565,46 @@ const Dashboard = ({ userType }: DashboardProps) => {
           </Card>
         </div>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-50">
+        <div className="grid grid-cols-7 gap-1 p-2">
+          {mobileNavItems.map((item, index) => (
+            <Button
+              key={index}
+              onClick={item.onClick}
+              variant="ghost"
+              className="flex flex-col items-center gap-1 p-2 h-auto text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+            >
+              <item.icon className="w-5 h-5" />
+              <span className="text-xs leading-tight text-center">{item.label}</span>
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* Upgrade Prompt Modal */}
+      {showUpgradePrompt && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="text-xl text-center">Upgrade Required</CardTitle>
+              <CardDescription className="text-center">
+                Expense sharing is only available for Premium and Organization users.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              <Button onClick={handleUpgradeClick} className="w-full bg-blue-gradient hover:bg-blue-600 text-white">
+                <Crown className="w-4 h-4 mr-2" />
+                Upgrade to Premium
+              </Button>
+              <Button onClick={() => setShowUpgradePrompt(false)} variant="outline" className="w-full">
+                Cancel
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Form Modals */}
       <AddTransactionForm 

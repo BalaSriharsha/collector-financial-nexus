@@ -26,6 +26,12 @@ const Navigation = () => {
     navigate('/');
   };
 
+  const handleSubscriptionClick = () => {
+    if (subscription?.tier === 'Individual') {
+      navigate('/pricing');
+    }
+  };
+
   const navLinks = [
     { to: "/features", label: "Features" },
     { to: "/pricing", label: "Pricing" },
@@ -58,7 +64,7 @@ const Navigation = () => {
       case 'Organization':
         return 'text-purple-600 border-purple-200';
       default:
-        return 'text-blue-600 border-blue-200';
+        return 'text-blue-600 border-blue-200 cursor-pointer hover:bg-blue-50';
     }
   };
 
@@ -118,7 +124,11 @@ const Navigation = () => {
             {user ? (
               <div className="flex items-center space-x-3">
                 {subscription && (
-                  <Badge variant="outline" className={`text-xs ${getSubscriptionColor()}`}>
+                  <Badge 
+                    variant="outline" 
+                    className={`text-xs ${getSubscriptionColor()}`}
+                    onClick={handleSubscriptionClick}
+                  >
                     {getSubscriptionIcon()}
                     <span className="ml-1">{subscription.tier}</span>
                   </Badge>
@@ -189,7 +199,11 @@ const Navigation = () => {
                   {/* Subscription Badge for mobile */}
                   {subscription && (
                     <div className="px-3 py-2">
-                      <Badge variant="outline" className={`text-xs ${getSubscriptionColor()}`}>
+                      <Badge 
+                        variant="outline" 
+                        className={`text-xs ${getSubscriptionColor()}`}
+                        onClick={handleSubscriptionClick}
+                      >
                         {getSubscriptionIcon()}
                         <span className="ml-1">{subscription.tier} Plan</span>
                       </Badge>
