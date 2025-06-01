@@ -446,7 +446,7 @@ const Dashboard = ({
 
           {/* Budgets Overview */}
           <Card className="bg-white/90 border-gray-200 backdrop-blur-sm">
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between py-[10px] mx-[10px]">
               <CardTitle className="text-lg sm:text-xl text-gray-800">Budget Overview</CardTitle>
               <Button variant="outline" size="sm" onClick={() => setShowViewAllBudgets(true)} className="border-gray-400 text-gray-800 hover-navy transition-colors">
                 View All
