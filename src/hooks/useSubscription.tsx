@@ -33,7 +33,7 @@ export const useSubscription = () => {
       }
 
       setSubscription({
-        tier: data.subscription_tier || 'Individual',
+        tier: (data.subscription_tier as 'Individual' | 'Premium' | 'Organization') || 'Individual',
         subscribed: data.subscribed || false,
         subscriptionEnd: data.subscription_end
       });

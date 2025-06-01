@@ -167,8 +167,8 @@ const Dashboard = ({ userType }: DashboardProps) => {
       <Navigation />
       
       <div className="max-w-7xl mx-auto px-4 py-4 sm:py-8">
-        {/* Header Section - Improved visibility */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 p-6 bg-white/80 backdrop-blur-sm rounded-xl border border-collector-gold/30 shadow-lg">
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl sm:text-4xl font-playfair font-bold text-collector-black mb-2">
               {userType === 'organization' ? 'Organization Dashboard' : 'Personal Dashboard'}
@@ -178,7 +178,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Badge variant="outline" className="text-sm px-3 py-1 border-collector-gold/50 bg-white/50">
+            <Badge variant="outline" className="text-sm px-3 py-1">
               {subscription?.tier} Plan
             </Badge>
             {subscription?.tier !== 'Individual' && (
@@ -190,10 +190,74 @@ const Dashboard = ({ userType }: DashboardProps) => {
           </div>
         </div>
 
-        {/* Stats Cards - Enhanced design */}
+        {/* Quick Actions - Moved to top */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="text-xl text-collector-black">Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              <Button
+                variant="outline"
+                className="flex flex-col items-center gap-3 h-auto py-6"
+                onClick={() => setShowAddTransaction(true)}
+              >
+                <PlusCircle className="w-6 h-6 text-collector-orange" />
+                <span className="text-xs font-medium">Add Transaction</span>
+              </Button>
+              
+              <Button
+                variant="outline"
+                className="flex flex-col items-center gap-3 h-auto py-6"
+                onClick={() => setShowCreateBudget(true)}
+              >
+                <Target className="w-6 h-6 text-collector-orange" />
+                <span className="text-xs font-medium">Create Budget</span>
+              </Button>
+              
+              <Button
+                variant="outline"
+                className="flex flex-col items-center gap-3 h-auto py-6"
+                onClick={() => setShowGenerateInvoice(true)}
+              >
+                <FileText className="w-6 h-6 text-collector-orange" />
+                <span className="text-xs font-medium">Generate Invoice</span>
+              </Button>
+              
+              <Button
+                variant="outline"
+                className="flex flex-col items-center gap-3 h-auto py-6"
+                onClick={() => setShowUploadInvoice(true)}
+              >
+                <Upload className="w-6 h-6 text-collector-orange" />
+                <span className="text-xs font-medium">Upload Invoice</span>
+              </Button>
+              
+              <Button
+                variant="outline"
+                className="flex flex-col items-center gap-3 h-auto py-6"
+                onClick={() => setShowViewReports(true)}
+              >
+                <BarChart3 className="w-6 h-6 text-collector-orange" />
+                <span className="text-xs font-medium">View Reports</span>
+              </Button>
+              
+              <Button
+                variant="outline"
+                className="flex flex-col items-center gap-3 h-auto py-6"
+                onClick={handleRefresh}
+              >
+                <Download className="w-6 h-6 text-collector-orange" />
+                <span className="text-xs font-medium">Refresh</span>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card 
-            className="cursor-pointer hover:shadow-xl transition-all duration-300 border-collector-gold/30 bg-white/90 backdrop-blur-sm hover:scale-105"
+            className="cursor-pointer hover:shadow-lg transition-shadow"
             onClick={() => handleMetricClick('income', stats.totalIncome, 'Total Income')}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
@@ -208,7 +272,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
           </Card>
 
           <Card 
-            className="cursor-pointer hover:shadow-xl transition-all duration-300 border-collector-gold/30 bg-white/90 backdrop-blur-sm hover:scale-105"
+            className="cursor-pointer hover:shadow-lg transition-shadow"
             onClick={() => handleMetricClick('expense', stats.totalExpense, 'Total Expenses')}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
@@ -223,7 +287,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
           </Card>
 
           <Card 
-            className="cursor-pointer hover:shadow-xl transition-all duration-300 border-collector-gold/30 bg-white/90 backdrop-blur-sm hover:scale-105"
+            className="cursor-pointer hover:shadow-lg transition-shadow"
             onClick={() => handleMetricClick('balance', stats.balance, 'Net Balance')}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
@@ -238,7 +302,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
           </Card>
 
           <Card 
-            className="cursor-pointer hover:shadow-xl transition-all duration-300 border-collector-gold/30 bg-white/90 backdrop-blur-sm hover:scale-105"
+            className="cursor-pointer hover:shadow-lg transition-shadow"
             onClick={() => setShowAllTransactions(true)}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
@@ -253,45 +317,44 @@ const Dashboard = ({ userType }: DashboardProps) => {
           </Card>
         </div>
 
-        {/* Main Content Tabs - Improved visibility */}
+        {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 bg-white/70 backdrop-blur-sm border border-collector-gold/30 shadow-lg h-12">
-            <TabsTrigger value="overview" className="text-xs sm:text-sm font-medium data-[state=active]:bg-collector-orange data-[state=active]:text-white">Overview</TabsTrigger>
-            <TabsTrigger value="transactions" className="text-xs sm:text-sm font-medium data-[state=active]:bg-collector-orange data-[state=active]:text-white">Add Transaction</TabsTrigger>
-            <TabsTrigger value="budgets" className="text-xs sm:text-sm font-medium data-[state=active]:bg-collector-orange data-[state=active]:text-white">Budgets</TabsTrigger>
-            <TabsTrigger value="invoices" className="text-xs sm:text-sm font-medium data-[state=active]:bg-collector-orange data-[state=active]:text-white">Invoices</TabsTrigger>
-            <TabsTrigger value="upload" className="text-xs sm:text-sm font-medium data-[state=active]:bg-collector-orange data-[state=active]:text-white">Upload</TabsTrigger>
-            <TabsTrigger value="reports" className="text-xs sm:text-sm font-medium data-[state=active]:bg-collector-orange data-[state=active]:text-white">Reports</TabsTrigger>
-            <TabsTrigger value="archive" className="text-xs sm:text-sm font-medium data-[state=active]:bg-collector-orange data-[state=active]:text-white">Archive</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 bg-white/70 backdrop-blur-sm h-12">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm font-medium">Overview</TabsTrigger>
+            <TabsTrigger value="transactions" className="text-xs sm:text-sm font-medium">Add Transaction</TabsTrigger>
+            <TabsTrigger value="budgets" className="text-xs sm:text-sm font-medium">Budgets</TabsTrigger>
+            <TabsTrigger value="invoices" className="text-xs sm:text-sm font-medium">Invoices</TabsTrigger>
+            <TabsTrigger value="upload" className="text-xs sm:text-sm font-medium">Upload</TabsTrigger>
+            <TabsTrigger value="reports" className="text-xs sm:text-sm font-medium">Reports</TabsTrigger>
+            <TabsTrigger value="archive" className="text-xs sm:text-sm font-medium">Archive</TabsTrigger>
             {userType === 'organization' && (
-              <TabsTrigger value="teams" className="text-xs sm:text-sm font-medium data-[state=active]:bg-collector-orange data-[state=active]:text-white">Teams</TabsTrigger>
+              <TabsTrigger value="teams" className="text-xs sm:text-sm font-medium">Teams</TabsTrigger>
             )}
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Recent Transactions - Enhanced visibility */}
-              <Card className="border-collector-gold/30 bg-white/90 backdrop-blur-sm shadow-lg">
-                <CardHeader className="pb-4 border-b border-collector-gold/20">
+              {/* Recent Transactions */}
+              <Card>
+                <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-xl text-collector-black">Recent Transactions</CardTitle>
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => setShowAllTransactions(true)}
-                      className="text-sm border-collector-orange text-collector-orange hover:bg-collector-orange hover:text-white"
                     >
                       View All
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent className="pt-4">
+                <CardContent>
                   {recentTransactions.length > 0 ? (
                     <div className="space-y-4">
                       {recentTransactions.map((transaction) => (
                         <div 
                           key={transaction.id}
-                          className="flex items-center justify-between p-4 rounded-lg border border-collector-gold/20 hover:bg-collector-orange/5 cursor-pointer transition-all duration-200 hover:shadow-md"
+                          className="flex items-center justify-between p-4 rounded-lg border hover:bg-gray-50 cursor-pointer transition-colors"
                           onClick={() => setSelectedTransaction(transaction)}
                         >
                           <div className="flex-1">
@@ -316,8 +379,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="border-collector-orange text-collector-orange hover:bg-collector-orange hover:text-white"
-                        onClick={() => setActiveTab('transactions')}
+                        onClick={() => setShowAddTransaction(true)}
                       >
                         Add Transaction
                       </Button>
@@ -326,16 +388,16 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardContent>
               </Card>
 
-              {/* Budgets Overview - Enhanced visibility */}
-              <Card className="border-collector-gold/30 bg-white/90 backdrop-blur-sm shadow-lg">
-                <CardHeader className="pb-4 border-b border-collector-gold/20">
+              {/* Budgets Overview */}
+              <Card>
+                <CardHeader>
                   <CardTitle className="text-xl text-collector-black">Budget Overview</CardTitle>
                 </CardHeader>
-                <CardContent className="pt-4">
+                <CardContent>
                   {budgets.length > 0 ? (
                     <div className="space-y-4">
                       {budgets.slice(0, 3).map((budget) => (
-                        <div key={budget.id} className="p-4 rounded-lg border border-collector-gold/20 bg-white/50">
+                        <div key={budget.id} className="p-4 rounded-lg border bg-white/50">
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-semibold text-collector-black text-sm">{budget.name}</span>
                             <span className="text-sm font-bold text-collector-orange">{currencySymbol}{Number(budget.amount).toLocaleString()}</span>
@@ -349,8 +411,8 @@ const Dashboard = ({ userType }: DashboardProps) => {
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          className="w-full border-collector-orange text-collector-orange hover:bg-collector-orange hover:text-white"
-                          onClick={() => setActiveTab('budgets')}
+                          className="w-full"
+                          onClick={() => setShowCreateBudget(true)}
                         >
                           View All Budgets
                         </Button>
@@ -363,8 +425,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="border-collector-orange text-collector-orange hover:bg-collector-orange hover:text-white"
-                        onClick={() => setActiveTab('budgets')}
+                        onClick={() => setShowCreateBudget(true)}
                       >
                         Create Budget
                       </Button>
@@ -373,70 +434,6 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardContent>
               </Card>
             </div>
-
-            {/* Quick Actions - Enhanced design */}
-            <Card className="border-collector-gold/30 bg-white/90 backdrop-blur-sm shadow-lg">
-              <CardHeader className="pb-4 border-b border-collector-gold/20">
-                <CardTitle className="text-xl text-collector-black">Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                  <Button
-                    variant="outline"
-                    className="flex flex-col items-center gap-3 h-auto py-6 border-collector-gold/40 hover:border-collector-orange hover:bg-collector-orange/10 transition-all duration-200"
-                    onClick={() => setActiveTab('transactions')}
-                  >
-                    <PlusCircle className="w-6 h-6 text-collector-orange" />
-                    <span className="text-xs font-medium">Add Transaction</span>
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="flex flex-col items-center gap-3 h-auto py-6 border-collector-gold/40 hover:border-collector-orange hover:bg-collector-orange/10 transition-all duration-200"
-                    onClick={() => setActiveTab('budgets')}
-                  >
-                    <Target className="w-6 h-6 text-collector-orange" />
-                    <span className="text-xs font-medium">Create Budget</span>
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="flex flex-col items-center gap-3 h-auto py-6 border-collector-gold/40 hover:border-collector-orange hover:bg-collector-orange/10 transition-all duration-200"
-                    onClick={() => setActiveTab('invoices')}
-                  >
-                    <FileText className="w-6 h-6 text-collector-orange" />
-                    <span className="text-xs font-medium">Generate Invoice</span>
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="flex flex-col items-center gap-3 h-auto py-6 border-collector-gold/40 hover:border-collector-orange hover:bg-collector-orange/10 transition-all duration-200"
-                    onClick={() => setActiveTab('upload')}
-                  >
-                    <Upload className="w-6 h-6 text-collector-orange" />
-                    <span className="text-xs font-medium">Upload Invoice</span>
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="flex flex-col items-center gap-3 h-auto py-6 border-collector-gold/40 hover:border-collector-orange hover:bg-collector-orange/10 transition-all duration-200"
-                    onClick={() => setActiveTab('reports')}
-                  >
-                    <BarChart3 className="w-6 h-6 text-collector-orange" />
-                    <span className="text-xs font-medium">View Reports</span>
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="flex flex-col items-center gap-3 h-auto py-6 border-collector-gold/40 hover:border-collector-orange hover:bg-collector-orange/10 transition-all duration-200"
-                    onClick={handleRefresh}
-                  >
-                    <Download className="w-6 h-6 text-collector-orange" />
-                    <span className="text-xs font-medium">Refresh</span>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           <TabsContent value="transactions">
@@ -444,7 +441,6 @@ const Dashboard = ({ userType }: DashboardProps) => {
               open={showAddTransaction} 
               onOpenChange={setShowAddTransaction} 
               userType={userType}
-              onSuccess={handleRefresh} 
             />
           </TabsContent>
 
@@ -453,7 +449,6 @@ const Dashboard = ({ userType }: DashboardProps) => {
               open={showCreateBudget} 
               onOpenChange={setShowCreateBudget} 
               userType={userType}
-              onSuccess={handleRefresh} 
             />
           </TabsContent>
 
@@ -496,8 +491,8 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
         {/* Expense Sharing for Premium/Organization users */}
         {canAccess('expense-sharing') && (
-          <Card className="mt-8 border-collector-gold/30 bg-white/90 backdrop-blur-sm shadow-lg">
-            <CardHeader className="border-b border-collector-gold/20">
+          <Card className="mt-8">
+            <CardHeader>
               <div className="flex items-center gap-3">
                 <Users className="w-6 h-6 text-collector-orange" />
                 <CardTitle className="text-xl text-collector-black">Expense Sharing</CardTitle>
@@ -509,7 +504,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 Share expenses with friends and colleagues
               </CardDescription>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent>
               <ExpenseSharingForm 
                 open={showExpenseSharing} 
                 onOpenChange={setShowExpenseSharing} 
@@ -543,6 +538,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
         <AllTransactionsModal
           open={showAllTransactions}
           onOpenChange={setShowAllTransactions}
+          transactions={recentTransactions}
         />
       )}
     </div>
