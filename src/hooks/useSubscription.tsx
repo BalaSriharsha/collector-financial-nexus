@@ -4,8 +4,10 @@ import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+type SubscriptionTier = 'Individual' | 'Premium' | 'Organization';
+
 interface SubscriptionInfo {
-  tier: 'Individual' | 'Premium' | 'Organization';
+  tier: SubscriptionTier;
   subscribed: boolean;
   subscriptionEnd?: string;
 }
@@ -33,7 +35,7 @@ export const useSubscription = () => {
       }
 
       setSubscription({
-        tier: (data.subscription_tier as 'Individual' | 'Premium' | 'Organization') || 'Individual',
+        tier: (data.subscription_tier as SubscriptionTier) || 'Individual',
         subscribed: data.subscribed || false,
         subscriptionEnd: data.subscription_end
       });
@@ -56,7 +58,7 @@ export const useSubscription = () => {
           .maybeSingle();
 
         setSubscription({
-          tier: (subscriber?.subscription_tier || profile?.subscription_tier as 'Individual' | 'Premium' | 'Organization') || 'Individual',
+          tier: (subscriber?.subscription_tier || profile?.subscription_tier as SubscriptionTier) || 'Individual',
           subscribed: subscriber?.subscribed || false,
           subscriptionEnd: subscriber?.subscription_end
         });

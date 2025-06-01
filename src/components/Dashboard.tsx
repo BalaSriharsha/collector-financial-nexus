@@ -28,7 +28,7 @@ interface DashboardProps {
   userType: 'individual' | 'organization';
 }
 
-interface Transaction {
+interface DashboardTransaction {
   id: string;
   title: string;
   amount: number;
@@ -56,7 +56,7 @@ interface Budget {
   end_date: string;
 }
 
-interface Metrics {
+interface DashboardMetrics {
   type: string;
   value: number;
   label: string;
@@ -73,11 +73,11 @@ const Dashboard = ({ userType }: DashboardProps) => {
     balance: 0,
     transactionCount: 0
   });
-  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+  const [recentTransactions, setRecentTransactions] = useState<DashboardTransaction[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  const [selectedMetrics, setSelectedMetrics] = useState<Metrics | null>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<DashboardTransaction | null>(null);
+  const [selectedMetrics, setSelectedMetrics] = useState<DashboardMetrics | null>(null);
   const [showAllTransactions, setShowAllTransactions] = useState(false);
   const [showAddTransaction, setShowAddTransaction] = useState(false);
   const [showCreateBudget, setShowCreateBudget] = useState(false);
@@ -115,7 +115,19 @@ const Dashboard = ({ userType }: DashboardProps) => {
         transactionCount: transactions?.length || 0
       });
 
-      setRecentTransactions(transactions?.slice(0, 5) || []);
+      // Map transactions to DashboardTransaction type
+      const mappedTransactions = transactions?.slice(0, 5).map(t => ({
+        id: t.id,
+        title: t.title,
+        amount: Number(t.amount),
+        type: t.type as 'income' | 'expense',
+        category: t.category,
+        date: t.date,
+        description: t.description || '',
+        created_at: t.created_at
+      })) || [];
+
+      setRecentTransactions(mappedTransactions);
 
       // Fetch budgets
       const { data: budgetData, error: budgetError } = await supabase
@@ -441,6 +453,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
               open={showAddTransaction} 
               onOpenChange={setShowAddTransaction} 
               userType={userType}
+              onSuccess={() => {
+                fetchDashboardData();
+                setShowAddTransaction(false);
+              }}
             />
           </TabsContent>
 
@@ -449,6 +465,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
               open={showCreateBudget} 
               onOpenChange={setShowCreateBudget} 
               userType={userType}
+              onSuccess={() => {
+                fetchDashboardData();
+                setShowCreateBudget(false);
+              }}
             />
           </TabsContent>
 
