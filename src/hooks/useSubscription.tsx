@@ -32,8 +32,13 @@ export const useSubscription = () => {
         throw error;
       }
 
+      const tierValue = data.subscription_tier || 'Individual';
+      const validTier = ['Individual', 'Premium', 'Organization'].includes(tierValue) 
+        ? tierValue as 'Individual' | 'Premium' | 'Organization'
+        : 'Individual';
+
       setSubscription({
-        tier: data.subscription_tier || 'Individual',
+        tier: validTier,
         subscribed: data.subscribed || false,
         subscriptionEnd: data.subscription_end
       });
@@ -55,8 +60,13 @@ export const useSubscription = () => {
           .eq('user_id', user.id)
           .maybeSingle();
 
+        const tierValue = subscriber?.subscription_tier || profile?.subscription_tier || 'Individual';
+        const validTier = ['Individual', 'Premium', 'Organization'].includes(tierValue) 
+          ? tierValue as 'Individual' | 'Premium' | 'Organization'
+          : 'Individual';
+
         setSubscription({
-          tier: (subscriber?.subscription_tier || profile?.subscription_tier as 'Individual' | 'Premium' | 'Organization') || 'Individual',
+          tier: validTier,
           subscribed: subscriber?.subscribed || false,
           subscriptionEnd: subscriber?.subscription_end
         });

@@ -35,6 +35,7 @@ interface Transaction {
   category: string;
   date: string;
   description?: string;
+  created_at: string;
 }
 
 interface DashboardStats {
@@ -71,6 +72,13 @@ const Dashboard = ({ userType }: DashboardProps) => {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [selectedMetric, setSelectedMetric] = useState<{ type: string; value: number; label: string } | null>(null);
   const [showAllTransactions, setShowAllTransactions] = useState(false);
+  
+  // Modal states for forms
+  const [showGenerateInvoice, setShowGenerateInvoice] = useState(false);
+  const [showUploadInvoice, setShowUploadInvoice] = useState(false);
+  const [showReports, setShowReports] = useState(false);
+  const [showArchive, setShowArchive] = useState(false);
+  const [showExpenseSharing, setShowExpenseSharing] = useState(false);
 
   // Get currency symbol based on user profile
   const currencySymbol = getCurrencySymbol(profile?.currency || 'USD');
@@ -382,7 +390,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                   <Button
                     variant="outline"
                     className="flex flex-col items-center gap-2 h-auto py-4 border-collector-gold/30 hover:border-collector-orange"
-                    onClick={() => setActiveTab('invoices')}
+                    onClick={() => setShowGenerateInvoice(true)}
                   >
                     <FileText className="w-5 h-5" />
                     <span className="text-xs">Generate Invoice</span>
@@ -391,7 +399,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                   <Button
                     variant="outline"
                     className="flex flex-col items-center gap-2 h-auto py-4 border-collector-gold/30 hover:border-collector-orange"
-                    onClick={() => setActiveTab('upload')}
+                    onClick={() => setShowUploadInvoice(true)}
                   >
                     <Upload className="w-5 h-5" />
                     <span className="text-xs">Upload Invoice</span>
@@ -400,7 +408,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                   <Button
                     variant="outline"
                     className="flex flex-col items-center gap-2 h-auto py-4 border-collector-gold/30 hover:border-collector-orange"
-                    onClick={() => setActiveTab('reports')}
+                    onClick={() => setShowReports(true)}
                   >
                     <BarChart3 className="w-5 h-5" />
                     <span className="text-xs">View Reports</span>
@@ -420,32 +428,46 @@ const Dashboard = ({ userType }: DashboardProps) => {
           </TabsContent>
 
           <TabsContent value="transactions">
-            <AddTransactionForm onSuccess={handleRefresh} />
+            <AddTransactionForm />
           </TabsContent>
 
           <TabsContent value="budgets">
-            <CreateBudgetForm onSuccess={handleRefresh} />
+            <CreateBudgetForm />
           </TabsContent>
 
           <TabsContent value="invoices">
-            <GenerateInvoiceForm />
+            <GenerateInvoiceForm 
+              open={showGenerateInvoice} 
+              onOpenChange={setShowGenerateInvoice} 
+            />
           </TabsContent>
 
           <TabsContent value="upload">
-            <UploadInvoiceForm />
+            <UploadInvoiceForm 
+              open={showUploadInvoice} 
+              onOpenChange={setShowUploadInvoice} 
+            />
           </TabsContent>
 
           <TabsContent value="reports">
-            <ViewReportsForm />
+            <ViewReportsForm 
+              open={showReports} 
+              onOpenChange={setShowReports} 
+            />
           </TabsContent>
 
           <TabsContent value="archive">
-            <ViewArchiveForm />
+            <ViewArchiveForm 
+              open={showArchive} 
+              onOpenChange={setShowArchive} 
+            />
           </TabsContent>
 
           {userType === 'organization' && (
             <TabsContent value="teams">
-              <OrganizationTeams />
+              <OrganizationTeams 
+                onCreateInvoice={() => setShowGenerateInvoice(true)} 
+              />
             </TabsContent>
           )}
         </Tabs>
@@ -466,7 +488,11 @@ const Dashboard = ({ userType }: DashboardProps) => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ExpenseSharingForm />
+              <ExpenseSharingForm 
+                open={showExpenseSharing} 
+                onOpenChange={setShowExpenseSharing}
+                userType={userType}
+              />
             </CardContent>
           </Card>
         )}
@@ -484,7 +510,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
       {selectedMetric && (
         <MetricDetailsModal
-          metric={selectedMetric}
+          metrics={selectedMetric}
           open={!!selectedMetric}
           onClose={() => setSelectedMetric(null)}
           currencySymbol={currencySymbol}
@@ -494,7 +520,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
       {showAllTransactions && (
         <AllTransactionsModal
           open={showAllTransactions}
-          onClose={() => setShowAllTransactions(false)}
+          onOpenChange={setShowAllTransactions}
           currencySymbol={currencySymbol}
         />
       )}
