@@ -91,7 +91,25 @@ serve(async (req) => {
         subscriptionEnd: subscriptionEnd.toISOString() 
       });
 
-      // Update subscribers table - use upsert to handle existing records
+      // Step 1: Update profiles table FIRST to ensure subscription tier is set correctly
+      logStep("Updating profiles table");
+      const { data: profileData, error: profileError } = await supabaseClient
+        .from("profiles")
+        .update({
+          subscription_tier: planType,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", userId)
+        .select();
+
+      if (profileError) {
+        logStep("ERROR updating profile", { error: profileError });
+        throw new Error(`Failed to update profile: ${profileError.message}`);
+      }
+      
+      logStep("Profile updated successfully", { data: profileData });
+
+      // Step 2: Update subscribers table - use upsert to handle existing records
       logStep("Updating subscribers table");
       const { data: subscriberData, error: subscriberError } = await supabaseClient
         .from("subscribers")
@@ -109,45 +127,41 @@ serve(async (req) => {
         .select();
 
       if (subscriberError) {
-        logStep("Error updating subscriber", { error: subscriberError });
-        throw subscriberError;
+        logStep("ERROR updating subscriber", { error: subscriberError });
+        throw new Error(`Failed to update subscriber: ${subscriberError.message}`);
       }
       
       logStep("Subscriber updated successfully", { data: subscriberData });
 
-      // Update profiles table to ensure consistency
-      logStep("Updating profiles table");
-      const { data: profileData, error: profileError } = await supabaseClient
+      // Step 3: Verify the updates were successful by reading back the data
+      const { data: verifyProfile, error: verifyProfileError } = await supabaseClient
         .from("profiles")
-        .update({
-          subscription_tier: planType,
-          updated_at: new Date().toISOString()
-        })
+        .select("subscription_tier, updated_at")
         .eq("id", userId)
-        .select();
-
-      if (profileError) {
-        logStep("Error updating profile", { error: profileError });
-        // Don't throw here as subscriber update was successful
-        logStep("Profile update failed, but continuing", { error: profileError });
+        .single();
+        
+      if (verifyProfileError) {
+        logStep("Error verifying profile update", { error: verifyProfileError });
       } else {
-        logStep("Profile updated successfully", { data: profileData });
+        logStep("Profile verification successful", { 
+          tier: verifyProfile.subscription_tier,
+          updated: verifyProfile.updated_at
+        });
       }
 
-      // Verify the updates were successful
-      const { data: verifyData, error: verifyError } = await supabaseClient
+      const { data: verifySubscriber, error: verifySubscriberError } = await supabaseClient
         .from("subscribers")
         .select("*")
         .eq("user_id", userId)
         .single();
         
-      if (verifyError) {
-        logStep("Error verifying subscription update", { error: verifyError });
+      if (verifySubscriberError) {
+        logStep("Error verifying subscription update", { error: verifySubscriberError });
       } else {
         logStep("Subscription verification successful", { 
-          subscribed: verifyData.subscribed,
-          tier: verifyData.subscription_tier,
-          end: verifyData.subscription_end
+          subscribed: verifySubscriber.subscribed,
+          tier: verifySubscriber.subscription_tier,
+          end: verifySubscriber.subscription_end
         });
       }
 
@@ -163,7 +177,9 @@ serve(async (req) => {
         message: "Payment processed successfully",
         userId,
         planType,
-        subscriptionEnd: subscriptionEnd.toISOString()
+        subscriptionEnd: subscriptionEnd.toISOString(),
+        profileUpdated: !!profileData,
+        subscriberUpdated: !!subscriberData
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,

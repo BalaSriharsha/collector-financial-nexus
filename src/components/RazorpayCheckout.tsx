@@ -48,12 +48,16 @@ const RazorpayCheckout = ({ planType, onSuccess }: RazorpayCheckoutProps) => {
     setLoading(true);
     
     try {
+      console.log('Creating Razorpay order for plan:', planType);
+      
       // Create Razorpay order
       const { data, error } = await supabase.functions.invoke('razorpay-checkout', {
         body: { planType }
       });
 
       if (error) throw error;
+
+      console.log('Razorpay order created:', data);
 
       // Load Razorpay script if not already loaded
       if (!window.Razorpay) {
@@ -89,15 +93,53 @@ const RazorpayCheckout = ({ planType, onSuccess }: RazorpayCheckoutProps) => {
         },
         handler: async function (response: any) {
           console.log('Payment successful:', response);
-          toast.success('Payment successful! Updating your subscription...');
+          toast.success('Payment successful! Processing your subscription...');
           
-          // Wait longer for webhook processing
-          setTimeout(async () => {
-            console.log('Refreshing subscription after payment...');
-            await refreshSubscription();
-            onSuccess?.();
-            toast.success('Your subscription has been activated!');
-          }, 5000); // Increased delay to 5 seconds
+          // Wait for webhook processing with multiple checks
+          let attempts = 0;
+          const maxAttempts = 10;
+          
+          const checkSubscriptionStatus = async () => {
+            console.log(`Checking subscription status - attempt ${attempts + 1}`);
+            
+            // Check if subscription has been updated
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('subscription_tier')
+              .eq('id', user.id)
+              .single();
+              
+            if (profileData?.subscription_tier === planType) {
+              console.log('Subscription updated successfully in database');
+              await refreshSubscription();
+              onSuccess?.();
+              toast.success('Your subscription has been activated!');
+              return true;
+            }
+            
+            return false;
+          };
+          
+          // Check immediately
+          if (await checkSubscriptionStatus()) return;
+          
+          // If not updated, keep checking every 2 seconds
+          const intervalId = setInterval(async () => {
+            attempts++;
+            
+            if (await checkSubscriptionStatus()) {
+              clearInterval(intervalId);
+              return;
+            }
+            
+            if (attempts >= maxAttempts) {
+              clearInterval(intervalId);
+              console.log('Timeout waiting for subscription update');
+              toast.warning('Payment processed, but subscription update is taking longer than expected. Please refresh the page.');
+              await refreshSubscription();
+              onSuccess?.();
+            }
+          }, 2000);
         },
         modal: {
           ondismiss: function() {

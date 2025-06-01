@@ -17,16 +17,32 @@ export const useSubscription = () => {
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchSubscription = useCallback(async (skipDelay = false) => {
+  const fetchSubscription = useCallback(async () => {
     if (!user) {
       setLoading(false);
+      setSubscription({
+        tier: 'Individual',
+        subscribed: false
+      });
       return;
     }
 
     try {
       console.log('Fetching subscription status for user:', user.id);
       
-      // First check the subscribers table directly
+      // First get the profile data (this is the primary source of truth for subscription tier)
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('subscription_tier')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) {
+        console.error('Profile error:', profileError);
+        throw profileError;
+      }
+
+      // Then check the subscribers table for additional subscription details
       const { data: subscriberData, error: subscriberError } = await supabase
         .from('subscribers')
         .select('subscribed, subscription_end, subscription_tier')
@@ -35,25 +51,15 @@ export const useSubscription = () => {
 
       if (subscriberError) {
         console.error('Subscriber error:', subscriberError);
+        // Don't throw here, just log - subscriber data is supplementary
       }
 
-      // Also check the profiles table for subscription tier
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('subscription_tier')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (profileError) {
-        console.error('Profile error:', profileError);
-      }
-
-      console.log('Subscriber data:', subscriberData);
       console.log('Profile data:', profileData);
+      console.log('Subscriber data:', subscriberData);
 
-      // Determine subscription status
-      const isSubscribed = subscriberData?.subscribed || false;
-      const subscriptionTier = subscriberData?.subscription_tier || profileData?.subscription_tier || 'Individual';
+      // Use profile data as primary source, subscriber data as supplementary
+      const subscriptionTier = profileData?.subscription_tier || 'Individual';
+      const isSubscribed = subscriberData?.subscribed || (subscriptionTier !== 'Individual');
       const subscriptionEnd = subscriberData?.subscription_end;
 
       // Validate tier
@@ -86,15 +92,15 @@ export const useSubscription = () => {
     fetchSubscription();
   }, [fetchSubscription]);
 
-  // Refresh subscription status with delay for webhook processing
+  // Refresh subscription status - with minimal delay to allow for webhook processing
   const refreshSubscription = useCallback(async () => {
     console.log('Refreshing subscription status...');
     setLoading(true);
     
-    // Add a delay to allow webhook processing
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    // Small delay to allow webhook processing
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
-    await fetchSubscription(true);
+    await fetchSubscription();
   }, [fetchSubscription]);
 
   const canAccess = useCallback((feature: string) => {
