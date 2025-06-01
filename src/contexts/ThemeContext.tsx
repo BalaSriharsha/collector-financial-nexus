@@ -48,8 +48,8 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         if (error) throw error;
 
         if (data) {
-          setModeState(data.theme_mode || 'system');
-          setStyleState(data.theme_style || 'default');
+          setModeState((data.theme_mode as ThemeMode) || 'system');
+          setStyleState((data.theme_style as ThemeStyle) || 'default');
         }
       } catch (error) {
         console.error('Error fetching theme preferences:', error);

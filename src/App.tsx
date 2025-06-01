@@ -19,7 +19,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import CancellationRefund from "./pages/CancellationRefund";
 import ShippingDelivery from "./pages/ShippingDelivery";
 import NotFound from "./pages/NotFound";
-import ProtectedRoute from "./components/ProtectedRoute";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import { ThemeProvider } from "./contexts/ThemeContext";
 
 function App() {

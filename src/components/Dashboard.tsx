@@ -36,6 +36,7 @@ interface Transaction {
   category: string;
   date: string;
   description?: string;
+  created_at: string;
 }
 
 interface Budget {
@@ -383,7 +384,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
         </div>
 
         {/* Organization Teams - Only show for organization users */}
-        {userType === 'organization' && <OrganizationTeams />}
+        {userType === 'organization' && <OrganizationTeams onCreateInvoice={() => setActiveModal('generate-invoice')} />}
 
         {/* Quick Actions */}
         <Card className="shadow-sm border-collector-gold/20 dark:border-gray-700">
@@ -442,7 +443,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
       {activeModal === 'add-transaction' && (
         <AddTransactionForm
           onClose={() => setActiveModal(null)}
-          onSuccess={() => {
+          onTransactionAdded={() => {
             setActiveModal(null);
             fetchTransactions();
           }}
@@ -452,7 +453,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
       {activeModal === 'create-budget' && (
         <CreateBudgetForm
           onClose={() => setActiveModal(null)}
-          onSuccess={() => {
+          onBudgetCreated={() => {
             setActiveModal(null);
             fetchBudgets();
           }}
@@ -460,40 +461,40 @@ const Dashboard = ({ userType }: DashboardProps) => {
       )}
 
       {activeModal === 'expense-sharing' && (
-        <ExpenseSharingForm onClose={() => setActiveModal(null)} />
+        <ExpenseSharingForm />
       )}
 
       {activeModal === 'generate-invoice' && (
-        <GenerateInvoiceForm onClose={() => setActiveModal(null)} />
+        <GenerateInvoiceForm />
       )}
 
       {activeModal === 'upload-invoice' && (
-        <UploadInvoiceForm onClose={() => setActiveModal(null)} />
+        <UploadInvoiceForm />
       )}
 
       {activeModal === 'view-reports' && (
-        <ViewReportsForm onClose={() => setActiveModal(null)} />
+        <ViewReportsForm />
       )}
 
       {activeModal === 'view-archive' && (
-        <ViewArchiveForm onClose={() => setActiveModal(null)} />
+        <ViewArchiveForm />
       )}
 
       {/* Stats Details Modal */}
       <StatsDetailsModal
-        isOpen={statsModal.isOpen}
-        onClose={() => setStatsModal({ ...statsModal, isOpen: false })}
+        open={statsModal.isOpen}
+        onOpenChange={(open) => setStatsModal({ ...statsModal, isOpen: open })}
         type={statsModal.type}
+        value={statsModal.type === 'income' ? totalIncome : 
+               statsModal.type === 'expense' ? totalExpenses :
+               statsModal.type === 'balance' ? balance : transactions.length}
         transactions={transactions}
-        totalIncome={totalIncome}
-        totalExpenses={totalExpenses}
-        balance={balance}
       />
 
       {/* View All Modal */}
       <ViewAllModal
-        isOpen={viewAllModal.isOpen}
-        onClose={() => setViewAllModal({ ...viewAllModal, isOpen: false })}
+        open={viewAllModal.isOpen}
+        onOpenChange={(open) => setViewAllModal({ ...viewAllModal, isOpen: open })}
         type={viewAllModal.type}
         data={viewAllModal.type === 'transactions' ? transactions : budgets}
       />

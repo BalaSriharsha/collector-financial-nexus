@@ -1,7 +1,6 @@
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown, DollarSign, FileText, Calendar } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
@@ -14,7 +13,7 @@ interface Transaction {
   type: 'income' | 'expense';
   category: string;
   date: string;
-  description: string;
+  description?: string;
   created_at: string;
 }
 
