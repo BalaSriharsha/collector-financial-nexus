@@ -22,6 +22,7 @@ import BudgetDetailsModal from "./BudgetDetailsModal";
 import StatsDetailsModal from "./StatsDetailsModal";
 import ViewAllModal from "./ViewAllModal";
 import { getCurrencySymbol } from "@/utils/currency";
+
 interface DashboardProps {
   userType: 'individual' | 'organization';
 }
@@ -334,53 +335,65 @@ const Dashboard = ({
           </div>
         </div>
 
-        {/* Stats Cards - Single Row with 4 Columns, All Clickable */}
-        <div className="grid grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => handleStatClick('income', 'Total Income', stats.totalIncome)}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
-              <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Total Income</CardTitle>
-              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+        {/* Stats Cards - Improved Single Row Layout */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+          <Card className="bg-white/95 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer hover:border-green-300" onClick={() => handleStatClick('income', 'Total Income', stats.totalIncome)}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+              <CardTitle className="text-xs sm:text-sm font-semibold text-gray-700 leading-tight">Total Income</CardTitle>
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-green-100 flex items-center justify-center">
+                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+              </div>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent className="px-4 pb-4">
               <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600 mb-1">
                 {currencySymbol}{stats.totalIncome.toLocaleString()}
               </div>
+              <p className="text-xs text-gray-500 hidden sm:block">Click to view details</p>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => handleStatClick('expenses', 'Total Expenses', stats.totalExpense)}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
-              <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Total Expenses</CardTitle>
-              <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
+          <Card className="bg-white/95 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer hover:border-red-300" onClick={() => handleStatClick('expenses', 'Total Expenses', stats.totalExpense)}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+              <CardTitle className="text-xs sm:text-sm font-semibold text-gray-700 leading-tight">Total Expenses</CardTitle>
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-red-100 flex items-center justify-center">
+                <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
+              </div>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent className="px-4 pb-4">
               <div className="text-lg sm:text-xl lg:text-2xl font-bold text-red-600 mb-1">
                 {currencySymbol}{stats.totalExpense.toLocaleString()}
               </div>
+              <p className="text-xs text-gray-500 hidden sm:block">Click to view details</p>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => handleStatClick('balance', 'Balance', stats.balance)}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
-              <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Balance</CardTitle>
-              <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+          <Card className="bg-white/95 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer hover:border-blue-300" onClick={() => handleStatClick('balance', 'Balance', stats.balance)}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+              <CardTitle className="text-xs sm:text-sm font-semibold text-gray-700 leading-tight">Balance</CardTitle>
+              <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full flex items-center justify-center ${stats.balance >= 0 ? 'bg-blue-100' : 'bg-red-100'}`}>
+                <DollarSign className={`h-4 w-4 sm:h-5 sm:w-5 ${stats.balance >= 0 ? 'text-blue-600' : 'text-red-600'}`} />
+              </div>
             </CardHeader>
-            <CardContent className="pt-0">
-              <div className={`text-lg sm:text-xl lg:text-2xl font-bold mb-1 ${stats.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <CardContent className="px-4 pb-4">
+              <div className={`text-lg sm:text-xl lg:text-2xl font-bold mb-1 ${stats.balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
                 {currencySymbol}{stats.balance.toLocaleString()}
               </div>
+              <p className="text-xs text-gray-500 hidden sm:block">Click to view details</p>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => handleStatClick('transactions', 'Transactions', stats.transactionCount)}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
-              <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Transactions</CardTitle>
-              <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
+          <Card className="bg-white/95 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer hover:border-orange-300" onClick={() => handleStatClick('transactions', 'Transactions', stats.transactionCount)}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+              <CardTitle className="text-xs sm:text-sm font-semibold text-gray-700 leading-tight">Transactions</CardTitle>
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-orange-100 flex items-center justify-center">
+                <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
+              </div>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent className="px-4 pb-4">
               <div className="text-lg sm:text-xl lg:text-2xl font-bold text-orange-600 mb-1">
                 {stats.transactionCount}
               </div>
+              <p className="text-xs text-gray-500 hidden sm:block">Click to view details</p>
             </CardContent>
           </Card>
         </div>
@@ -566,4 +579,5 @@ const Dashboard = ({
       <ViewAllModal open={showViewAllBudgets} onOpenChange={setShowViewAllBudgets} type="budgets" data={budgets} title="All Budgets" />
     </div>;
 };
+
 export default Dashboard;
