@@ -95,38 +95,58 @@ const RazorpayCheckout = ({ planType, onSuccess }: RazorpayCheckoutProps) => {
           console.log('Payment successful:', response);
           toast.success('Payment successful! Processing your subscription...');
           
-          // Wait for webhook processing with multiple checks
+          // Wait longer for webhook processing and be more thorough
           let attempts = 0;
-          const maxAttempts = 10;
+          const maxAttempts = 15; // Increased attempts
           
           const checkSubscriptionStatus = async () => {
-            console.log(`Checking subscription status - attempt ${attempts + 1}`);
+            attempts++;
+            console.log(`Checking subscription status - attempt ${attempts}`);
             
-            // Check if subscription has been updated
-            const { data: profileData } = await supabase
-              .from('profiles')
-              .select('subscription_tier')
-              .eq('id', user.id)
-              .single();
+            try {
+              // Check profiles table first
+              const { data: profileData, error: profileError } = await supabase
+                .from('profiles')
+                .select('subscription_tier, updated_at')
+                .eq('id', user.id)
+                .single();
+                
+              if (profileError) {
+                console.error('Error checking profile:', profileError);
+                return false;
+              }
               
-            if (profileData?.subscription_tier === planType) {
-              console.log('Subscription updated successfully in database');
-              await refreshSubscription();
-              onSuccess?.();
-              toast.success('Your subscription has been activated!');
-              return true;
+              console.log('Current profile data:', profileData);
+              
+              if (profileData?.subscription_tier === planType) {
+                console.log('Subscription updated successfully in profiles table!');
+                await refreshSubscription();
+                onSuccess?.();
+                toast.success('Your subscription has been activated!');
+                return true;
+              }
+              
+              // Also check subscribers table for additional confirmation
+              const { data: subscriberData } = await supabase
+                .from('subscribers')
+                .select('subscribed, subscription_tier, subscription_end')
+                .eq('user_id', user.id)
+                .single();
+                
+              console.log('Current subscriber data:', subscriberData);
+              
+              return false;
+            } catch (error) {
+              console.error('Error checking subscription status:', error);
+              return false;
             }
-            
-            return false;
           };
           
-          // Check immediately
+          // Check immediately first
           if (await checkSubscriptionStatus()) return;
           
-          // If not updated, keep checking every 2 seconds
+          // Then check every 3 seconds with longer timeout
           const intervalId = setInterval(async () => {
-            attempts++;
-            
             if (await checkSubscriptionStatus()) {
               clearInterval(intervalId);
               return;
@@ -134,16 +154,19 @@ const RazorpayCheckout = ({ planType, onSuccess }: RazorpayCheckoutProps) => {
             
             if (attempts >= maxAttempts) {
               clearInterval(intervalId);
-              console.log('Timeout waiting for subscription update');
-              toast.warning('Payment processed, but subscription update is taking longer than expected. Please refresh the page.');
+              console.log('Timeout waiting for subscription update after', attempts, 'attempts');
+              
+              // Manual refresh and show message
               await refreshSubscription();
+              toast.warning('Payment processed successfully. If your subscription doesn\'t update immediately, please refresh the page or contact support.');
               onSuccess?.();
             }
-          }, 2000);
+          }, 3000); // Check every 3 seconds
         },
         modal: {
           ondismiss: function() {
-            console.log('Payment modal closed');
+            console.log('Payment modal closed by user');
+            setLoading(false);
           }
         }
       };
