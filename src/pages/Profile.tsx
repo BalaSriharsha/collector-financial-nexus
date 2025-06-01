@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -13,6 +14,7 @@ import { toast } from "sonner";
 import { User, CreditCard, Trash2, Crown, Gem } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import SubscriptionCard from "@/components/SubscriptionCard";
+import RazorpayCheckout from "@/components/RazorpayCheckout";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,11 +39,12 @@ interface Profile {
 
 const Profile = () => {
   const { user, updateProfile, signOut } = useAuth();
-  const { subscription, manageSubscription } = useSubscription();
+  const { subscription, manageSubscription, refreshSubscription } = useSubscription();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showUpgradeOptions, setShowUpgradeOptions] = useState(false);
+  const [showRazorpayCheckout, setShowRazorpayCheckout] = useState<'Premium' | 'Organization' | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -92,24 +95,15 @@ const Profile = () => {
     setLoading(false);
   };
 
-  const handleUpgrade = async (tier: 'Premium' | 'Organization') => {
-    try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { 
-          priceId: tier === 'Premium' ? 'price_premium' : 'price_organization',
-          successUrl: `${window.location.origin}/profile?success=true`,
-          cancelUrl: `${window.location.origin}/profile?canceled=true`
-        }
-      });
-      
-      if (error) throw error;
-      
-      // Redirect to Stripe checkout
-      window.location.href = data.url;
-    } catch (error: any) {
-      console.error('Error creating checkout session:', error);
-      toast.error('Failed to start upgrade process');
-    }
+  const handleUpgrade = (tier: 'Premium' | 'Organization') => {
+    setShowRazorpayCheckout(tier);
+    setShowUpgradeOptions(false);
+  };
+
+  const handlePaymentSuccess = async () => {
+    setShowRazorpayCheckout(null);
+    await refreshSubscription();
+    toast.success('Subscription updated successfully!');
   };
 
   const handleDeleteAccount = async () => {
@@ -149,6 +143,38 @@ const Profile = () => {
           <Alert>
             <AlertDescription>Unable to load profile. Please try again.</AlertDescription>
           </Alert>
+        </div>
+      </div>
+    );
+  }
+
+  // Show Razorpay checkout if user is upgrading
+  if (showRazorpayCheckout) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-white via-orange-50/30 to-amber-50/30">
+        <Navigation />
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="mb-6">
+            <Button
+              variant="outline"
+              onClick={() => setShowRazorpayCheckout(null)}
+              className="mb-4"
+            >
+              ← Back to Profile
+            </Button>
+            <h1 className="text-2xl sm:text-3xl font-playfair font-bold text-collector-black mb-2">
+              Upgrade to {showRazorpayCheckout}
+            </h1>
+            <p className="text-collector-black/70">
+              Complete your subscription upgrade with secure Razorpay payment
+            </p>
+          </div>
+          <div className="flex justify-center">
+            <RazorpayCheckout
+              planType={showRazorpayCheckout}
+              onSuccess={handlePaymentSuccess}
+            />
+          </div>
         </div>
       </div>
     );
@@ -212,31 +238,31 @@ const Profile = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="currency" className="text-sm font-medium">Currency</Label>
-                    <Select name="currency" defaultValue={profile.currency || "USD"}>
+                    <Select name="currency" defaultValue={profile.currency || "INR"}>
                       <SelectTrigger className="border-collector-gold/30 focus:border-collector-orange text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="INR">INR (₹)</SelectItem>
                         <SelectItem value="USD">USD ($)</SelectItem>
                         <SelectItem value="EUR">EUR (€)</SelectItem>
                         <SelectItem value="GBP">GBP (£)</SelectItem>
-                        <SelectItem value="JPY">JPY (¥)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="country" className="text-sm font-medium">Country</Label>
-                    <Select name="country" defaultValue={profile.country || "USA"}>
+                    <Select name="country" defaultValue={profile.country || "IND"}>
                       <SelectTrigger className="border-collector-gold/30 focus:border-collector-orange text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="IND">India</SelectItem>
                         <SelectItem value="USA">United States</SelectItem>
                         <SelectItem value="CAN">Canada</SelectItem>
                         <SelectItem value="GBR">United Kingdom</SelectItem>
                         <SelectItem value="DEU">Germany</SelectItem>
-                        <SelectItem value="FRA">France</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -272,14 +298,15 @@ const Profile = () => {
                       onClick={() => manageSubscription()}
                       className="w-full text-sm"
                     >
-                      Manage Subscription
+                      Cancel Subscription
                     </Button>
                     {subscription?.tier === 'Premium' && (
                       <Button
                         onClick={() => handleUpgrade('Organization')}
                         className="w-full bg-purple-500 hover:bg-purple-600 text-white text-sm"
                       >
-                        Upgrade to Organization
+                        <Crown className="w-4 h-4 mr-2" />
+                        Upgrade to Organization - ₹2,249/month
                       </Button>
                     )}
                   </div>
@@ -292,14 +319,14 @@ const Profile = () => {
                       className="w-full bg-orange-500 hover:bg-orange-600 text-white text-sm"
                     >
                       <Crown className="w-4 h-4 mr-2" />
-                      Upgrade to Premium - $9.99/month
+                      Upgrade to Premium - ₹749/month
                     </Button>
                     <Button
                       onClick={() => handleUpgrade('Organization')}
                       className="w-full bg-purple-500 hover:bg-purple-600 text-white text-sm"
                     >
-                      <Crown className="w-4 h-4 mr-2" />
-                      Upgrade to Organization - $29.99/month
+                      <Gem className="w-4 h-4 mr-2" />
+                      Upgrade to Organization - ₹2,249/month
                     </Button>
                     <Button
                       variant="outline"
