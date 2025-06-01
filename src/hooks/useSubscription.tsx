@@ -57,8 +57,17 @@ export const useSubscription = () => {
           .eq('user_id', user.id)
           .maybeSingle();
 
+        const tierFromSubscriber = subscriber?.subscription_tier;
+        const tierFromProfile = profile?.subscription_tier;
+        const finalTier = (tierFromSubscriber || tierFromProfile) as string;
+        
+        // Ensure the tier is one of the allowed values
+        const validTier: SubscriptionTier = ['Individual', 'Premium', 'Organization'].includes(finalTier) 
+          ? finalTier as SubscriptionTier 
+          : 'Individual';
+
         setSubscription({
-          tier: (subscriber?.subscription_tier || profile?.subscription_tier as SubscriptionTier) || 'Individual',
+          tier: validTier,
           subscribed: subscriber?.subscribed || false,
           subscriptionEnd: subscriber?.subscription_end
         });

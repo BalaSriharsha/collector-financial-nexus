@@ -35,7 +35,7 @@ interface DashboardTransaction {
   type: 'income' | 'expense';
   category: string;
   date: string;
-  description?: string;
+  description: string;
   created_at: string;
 }
 
@@ -158,6 +158,16 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
   const handleMetricClick = (type: string, value: number, label: string) => {
     setSelectedMetrics({ type, value, label });
+  };
+
+  const handleTransactionSuccess = () => {
+    fetchDashboardData();
+    setShowAddTransaction(false);
+  };
+
+  const handleBudgetSuccess = () => {
+    fetchDashboardData();
+    setShowCreateBudget(false);
   };
 
   if (loading) {
@@ -453,10 +463,6 @@ const Dashboard = ({ userType }: DashboardProps) => {
               open={showAddTransaction} 
               onOpenChange={setShowAddTransaction} 
               userType={userType}
-              onSuccess={() => {
-                fetchDashboardData();
-                setShowAddTransaction(false);
-              }}
             />
           </TabsContent>
 
@@ -465,10 +471,6 @@ const Dashboard = ({ userType }: DashboardProps) => {
               open={showCreateBudget} 
               onOpenChange={setShowCreateBudget} 
               userType={userType}
-              onSuccess={() => {
-                fetchDashboardData();
-                setShowCreateBudget(false);
-              }}
             />
           </TabsContent>
 
@@ -538,7 +540,16 @@ const Dashboard = ({ userType }: DashboardProps) => {
       {/* Modals */}
       {selectedTransaction && (
         <TransactionDetailsModal
-          transaction={selectedTransaction}
+          transaction={{
+            id: selectedTransaction.id,
+            title: selectedTransaction.title,
+            amount: selectedTransaction.amount,
+            type: selectedTransaction.type,
+            category: selectedTransaction.category,
+            date: selectedTransaction.date,
+            description: selectedTransaction.description,
+            created_at: selectedTransaction.created_at
+          }}
           open={!!selectedTransaction}
           onClose={() => setSelectedTransaction(null)}
           currencySymbol={currencySymbol}
@@ -547,7 +558,11 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
       {selectedMetrics && (
         <MetricDetailsModal
-          metrics={selectedMetrics}
+          metrics={{
+            type: selectedMetrics.type,
+            value: selectedMetrics.value,
+            label: selectedMetrics.label
+          }}
           open={!!selectedMetrics}
           onClose={() => setSelectedMetrics(null)}
           currencySymbol={currencySymbol}
@@ -558,7 +573,16 @@ const Dashboard = ({ userType }: DashboardProps) => {
         <AllTransactionsModal
           open={showAllTransactions}
           onOpenChange={setShowAllTransactions}
-          transactions={recentTransactions}
+          transactions={recentTransactions.map(t => ({
+            id: t.id,
+            title: t.title,
+            amount: t.amount,
+            type: t.type,
+            category: t.category,
+            date: t.date,
+            description: t.description,
+            created_at: t.created_at
+          }))}
         />
       )}
     </div>
