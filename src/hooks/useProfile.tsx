@@ -11,8 +11,6 @@ interface UserProfile {
   country: string | null;
   user_type: string | null;
   subscription_tier: string | null;
-  theme_mode: string | null;
-  theme_style: string | null;
 }
 
 export const useProfile = () => {

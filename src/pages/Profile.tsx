@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
-import { useTheme } from "@/contexts/ThemeContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,9 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { User, CreditCard, Trash2, Crown, Gem, Palette, Monitor } from "lucide-react";
+import { User, CreditCard, Trash2, Crown, Gem } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import RazorpayCheckout from "@/components/RazorpayCheckout";
@@ -37,14 +35,11 @@ interface Profile {
   country: string | null;
   user_type: string | null;
   subscription_tier: string | null;
-  theme_mode: string | null;
-  theme_style: string | null;
 }
 
 const Profile = () => {
   const { user, updateProfile, signOut } = useAuth();
   const { subscription, manageSubscription, refreshSubscription } = useSubscription();
-  const { mode, style, setMode, setStyle } = useTheme();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -128,12 +123,12 @@ const Profile = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-white via-orange-50/30 to-amber-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-white via-orange-50/30 to-amber-50/30">
         <Navigation />
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="text-center py-8">
             <div className="w-8 h-8 border-4 border-collector-orange border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-collector-black/70 dark:text-white/70">Loading profile...</p>
+            <p className="text-collector-black/70">Loading profile...</p>
           </div>
         </div>
       </div>
@@ -142,7 +137,7 @@ const Profile = () => {
 
   if (!user || !profile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-white via-orange-50/30 to-amber-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-white via-orange-50/30 to-amber-50/30">
         <Navigation />
         <div className="max-w-4xl mx-auto px-4 py-8">
           <Alert>
@@ -156,7 +151,7 @@ const Profile = () => {
   // Show Razorpay checkout if user is upgrading
   if (showRazorpayCheckout) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-white via-orange-50/30 to-amber-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-white via-orange-50/30 to-amber-50/30">
         <Navigation />
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="mb-6">
@@ -167,10 +162,10 @@ const Profile = () => {
             >
               ← Back to Profile
             </Button>
-            <h1 className="text-2xl sm:text-3xl font-playfair font-bold text-collector-black dark:text-white mb-2">
+            <h1 className="text-2xl sm:text-3xl font-playfair font-bold text-collector-black mb-2">
               Upgrade to {showRazorpayCheckout}
             </h1>
-            <p className="text-collector-black/70 dark:text-white/70">
+            <p className="text-collector-black/70">
               Complete your subscription upgrade with secure Razorpay payment
             </p>
           </div>
@@ -186,16 +181,16 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-orange-50/30 to-amber-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-white via-orange-50/30 to-amber-50/30">
       <Navigation />
       
       <div className="max-w-4xl mx-auto px-4 py-4 sm:py-8 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-playfair font-bold text-collector-black dark:text-white">
+            <h1 className="text-2xl sm:text-3xl font-playfair font-bold text-collector-black">
               Profile Settings
             </h1>
-            <p className="text-collector-black/70 dark:text-white/70 text-sm sm:text-base">
+            <p className="text-collector-black/70 text-sm sm:text-base">
               Manage your account information and preferences
             </p>
           </div>
@@ -208,43 +203,43 @@ const Profile = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Profile Information */}
-          <Card className="shadow-sm border-collector-gold/20 dark:border-gray-700">
+          <Card className="shadow-sm border-collector-gold/20">
             <CardHeader className="pb-4">
               <div className="flex items-center gap-2">
                 <User className="w-5 h-5 text-collector-orange" />
-                <CardTitle className="text-lg dark:text-white">Personal Information</CardTitle>
+                <CardTitle className="text-lg">Personal Information</CardTitle>
               </div>
-              <CardDescription className="text-sm dark:text-gray-400">
+              <CardDescription className="text-sm">
                 Update your personal details and preferences
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="full_name" className="text-sm font-medium dark:text-white">Full Name</Label>
+                  <Label htmlFor="full_name" className="text-sm font-medium">Full Name</Label>
                   <Input
                     id="full_name"
                     name="full_name"
                     defaultValue={profile.full_name || ""}
-                    className="border-collector-gold/30 focus:border-collector-orange text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                    className="border-collector-gold/30 focus:border-collector-orange text-sm"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium dark:text-white">Email</Label>
+                  <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                   <Input
                     id="email"
                     value={profile.email || ""}
                     disabled
-                    className="bg-gray-50 dark:bg-gray-700 text-sm dark:text-gray-300"
+                    className="bg-gray-50 text-sm"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="currency" className="text-sm font-medium dark:text-white">Currency</Label>
+                    <Label htmlFor="currency" className="text-sm font-medium">Currency</Label>
                     <Select name="currency" defaultValue={profile.currency || "INR"}>
-                      <SelectTrigger className="border-collector-gold/30 focus:border-collector-orange text-sm dark:bg-gray-800 dark:border-gray-600">
+                      <SelectTrigger className="border-collector-gold/30 focus:border-collector-orange text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -257,9 +252,9 @@ const Profile = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="country" className="text-sm font-medium dark:text-white">Country</Label>
+                    <Label htmlFor="country" className="text-sm font-medium">Country</Label>
                     <Select name="country" defaultValue={profile.country || "IND"}>
-                      <SelectTrigger className="border-collector-gold/30 focus:border-collector-orange text-sm dark:bg-gray-800 dark:border-gray-600">
+                      <SelectTrigger className="border-collector-gold/30 focus:border-collector-orange text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -284,166 +279,108 @@ const Profile = () => {
             </CardContent>
           </Card>
 
-          {/* Theme Settings */}
-          <Card className="shadow-sm border-collector-gold/20 dark:border-gray-700">
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-2">
-                <Palette className="w-5 h-5 text-collector-orange" />
-                <CardTitle className="text-lg dark:text-white">Theme Settings</CardTitle>
-              </div>
-              <CardDescription className="text-sm dark:text-gray-400">
-                Customize your appearance preferences
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-3">
-                <Label className="text-sm font-medium dark:text-white">Theme Mode</Label>
-                <div className="grid grid-cols-3 gap-2">
-                  <Button
-                    variant={mode === 'light' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setMode('light')}
-                    className="text-xs"
-                  >
-                    Light
-                  </Button>
-                  <Button
-                    variant={mode === 'dark' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setMode('dark')}
-                    className="text-xs"
-                  >
-                    Dark
-                  </Button>
-                  <Button
-                    variant={mode === 'system' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setMode('system')}
-                    className="text-xs"
-                  >
-                    <Monitor className="w-3 h-3 mr-1" />
-                    System
-                  </Button>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label className="text-sm font-medium dark:text-white">Compact Theme</Label>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Make the interface more compact like an Excel sheet
-                  </p>
-                </div>
-                <Switch
-                  checked={style === 'compact'}
-                  onCheckedChange={(checked) => setStyle(checked ? 'compact' : 'default')}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Subscription Management */}
-          <Card className="shadow-sm border-collector-gold/20 dark:border-gray-700">
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-collector-orange" />
-                <CardTitle className="text-lg dark:text-white">Subscription</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <SubscriptionCard onUpgrade={() => setShowUpgradeOptions(true)} />
-              
-              {subscription?.tier !== 'Individual' && (
-                <div className="mt-4 space-y-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => manageSubscription()}
-                    className="w-full text-sm"
-                  >
-                    Cancel Subscription
-                  </Button>
-                  {subscription?.tier === 'Premium' && (
+          <div className="space-y-6">
+            <Card className="shadow-sm border-collector-gold/20">
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-collector-orange" />
+                  <CardTitle className="text-lg">Subscription</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <SubscriptionCard onUpgrade={() => setShowUpgradeOptions(true)} />
+                
+                {subscription?.tier !== 'Individual' && (
+                  <div className="mt-4 space-y-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => manageSubscription()}
+                      className="w-full text-sm"
+                    >
+                      Cancel Subscription
+                    </Button>
+                    {subscription?.tier === 'Premium' && (
+                      <Button
+                        onClick={() => handleUpgrade('Organization')}
+                        className="w-full bg-purple-500 hover:bg-purple-600 text-white text-sm"
+                      >
+                        <Crown className="w-4 h-4 mr-2" />
+                        Upgrade to Organization - ₹2,249/month
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                {showUpgradeOptions && subscription?.tier === 'Individual' && (
+                  <div className="mt-4 space-y-2">
+                    <Button
+                      onClick={() => handleUpgrade('Premium')}
+                      className="w-full bg-orange-500 hover:bg-orange-600 text-white text-sm"
+                    >
+                      <Crown className="w-4 h-4 mr-2" />
+                      Upgrade to Premium - ₹749/month
+                    </Button>
                     <Button
                       onClick={() => handleUpgrade('Organization')}
                       className="w-full bg-purple-500 hover:bg-purple-600 text-white text-sm"
                     >
-                      <Crown className="w-4 h-4 mr-2" />
+                      <Gem className="w-4 h-4 mr-2" />
                       Upgrade to Organization - ₹2,249/month
                     </Button>
-                  )}
-                </div>
-              )}
-
-              {showUpgradeOptions && subscription?.tier === 'Individual' && (
-                <div className="mt-4 space-y-2">
-                  <Button
-                    onClick={() => handleUpgrade('Premium')}
-                    className="w-full bg-orange-500 hover:bg-orange-600 text-white text-sm"
-                  >
-                    <Crown className="w-4 h-4 mr-2" />
-                    Upgrade to Premium - ₹749/month
-                  </Button>
-                  <Button
-                    onClick={() => handleUpgrade('Organization')}
-                    className="w-full bg-purple-500 hover:bg-purple-600 text-white text-sm"
-                  >
-                    <Gem className="w-4 h-4 mr-2" />
-                    Upgrade to Organization - ₹2,249/month
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowUpgradeOptions(false)}
-                    className="w-full text-sm"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Danger Zone */}
-          <Card className="shadow-sm border-red-200 dark:border-red-800">
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-2">
-                <Trash2 className="w-5 h-5 text-red-600" />
-                <CardTitle className="text-lg text-red-600 dark:text-red-400">Danger Zone</CardTitle>
-              </div>
-              <CardDescription className="text-sm dark:text-gray-400">
-                Irreversible actions for your account
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" className="w-full text-sm">
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete Account
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete your account
-                      and remove all your data from our servers.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDeleteAccount}
-                      className="bg-red-600 hover:bg-red-700"
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowUpgradeOptions(false)}
+                      className="w-full text-sm"
                     >
+                      Cancel
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Danger Zone */}
+            <Card className="shadow-sm border-red-200">
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-2">
+                  <Trash2 className="w-5 h-5 text-red-600" />
+                  <CardTitle className="text-lg text-red-600">Danger Zone</CardTitle>
+                </div>
+                <CardDescription className="text-sm">
+                  Irreversible actions for your account
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="w-full text-sm">
+                      <Trash2 className="w-4 h-4 mr-2" />
                       Delete Account
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </CardContent>
-          </Card>
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete your account
+                        and remove all your data from our servers.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDeleteAccount}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        Delete Account
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
