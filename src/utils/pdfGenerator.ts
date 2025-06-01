@@ -1,5 +1,9 @@
 
-export const generatePDF = (data: any[], title: string, type: 'transactions' | 'budgets') => {
+import { getCurrencySymbol } from "./currency";
+
+export const generatePDF = (data: any[], title: string, type: 'transactions' | 'budgets', currency: string = 'USD') => {
+  const currencySymbol = getCurrencySymbol(currency);
+  
   // Create a simple HTML structure for the PDF
   const htmlContent = `
     <!DOCTYPE html>
@@ -43,7 +47,8 @@ export const generatePDF = (data: any[], title: string, type: 'transactions' | '
     <body>
         <h1>${title}</h1>
         <p>Generated on: ${new Date().toLocaleDateString()}</p>
-        ${generateTableHTML(data, type)}
+        <p>Currency: ${currency}</p>
+        ${generateTableHTML(data, type, currencySymbol)}
     </body>
     </html>
   `;
@@ -60,7 +65,7 @@ export const generatePDF = (data: any[], title: string, type: 'transactions' | '
   URL.revokeObjectURL(url);
 };
 
-const generateTableHTML = (data: any[], type: 'transactions' | 'budgets') => {
+const generateTableHTML = (data: any[], type: 'transactions' | 'budgets', currencySymbol: string) => {
   if (type === 'transactions') {
     const totalIncome = data.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0);
     const totalExpense = data.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0);
@@ -84,23 +89,23 @@ const generateTableHTML = (data: any[], type: 'transactions' | 'budgets') => {
               <td>${transaction.title}</td>
               <td>${transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}</td>
               <td>${transaction.category.charAt(0).toUpperCase() + transaction.category.slice(1)}</td>
-              <td>$${Number(transaction.amount).toFixed(2)}</td>
+              <td>${currencySymbol}${Number(transaction.amount).toFixed(2)}</td>
               <td>${transaction.description || '-'}</td>
             </tr>
           `).join('')}
           <tr class="total">
             <td colspan="4"><strong>Total Income</strong></td>
-            <td><strong>$${totalIncome.toFixed(2)}</strong></td>
+            <td><strong>${currencySymbol}${totalIncome.toFixed(2)}</strong></td>
             <td></td>
           </tr>
           <tr class="total">
             <td colspan="4"><strong>Total Expenses</strong></td>
-            <td><strong>$${totalExpense.toFixed(2)}</strong></td>
+            <td><strong>${currencySymbol}${totalExpense.toFixed(2)}</strong></td>
             <td></td>
           </tr>
           <tr class="total">
             <td colspan="4"><strong>Net Amount</strong></td>
-            <td><strong>$${(totalIncome - totalExpense).toFixed(2)}</strong></td>
+            <td><strong>${currencySymbol}${(totalIncome - totalExpense).toFixed(2)}</strong></td>
             <td></td>
           </tr>
         </tbody>
@@ -129,12 +134,12 @@ const generateTableHTML = (data: any[], type: 'transactions' | 'budgets') => {
               <td>${budget.period.charAt(0).toUpperCase() + budget.period.slice(1)}</td>
               <td>${new Date(budget.start_date).toLocaleDateString()}</td>
               <td>${new Date(budget.end_date).toLocaleDateString()}</td>
-              <td>$${Number(budget.amount).toFixed(2)}</td>
+              <td>${currencySymbol}${Number(budget.amount).toFixed(2)}</td>
             </tr>
           `).join('')}
           <tr class="total">
             <td colspan="5"><strong>Total Budget</strong></td>
-            <td><strong>$${totalBudget.toFixed(2)}</strong></td>
+            <td><strong>${currencySymbol}${totalBudget.toFixed(2)}</strong></td>
           </tr>
         </tbody>
       </table>

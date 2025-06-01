@@ -78,7 +78,7 @@ const Navigation = () => {
               <div className="w-8 h-8 bg-blue-gradient rounded-xl flex items-center justify-center">
                 <Coins className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl sm:text-2xl font-playfair font-bold text-collector-black">
+              <span className="text-xl sm:text-2xl brand-logo">
                 Vittas
               </span>
             </Link>
@@ -92,10 +92,10 @@ const Navigation = () => {
                   <Link
                     key={link.to}
                     to={link.to}
-                    className={`text-sm font-medium transition-colors duration-200 ${
+                    className={`text-sm font-medium transition-colors duration-200 hover:text-orange-500 ${
                       isActivePath(link.to)
                         ? 'text-collector-orange'
-                        : 'text-collector-black/70 hover:text-collector-orange'
+                        : 'text-collector-black/70'
                     }`}
                   >
                     {link.label}
@@ -107,10 +107,10 @@ const Navigation = () => {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`text-sm font-medium transition-colors duration-200 ${
+                  className={`text-sm font-medium transition-colors duration-200 hover:text-orange-500 ${
                     isActivePath(link.to)
                       ? 'text-collector-orange'
-                      : 'text-collector-black/70 hover:text-collector-orange'
+                      : 'text-collector-black/70'
                   }`}
                 >
                   {link.label}
@@ -126,7 +126,7 @@ const Navigation = () => {
                 {subscription && (
                   <Badge 
                     variant="outline" 
-                    className={`text-xs ${getSubscriptionColor()}`}
+                    className={`text-xs transition-colors duration-200 ${getSubscriptionColor()}`}
                     onClick={handleSubscriptionClick}
                   >
                     {getSubscriptionIcon()}
@@ -135,17 +135,17 @@ const Navigation = () => {
                 )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full">
+                    <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full hover:bg-navy-500 hover:text-orange-500 transition-colors">
                       <User className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    <DropdownMenuItem onClick={() => navigate('/profile')} className="hover:bg-navy-500 hover:text-orange-500 transition-colors">
                       <User className="mr-2 h-4 w-4" />
                       Profile
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut}>
+                    <DropdownMenuItem onClick={handleSignOut} className="hover:bg-navy-500 hover:text-orange-500 transition-colors">
                       <LogOut className="mr-2 h-4 w-4" />
                       Sign Out
                     </DropdownMenuItem>
@@ -158,14 +158,14 @@ const Navigation = () => {
                   variant="ghost" 
                   size="sm" 
                   onClick={() => navigate('/auth')}
-                  className="text-collector-black/70 hover:text-collector-orange"
+                  className="text-collector-black/70 hover:text-orange-500 transition-colors"
                 >
                   Sign In
                 </Button>
                 <Button 
                   size="sm" 
                   onClick={() => navigate('/auth')}
-                  className="bg-blue-gradient hover:bg-blue-600 text-white"
+                  className="bg-blue-gradient hover:bg-blue-600 text-white transition-colors"
                 >
                   Get Started
                 </Button>
@@ -179,7 +179,7 @@ const Navigation = () => {
               variant="ghost"
               size="sm"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 hover:bg-navy-500 hover:text-orange-500 transition-colors"
             >
               {isMobileMenuOpen ? (
                 <X className="h-5 w-5" />
@@ -201,7 +201,7 @@ const Navigation = () => {
                     <div className="px-3 py-2">
                       <Badge 
                         variant="outline" 
-                        className={`text-xs ${getSubscriptionColor()}`}
+                        className={`text-xs transition-colors duration-200 ${getSubscriptionColor()}`}
                         onClick={handleSubscriptionClick}
                       >
                         {getSubscriptionIcon()}
@@ -215,10 +215,10 @@ const Navigation = () => {
                       key={link.to}
                       to={link.to}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className={`block px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                      className={`block px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-navy-500 hover:text-orange-500 ${
                         isActivePath(link.to)
                           ? 'text-collector-orange bg-orange-50'
-                          : 'text-collector-black/70 hover:text-collector-orange hover:bg-gray-50'
+                          : 'text-collector-black/70'
                       }`}
                     >
                       {link.label}
@@ -229,7 +229,7 @@ const Navigation = () => {
                     <Link
                       to="/profile"
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="block px-3 py-2 text-sm font-medium text-collector-black/70 hover:text-collector-orange hover:bg-gray-50 rounded-md"
+                      className="block px-3 py-2 text-sm font-medium text-collector-black/70 hover:bg-navy-500 hover:text-orange-500 rounded-md transition-colors"
                     >
                       <User className="inline mr-2 h-4 w-4" />
                       Profile
@@ -239,7 +239,7 @@ const Navigation = () => {
                         setIsMobileMenuOpen(false);
                         handleSignOut();
                       }}
-                      className="block w-full text-left px-3 py-2 text-sm font-medium text-collector-black/70 hover:text-collector-orange hover:bg-gray-50 rounded-md"
+                      className="block w-full text-left px-3 py-2 text-sm font-medium text-collector-black/70 hover:bg-navy-500 hover:text-orange-500 rounded-md transition-colors"
                     >
                       <LogOut className="inline mr-2 h-4 w-4" />
                       Sign Out
@@ -253,10 +253,10 @@ const Navigation = () => {
                       key={link.to}
                       to={link.to}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className={`block px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                      className={`block px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-navy-500 hover:text-orange-500 ${
                         isActivePath(link.to)
                           ? 'text-collector-orange bg-orange-50'
-                          : 'text-collector-black/70 hover:text-collector-orange hover:bg-gray-50'
+                          : 'text-collector-black/70'
                       }`}
                     >
                       {link.label}
@@ -271,7 +271,7 @@ const Navigation = () => {
                         setIsMobileMenuOpen(false);
                         navigate('/auth');
                       }}
-                      className="w-full justify-start text-collector-black/70 hover:text-collector-orange"
+                      className="w-full justify-start text-collector-black/70 hover:bg-navy-500 hover:text-orange-500 transition-colors"
                     >
                       Sign In
                     </Button>
@@ -281,7 +281,7 @@ const Navigation = () => {
                         setIsMobileMenuOpen(false);
                         navigate('/auth');
                       }}
-                      className="w-full bg-blue-gradient hover:bg-blue-600 text-white"
+                      className="w-full bg-blue-gradient hover:bg-blue-600 text-white transition-colors"
                     >
                       Get Started
                     </Button>

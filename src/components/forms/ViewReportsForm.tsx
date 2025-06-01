@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
@@ -13,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { generatePDF } from "@/utils/pdfGenerator";
+import { getCurrencySymbol } from "@/utils/currency";
 
 interface ViewReportsFormProps {
   open: boolean;
@@ -21,10 +23,14 @@ interface ViewReportsFormProps {
 
 const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
   const { user } = useAuth();
+  const { profile } = useProfile();
   const [reportType, setReportType] = useState<'transactions' | 'budgets' | 'summary'>('summary');
   const [dateRange, setDateRange] = useState<'week' | 'month' | 'quarter' | 'year' | 'custom'>('month');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+
+  // Get currency symbol based on user profile
+  const currencySymbol = getCurrencySymbol(profile?.currency || 'USD');
 
   // Calculate date range
   const getDateRange = () => {
@@ -103,13 +109,13 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
     enabled: !!user?.id && open,
   });
 
-  // Calculate summary data
+  // Calculate summary data with proper currency formatting
   const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0);
   const totalExpenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0);
   const netAmount = totalIncome - totalExpenses;
   const totalBudgets = budgets.reduce((sum, b) => sum + Number(b.amount), 0);
 
-  // Category breakdown
+  // Category breakdown for both income and expenses
   const expensesByCategory = transactions
     .filter(t => t.type === 'expense')
     .reduce((acc, t) => {
@@ -128,12 +134,12 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
     let csvContent = '';
     
     if (type === 'transactions') {
-      csvContent = 'Date,Title,Type,Category,Amount,Description\n';
+      csvContent = `Date,Title,Type,Category,Amount (${profile?.currency || 'USD'}),Description\n`;
       csvContent += data.map(t => 
         `${t.date},${t.title},${t.type},${t.category},${t.amount},"${t.description || ''}"`
       ).join('\n');
     } else {
-      csvContent = 'Name,Category,Period,Start Date,End Date,Amount\n';
+      csvContent = `Name,Category,Period,Start Date,End Date,Amount (${profile?.currency || 'USD'})\n`;
       csvContent += data.map(b => 
         `${b.name},${b.category},${b.period},${b.start_date},${b.end_date},${b.amount}`
       ).join('\n');
@@ -156,12 +162,12 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
     } else if (reportType === 'budgets') {
       generatePDF(budgets, `Budget Report - ${start} to ${end}`, 'budgets');
     } else {
-      // Generate summary report
+      // Generate summary report with proper currency
       const summaryData = [
-        { label: 'Total Income', value: `$${totalIncome.toFixed(2)}` },
-        { label: 'Total Expenses', value: `$${totalExpenses.toFixed(2)}` },
-        { label: 'Net Amount', value: `$${netAmount.toFixed(2)}` },
-        { label: 'Total Budgets', value: `$${totalBudgets.toFixed(2)}` },
+        { label: 'Total Income', value: `${currencySymbol}${totalIncome.toFixed(2)}` },
+        { label: 'Total Expenses', value: `${currencySymbol}${totalExpenses.toFixed(2)}` },
+        { label: 'Net Amount', value: `${currencySymbol}${netAmount.toFixed(2)}` },
+        { label: 'Total Budgets', value: `${currencySymbol}${totalBudgets.toFixed(2)}` },
       ];
       
       const htmlContent = `
@@ -183,6 +189,7 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
         <body>
             <h1>Financial Summary Report</h1>
             <p>Period: ${start} to ${end}</p>
+            <p>Currency: ${profile?.currency || 'USD'}</p>
             <p>Generated on: ${new Date().toLocaleDateString()}</p>
             
             <div class="summary-grid">
@@ -194,12 +201,22 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
                 `).join('')}
             </div>
 
+            <h2>Income Breakdown by Category</h2>
+            <table>
+                <thead><tr><th>Category</th><th>Amount (${profile?.currency || 'USD'})</th></tr></thead>
+                <tbody>
+                    ${Object.entries(incomeByCategory).map(([category, amount]) => `
+                        <tr><td>${category.charAt(0).toUpperCase() + category.slice(1)}</td><td>${currencySymbol}${amount.toFixed(2)}</td></tr>
+                    `).join('')}
+                </tbody>
+            </table>
+
             <h2>Expense Breakdown by Category</h2>
             <table>
-                <thead><tr><th>Category</th><th>Amount</th></tr></thead>
+                <thead><tr><th>Category</th><th>Amount (${profile?.currency || 'USD'})</th></tr></thead>
                 <tbody>
                     ${Object.entries(expensesByCategory).map(([category, amount]) => `
-                        <tr><td>${category.charAt(0).toUpperCase() + category.slice(1)}</td><td>$${amount.toFixed(2)}</td></tr>
+                        <tr><td>${category.charAt(0).toUpperCase() + category.slice(1)}</td><td>${currencySymbol}${amount.toFixed(2)}</td></tr>
                     `).join('')}
                 </tbody>
             </table>
@@ -249,7 +266,7 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
             <div>
               <Label>Report Type</Label>
               <Select value={reportType} onValueChange={(value: 'transactions' | 'budgets' | 'summary') => setReportType(value)}>
-                <SelectTrigger className="border-2 border-collector-gold/30 focus:border-collector-orange">
+                <SelectTrigger className="border-2 border-collector-gold/30 focus:border-collector-orange hover:bg-navy-500 hover:text-orange-500 transition-colors">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
@@ -263,7 +280,7 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
             <div>
               <Label>Date Range</Label>
               <Select value={dateRange} onValueChange={(value: 'week' | 'month' | 'quarter' | 'year' | 'custom') => setDateRange(value)}>
-                <SelectTrigger className="border-2 border-collector-gold/30 focus:border-collector-orange">
+                <SelectTrigger className="border-2 border-collector-gold/30 focus:border-collector-orange hover:bg-navy-500 hover:text-orange-500 transition-colors">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
@@ -279,7 +296,7 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
             <div className="flex gap-2">
               <Button 
                 onClick={handleDownloadPDF}
-                className="flex-1 bg-blue-500 hover:bg-blue-200 text-white hover:text-collector-black transition-all duration-200"
+                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white transition-colors"
               >
                 <Download className="w-4 h-4 mr-2" />
                 PDF
@@ -288,7 +305,7 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
                 <Button 
                   onClick={handleDownloadCSV}
                   variant="outline"
-                  className="flex-1 hover:bg-gray-200 transition-all duration-200"
+                  className="flex-1 hover:bg-navy-500 hover:text-orange-500 transition-colors"
                 >
                   <Download className="w-4 h-4 mr-2" />
                   CSV
@@ -306,7 +323,7 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="border-2 border-collector-gold/30 focus:border-collector-orange"
+                  className="border-2 border-collector-gold/30 focus:border-collector-orange hover:bg-navy-500 hover:text-orange-500 transition-colors"
                 />
               </div>
               <div>
@@ -315,7 +332,7 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="border-2 border-collector-gold/30 focus:border-collector-orange"
+                  className="border-2 border-collector-gold/30 focus:border-collector-orange hover:bg-navy-500 hover:text-orange-500 transition-colors"
                 />
               </div>
             </div>
@@ -324,37 +341,37 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
           {/* Summary Cards */}
           {reportType === 'summary' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="border-collector-gold/20">
+              <Card className="border-collector-gold/20 hover:bg-gray-50 transition-colors">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Total Income</p>
-                      <p className="text-2xl font-bold text-green-600">${totalIncome.toFixed(2)}</p>
+                      <p className="text-2xl font-bold text-green-600">{currencySymbol}{totalIncome.toFixed(2)}</p>
                     </div>
                     <TrendingUp className="w-8 h-8 text-green-600" />
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-collector-gold/20">
+              <Card className="border-collector-gold/20 hover:bg-gray-50 transition-colors">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Total Expenses</p>
-                      <p className="text-2xl font-bold text-red-600">${totalExpenses.toFixed(2)}</p>
+                      <p className="text-2xl font-bold text-red-600">{currencySymbol}{totalExpenses.toFixed(2)}</p>
                     </div>
                     <TrendingDown className="w-8 h-8 text-red-600" />
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-collector-gold/20">
+              <Card className="border-collector-gold/20 hover:bg-gray-50 transition-colors">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Net Amount</p>
                       <p className={`text-2xl font-bold ${netAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        ${netAmount.toFixed(2)}
+                        {currencySymbol}{netAmount.toFixed(2)}
                       </p>
                     </div>
                     <DollarSign className={`w-8 h-8 ${netAmount >= 0 ? 'text-green-600' : 'text-red-600'}`} />
@@ -362,12 +379,12 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
                 </CardContent>
               </Card>
 
-              <Card className="border-collector-gold/20">
+              <Card className="border-collector-gold/20 hover:bg-gray-50 transition-colors">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Total Budgets</p>
-                      <p className="text-2xl font-bold text-blue-600">${totalBudgets.toFixed(2)}</p>
+                      <p className="text-2xl font-bold text-blue-600">{currencySymbol}{totalBudgets.toFixed(2)}</p>
                     </div>
                     <PieChart className="w-8 h-8 text-blue-600" />
                   </div>
@@ -376,44 +393,58 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
             </div>
           )}
 
-          {/* Category Breakdown */}
+          {/* Category Breakdown - Show both income and expenses */}
           {reportType === 'summary' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card className="border-collector-gold/20">
                 <CardHeader>
-                  <CardTitle className="text-lg">Expenses by Category</CardTitle>
+                  <CardTitle className="text-lg text-green-600">Income by Category</CardTitle>
+                  <CardDescription>Total: {currencySymbol}{totalIncome.toFixed(2)}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    {Object.entries(expensesByCategory).map(([category, amount]) => (
-                      <div key={category} className="flex justify-between items-center">
-                        <span className="capitalize">{category}</span>
-                        <Badge variant="outline">${amount.toFixed(2)}</Badge>
-                      </div>
-                    ))}
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {Object.entries(incomeByCategory).length > 0 ? (
+                      Object.entries(incomeByCategory).map(([category, amount]) => (
+                        <div key={category} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded transition-colors">
+                          <span className="capitalize font-medium">{category}</span>
+                          <Badge variant="outline" className="text-green-600 border-green-200">
+                            {currencySymbol}{amount.toFixed(2)}
+                          </Badge>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-center text-gray-500 py-4">No income transactions found</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="border-collector-gold/20">
                 <CardHeader>
-                  <CardTitle className="text-lg">Income by Category</CardTitle>
+                  <CardTitle className="text-lg text-red-600">Expenses by Category</CardTitle>
+                  <CardDescription>Total: {currencySymbol}{totalExpenses.toFixed(2)}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    {Object.entries(incomeByCategory).map(([category, amount]) => (
-                      <div key={category} className="flex justify-between items-center">
-                        <span className="capitalize">{category}</span>
-                        <Badge variant="outline" className="text-green-600">${amount.toFixed(2)}</Badge>
-                      </div>
-                    ))}
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {Object.entries(expensesByCategory).length > 0 ? (
+                      Object.entries(expensesByCategory).map(([category, amount]) => (
+                        <div key={category} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded transition-colors">
+                          <span className="capitalize font-medium">{category}</span>
+                          <Badge variant="outline" className="text-red-600 border-red-200">
+                            {currencySymbol}{amount.toFixed(2)}
+                          </Badge>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-center text-gray-500 py-4">No expense transactions found</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
             </div>
           )}
 
-          {/* Detailed Data */}
+          {/* Detailed Data - Transactions */}
           {reportType === 'transactions' && (
             <Card className="border-collector-gold/20">
               <CardHeader>
@@ -428,16 +459,21 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
                     <p>Loading transactions...</p>
                   ) : transactions.length > 0 ? (
                     transactions.map((transaction) => (
-                      <div key={transaction.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                        <div>
-                          <p className="font-medium">{transaction.title}</p>
+                      <div key={transaction.id} className="flex justify-between items-center p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start mb-1">
+                            <p className="font-medium text-gray-800">{transaction.title}</p>
+                            <Badge variant={transaction.type === 'income' ? 'default' : 'destructive'} className="ml-2">
+                              {transaction.type === 'income' ? '+' : '-'}{currencySymbol}{Number(transaction.amount).toFixed(2)}
+                            </Badge>
+                          </div>
                           <p className="text-sm text-gray-600">
                             {new Date(transaction.date).toLocaleDateString()} • {transaction.category}
                           </p>
+                          {transaction.description && (
+                            <p className="text-xs text-gray-500 mt-1">{transaction.description}</p>
+                          )}
                         </div>
-                        <Badge variant={transaction.type === 'income' ? 'default' : 'destructive'}>
-                          {transaction.type === 'income' ? '+' : '-'}${Number(transaction.amount).toFixed(2)}
-                        </Badge>
                       </div>
                     ))
                   ) : (
@@ -448,6 +484,7 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
             </Card>
           )}
 
+          {/* Detailed Data - Budgets */}
           {reportType === 'budgets' && (
             <Card className="border-collector-gold/20">
               <CardHeader>
@@ -462,16 +499,21 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
                     <p>Loading budgets...</p>
                   ) : budgets.length > 0 ? (
                     budgets.map((budget) => (
-                      <div key={budget.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                        <div>
-                          <p className="font-medium">{budget.name}</p>
+                      <div key={budget.id} className="flex justify-between items-center p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start mb-1">
+                            <p className="font-medium text-gray-800">{budget.name}</p>
+                            <Badge variant="outline" className="ml-2">
+                              {currencySymbol}{Number(budget.amount).toFixed(2)}
+                            </Badge>
+                          </div>
                           <p className="text-sm text-gray-600">
                             {budget.category} • {budget.period}
                           </p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(budget.start_date).toLocaleDateString()} - {new Date(budget.end_date).toLocaleDateString()}
+                          </p>
                         </div>
-                        <Badge variant="outline">
-                          ${Number(budget.amount).toFixed(2)}
-                        </Badge>
                       </div>
                     ))
                   ) : (

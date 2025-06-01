@@ -33,6 +33,8 @@ import UploadInvoiceForm from "./forms/UploadInvoiceForm";
 import ViewArchiveForm from "./forms/ViewArchiveForm";
 import ViewReportsForm from "./forms/ViewReportsForm";
 import ExpenseSharingForm from "./forms/ExpenseSharingForm";
+import TransactionDetailsModal from "./TransactionDetailsModal";
+import BudgetDetailsModal from "./BudgetDetailsModal";
 import { getCurrencySymbol } from "@/utils/currency";
 
 interface DashboardProps {
@@ -48,6 +50,7 @@ interface Transaction {
   date: string;
   description: string;
   created_at: string;
+  updated_at: string;
 }
 
 interface DashboardStats {
@@ -65,6 +68,8 @@ interface Budget {
   period: string;
   start_date: string;
   end_date: string;
+  created_at: string;
+  updated_at: string;
 }
 
 const Dashboard = ({ userType }: DashboardProps) => {
@@ -89,7 +94,12 @@ const Dashboard = ({ userType }: DashboardProps) => {
   const [showViewArchive, setShowViewArchive] = useState(false);
   const [showExpenseSharing, setShowExpenseSharing] = useState(false);
   const [editingTransactionId, setEditingTransactionId] = useState<string | null>(null);
+  const [editingBudgetId, setEditingBudgetId] = useState<string | null>(null);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
+  const [showTransactionDetails, setShowTransactionDetails] = useState(false);
+  const [showBudgetDetails, setShowBudgetDetails] = useState(false);
 
   // Get currency symbol based on user profile
   const currencySymbol = getCurrencySymbol(profile?.currency || 'USD');
@@ -165,7 +175,8 @@ const Dashboard = ({ userType }: DashboardProps) => {
         category: t.category,
         date: t.date,
         description: t.description || '',
-        created_at: t.created_at
+        created_at: t.created_at,
+        updated_at: t.updated_at
       })) || [];
 
       setRecentTransactions(mappedTransactions);
@@ -201,11 +212,17 @@ const Dashboard = ({ userType }: DashboardProps) => {
   const handleBudgetSuccess = () => {
     fetchDashboardData();
     setShowCreateBudget(false);
+    setEditingBudgetId(null);
   };
 
   const handleEditTransaction = (transactionId: string) => {
     setEditingTransactionId(transactionId);
     setShowAddTransaction(true);
+  };
+
+  const handleEditBudget = (budgetId: string) => {
+    setEditingBudgetId(budgetId);
+    setShowCreateBudget(true);
   };
 
   const handleDeleteTransaction = async (transactionId: string) => {
@@ -225,6 +242,36 @@ const Dashboard = ({ userType }: DashboardProps) => {
       console.error('Error deleting transaction:', error);
       toast.error('Failed to delete transaction');
     }
+  };
+
+  const handleDeleteBudget = async (budgetId: string) => {
+    if (!confirm('Are you sure you want to delete this budget?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('budgets')
+        .delete()
+        .eq('id', budgetId);
+
+      if (error) throw error;
+      
+      toast.success('Budget deleted successfully');
+      fetchDashboardData();
+      setShowBudgetDetails(false);
+    } catch (error: any) {
+      console.error('Error deleting budget:', error);
+      toast.error('Failed to delete budget');
+    }
+  };
+
+  const handleTransactionClick = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setShowTransactionDetails(true);
+  };
+
+  const handleBudgetClick = (budget: Budget) => {
+    setSelectedBudget(budget);
+    setShowBudgetDetails(true);
   };
 
   const handleExpenseShareClick = () => {
@@ -383,25 +430,90 @@ const Dashboard = ({ userType }: DashboardProps) => {
         {/* Quick Menu - Hidden on mobile */}
         <div className="mb-6 sm:mb-8 hidden md:block">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 xl:grid-cols-7 gap-3 sm:gap-4">
-            {quickMenuItems.map((item, index) => (
+            <Button
+              onClick={() => setShowAddTransaction(true)}
+              variant="ghost"
+              className="bg-blue-500/20 hover:bg-blue-500/30 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200"
+            >
+              <PlusCircle className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+              <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
+                Add Transaction
+              </span>
+            </Button>
+            
+            <Button
+              onClick={() => setShowCreateBudget(true)}
+              variant="ghost"
+              className="bg-orange-500/20 hover:bg-orange-500/30 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200"
+            >
+              <Target className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
+              <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
+                Create Budget
+              </span>
+            </Button>
+
+            {userType === 'organization' && (
               <Button
-                key={index}
-                onClick={item.onClick}
+                onClick={() => setShowGenerateInvoice(true)}
                 variant="ghost"
-                className={`${item.bgColor} ${item.hoverColor} border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200`}
+                className="bg-green-500/20 hover:bg-green-500/30 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200"
               >
-                <item.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${item.iconColor}`} />
+                <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
                 <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
-                  {item.label}
+                  Generate Invoice
                 </span>
               </Button>
-            ))}
+            )}
+
+            <Button
+              onClick={() => setShowUploadInvoice(true)}
+              variant="ghost"
+              className="bg-purple-500/20 hover:bg-purple-500/30 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200"
+            >
+              <Upload className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
+              <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
+                Upload
+              </span>
+            </Button>
+
+            <Button
+              onClick={handleExpenseShareClick}
+              variant="ghost"
+              className="bg-pink-500/20 hover:bg-pink-500/30 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200"
+            >
+              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-pink-600" />
+              <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
+                Expense Share
+              </span>
+            </Button>
+
+            <Button
+              onClick={() => setShowViewReports(true)}
+              variant="ghost"
+              className="bg-cyan-500/20 hover:bg-cyan-500/30 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200"
+            >
+              <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-600" />
+              <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
+                Reports
+              </span>
+            </Button>
+
+            <Button
+              onClick={() => setShowViewArchive(true)}
+              variant="ghost"
+              className="bg-gray-500/20 hover:bg-gray-500/30 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200"
+            >
+              <Archive className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
+              <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
+                Archive
+              </span>
+            </Button>
           </div>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm">
+          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm hover:bg-gray-50 transition-colors">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
               <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Total Income</CardTitle>
               <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
@@ -413,7 +525,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm">
+          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm hover:bg-gray-50 transition-colors">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
               <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Total Expenses</CardTitle>
               <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
@@ -425,7 +537,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm">
+          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm hover:bg-gray-50 transition-colors">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
               <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Balance</CardTitle>
               <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
@@ -437,7 +549,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm">
+          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm hover:bg-gray-50 transition-colors">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
               <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Transactions</CardTitle>
               <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
@@ -463,7 +575,8 @@ const Dashboard = ({ userType }: DashboardProps) => {
                   {recentTransactions.map((transaction) => (
                     <div 
                       key={transaction.id}
-                      className="flex items-center justify-between p-3 sm:p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                      className="flex items-center justify-between p-3 sm:p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
+                      onClick={() => handleTransactionClick(transaction)}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="font-semibold text-gray-800 text-sm mb-1 truncate">{transaction.title}</div>
@@ -482,16 +595,22 @@ const Dashboard = ({ userType }: DashboardProps) => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleEditTransaction(transaction.id)}
-                            className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-gray-400 text-gray-800 hover:bg-gray-100"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditTransaction(transaction.id);
+                            }}
+                            className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-gray-400 text-gray-800 hover:bg-navy-500 hover:text-orange-500 transition-colors"
                           >
                             <Edit className="w-3 h-3 text-gray-700" />
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleDeleteTransaction(transaction.id)}
-                            className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-red-400 text-red-600 hover:bg-red-50"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteTransaction(transaction.id);
+                            }}
+                            className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-red-400 text-red-600 hover:bg-black hover:text-white transition-colors"
                           >
                             <Trash2 className="w-3 h-3" />
                           </Button>
@@ -504,14 +623,6 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 <div className="text-center py-8 sm:py-12 text-gray-600">
                   <FileText className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-4 opacity-50" />
                   <p className="text-sm mb-4">No transactions yet</p>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setShowAddTransaction(true)}
-                    className="border-gray-400 text-gray-800 hover:bg-gray-100"
-                  >
-                    Add Transaction
-                  </Button>
                 </div>
               )}
             </CardContent>
@@ -526,10 +637,40 @@ const Dashboard = ({ userType }: DashboardProps) => {
               {budgets.length > 0 ? (
                 <div className="space-y-3 sm:space-y-4">
                   {budgets.slice(0, 3).map((budget) => (
-                    <div key={budget.id} className="p-3 sm:p-4 rounded-lg border border-gray-200 bg-gray-50">
+                    <div 
+                      key={budget.id} 
+                      className="p-3 sm:p-4 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                      onClick={() => handleBudgetClick(budget)}
+                    >
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-semibold text-gray-800 text-sm truncate flex-1">{budget.name}</span>
-                        <span className="text-sm font-bold text-orange-600 ml-2">{currencySymbol}{Number(budget.amount).toLocaleString()}</span>
+                        <div className="flex items-center gap-2 ml-2">
+                          <span className="text-sm font-bold text-orange-600">{currencySymbol}{Number(budget.amount).toLocaleString()}</span>
+                          <div className="flex flex-col gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditBudget(budget.id);
+                              }}
+                              className="h-5 w-5 p-0 border-gray-400 text-gray-800 hover:bg-navy-500 hover:text-orange-500 transition-colors"
+                            >
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteBudget(budget.id);
+                              }}
+                              className="h-5 w-5 p-0 border-red-400 text-red-600 hover:bg-black hover:text-white transition-colors"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                       <div className="text-xs text-gray-600">
                         {budget.category} • {budget.period}
@@ -540,7 +681,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="w-full border-gray-400 text-gray-800 hover:bg-gray-100 text-xs sm:text-sm"
+                      className="w-full border-gray-400 text-gray-800 hover:bg-navy-500 hover:text-orange-500 text-xs sm:text-sm transition-colors"
                       onClick={() => setShowCreateBudget(true)}
                     >
                       View All Budgets
@@ -555,7 +696,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                     variant="outline" 
                     size="sm" 
                     onClick={() => setShowCreateBudget(true)}
-                    className="border-gray-400 hover:bg-gray-100"
+                    className="border-gray-400 hover:bg-navy-500 hover:text-orange-500 transition-colors"
                   >
                     <span className="text-gray-700">Create Budget</span>
                   </Button>
@@ -569,17 +710,62 @@ const Dashboard = ({ userType }: DashboardProps) => {
       {/* Mobile Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-50">
         <div className="grid grid-cols-7 gap-1 p-2">
-          {mobileNavItems.map((item, index) => (
-            <Button
-              key={index}
-              onClick={item.onClick}
-              variant="ghost"
-              className="flex flex-col items-center gap-1 p-2 h-auto text-gray-600 hover:text-blue-600 hover:bg-blue-50"
-            >
-              <item.icon className="w-5 h-5" />
-              <span className="text-xs leading-tight text-center">{item.label}</span>
-            </Button>
-          ))}
+          <Button
+            onClick={() => setShowAddTransaction(true)}
+            variant="ghost"
+            className="flex flex-col items-center gap-1 p-2 h-auto text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+          >
+            <PlusCircle className="w-5 h-5" />
+            <span className="text-xs leading-tight text-center">Add Transaction</span>
+          </Button>
+          <Button
+            onClick={() => setShowCreateBudget(true)}
+            variant="ghost"
+            className="flex flex-col items-center gap-1 p-2 h-auto text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+          >
+            <Target className="w-5 h-5" />
+            <span className="text-xs leading-tight text-center">Create Budget</span>
+          </Button>
+          <Button
+            onClick={() => setShowUploadInvoice(true)}
+            variant="ghost"
+            className="flex flex-col items-center gap-1 p-2 h-auto text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+          >
+            <Upload className="w-5 h-5" />
+            <span className="text-xs leading-tight text-center">Upload</span>
+          </Button>
+          <Button
+            onClick={handleExpenseShareClick}
+            variant="ghost"
+            className="flex flex-col items-center gap-1 p-2 h-auto text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+          >
+            <Users className="w-5 h-5" />
+            <span className="text-xs leading-tight text-center">Expense Share</span>
+          </Button>
+          <Button
+            onClick={() => setShowViewReports(true)}
+            variant="ghost"
+            className="flex flex-col items-center gap-1 p-2 h-auto text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+          >
+            <BarChart3 className="w-5 h-5" />
+            <span className="text-xs leading-tight text-center">Reports</span>
+          </Button>
+          <Button
+            onClick={() => setShowViewArchive(true)}
+            variant="ghost"
+            className="flex flex-col items-center gap-1 p-2 h-auto text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+          >
+            <Archive className="w-5 h-5" />
+            <span className="text-xs leading-tight text-center">Archive</span>
+          </Button>
+          <Button
+            onClick={() => navigate('/profile')}
+            variant="ghost"
+            className="flex flex-col items-center gap-1 p-2 h-auto text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+          >
+            <User className="w-5 h-5" />
+            <span className="text-xs leading-tight text-center">Profile</span>
+          </Button>
         </div>
       </div>
 
@@ -594,11 +780,11 @@ const Dashboard = ({ userType }: DashboardProps) => {
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
-              <Button onClick={handleUpgradeClick} className="w-full bg-blue-gradient hover:bg-blue-600 text-white">
+              <Button onClick={handleUpgradeClick} className="w-full bg-blue-gradient hover:bg-blue-600 text-white transition-colors">
                 <Crown className="w-4 h-4 mr-2" />
                 Upgrade to Premium
               </Button>
-              <Button onClick={() => setShowUpgradePrompt(false)} variant="outline" className="w-full">
+              <Button onClick={() => setShowUpgradePrompt(false)} variant="outline" className="w-full hover:bg-navy-500 hover:text-orange-500 transition-colors">
                 Cancel
               </Button>
             </CardContent>
@@ -620,6 +806,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
         onOpenChange={setShowCreateBudget} 
         userType={userType}
         onClose={handleBudgetSuccess}
+        editingBudgetId={editingBudgetId}
       />
 
       {userType === 'organization' && (
@@ -653,6 +840,23 @@ const Dashboard = ({ userType }: DashboardProps) => {
           userType={userType}
         />
       )}
+
+      {/* Detail Modals */}
+      <TransactionDetailsModal
+        transaction={selectedTransaction}
+        open={showTransactionDetails}
+        onOpenChange={setShowTransactionDetails}
+        onEdit={handleEditTransaction}
+        onDelete={handleDeleteTransaction}
+      />
+
+      <BudgetDetailsModal
+        budget={selectedBudget}
+        open={showBudgetDetails}
+        onOpenChange={setShowBudgetDetails}
+        onEdit={handleEditBudget}
+        onDelete={handleDeleteBudget}
+      />
     </div>
   );
 };
