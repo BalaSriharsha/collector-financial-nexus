@@ -401,7 +401,7 @@ const Dashboard = ({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
           {/* Recent Transactions */}
           <Card className="bg-white/90 border-gray-200 backdrop-blur-sm">
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between px-0 py-[10px] mx-[10px]">
               <CardTitle className="text-lg sm:text-xl text-gray-800">Recent Transactions</CardTitle>
               <Button variant="outline" size="sm" onClick={() => setShowViewAllTransactions(true)} className="border-gray-400 text-gray-800 hover-navy transition-colors">
                 View All
