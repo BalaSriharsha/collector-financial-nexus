@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Crown, Gem, Check, Settings, CreditCard } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
@@ -14,9 +14,28 @@ interface SubscriptionCardProps {
 }
 
 const SubscriptionCard = ({ onUpgrade }: SubscriptionCardProps) => {
-  const { subscription, loading, manageSubscription } = useSubscription();
+  const { subscription, loading, manageSubscription, refreshSubscription } = useSubscription();
   const navigate = useNavigate();
   const [showManagement, setShowManagement] = useState(false);
+
+  // Auto-refresh subscription when component mounts or becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('SubscriptionCard: Page became visible, refreshing subscription...');
+        refreshSubscription(true);
+      }
+    };
+
+    // Refresh when component mounts
+    refreshSubscription(true);
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [refreshSubscription]);
 
   if (loading) {
     return (
@@ -72,7 +91,7 @@ const SubscriptionCard = ({ onUpgrade }: SubscriptionCardProps) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Icon className={`w-5 h-5 ${tierColors[subscription?.tier || 'Individual']}`} />
-              <CardTitle className="text-lg">{subscription?.tier} Plan</CardTitle>
+              <CardTitle className="text-lg">{subscription?.tier || 'Individual'} Plan</CardTitle>
             </div>
             <Badge variant="outline" className={tierColors[subscription?.tier || 'Individual']}>
               {subscription?.tier === 'Individual' ? 'Free' : 'Paid'}
@@ -159,7 +178,7 @@ const SubscriptionCard = ({ onUpgrade }: SubscriptionCardProps) => {
             <div className="text-center">
               <div className="mb-4">
                 <Icon className={`w-12 h-12 mx-auto ${tierColors[subscription?.tier || 'Individual']}`} />
-                <h3 className="text-lg font-semibold mt-2">{subscription?.tier} Plan</h3>
+                <h3 className="text-lg font-semibold mt-2">{subscription?.tier || 'Individual'} Plan</h3>
                 {subscription?.subscriptionEnd && (
                   <p className="text-sm text-gray-600">
                     Active until: {new Date(subscription.subscriptionEnd).toLocaleDateString()}

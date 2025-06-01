@@ -100,21 +100,21 @@ const Dashboard = ({ userType }: DashboardProps) => {
     // Check immediately
     checkSubscriptionStatus();
 
-    // Check every 10 seconds for subscription updates (more frequent for better UX)
-    const interval = setInterval(checkSubscriptionStatus, 10000);
+    // Check every 5 seconds for subscription updates (more frequent for better UX)
+    const interval = setInterval(checkSubscriptionStatus, 5000);
 
     // Check when user returns to the page (useful after payment)
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         console.log('Page became visible, checking subscription status...');
-        checkSubscriptionStatus();
+        refreshSubscription(true); // Force refresh when page becomes visible
       }
     };
 
     // Check when window regains focus (useful after payment in new tab)
     const handleFocus = () => {
       console.log('Window focused, checking subscription status...');
-      checkSubscriptionStatus();
+      refreshSubscription(true); // Force refresh when window gains focus
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -223,7 +223,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
     }
   };
 
-  // Quick menu items configuration
+  // Quick menu items configuration - including Expense Sharing for eligible users
   const quickMenuItems = [
     {
       icon: PlusCircle,
@@ -285,7 +285,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100">
         <Navigation />
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="text-center py-8">
@@ -298,7 +298,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100">
       <Navigation />
       
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
@@ -314,7 +314,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
           </div>
           <div className="flex items-center gap-3">
             <Badge variant="outline" className="text-xs sm:text-sm px-2 sm:px-3 py-1 border-gray-400 text-gray-700 bg-white/80">
-              {subscription?.tier} Plan
+              {subscription?.tier || 'Individual'} Plan
             </Badge>
             {subscription?.tier !== 'Individual' && (
               <Badge className="bg-gradient-to-r from-orange-400 to-amber-400 text-white text-xs sm:text-sm px-2 sm:px-3 py-1">

@@ -114,13 +114,18 @@ export const useSubscription = () => {
     fetchSubscription();
   }, [user]);
 
-  // Refresh subscription status (useful after checkout) with debouncing
-  const refreshSubscription = async () => {
-    console.log('Refreshing subscription status...');
+  // Refresh subscription status with more aggressive polling after payment
+  const refreshSubscription = async (forceRefresh = false) => {
+    console.log('Refreshing subscription status...', forceRefresh ? '(forced)' : '');
     setLoading(true);
     
-    // Add a small delay to allow webhook processing
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    if (forceRefresh) {
+      // Add longer delay for payment processing
+      await new Promise(resolve => setTimeout(resolve, 3000));
+    } else {
+      // Add a small delay to allow webhook processing
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
     
     await fetchSubscription();
   };
