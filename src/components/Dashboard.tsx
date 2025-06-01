@@ -36,7 +36,6 @@ interface Transaction {
   category: string;
   date: string;
   description?: string;
-  created_at: string;
 }
 
 interface Budget {
@@ -384,7 +383,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
         </div>
 
         {/* Organization Teams - Only show for organization users */}
-        {userType === 'organization' && <OrganizationTeams onCreateInvoice={() => setActiveModal('generate-invoice')} />}
+        {userType === 'organization' && <OrganizationTeams />}
 
         {/* Quick Actions */}
         <Card className="shadow-sm border-collector-gold/20 dark:border-gray-700">
@@ -442,11 +441,8 @@ const Dashboard = ({ userType }: DashboardProps) => {
       {/* Modals */}
       {activeModal === 'add-transaction' && (
         <AddTransactionForm
-          open={true}
-          onOpenChange={(open) => !open && setActiveModal(null)}
-          userType={userType}
           onClose={() => setActiveModal(null)}
-          onTransactionAdded={() => {
+          onSuccess={() => {
             setActiveModal(null);
             fetchTransactions();
           }}
@@ -455,11 +451,8 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
       {activeModal === 'create-budget' && (
         <CreateBudgetForm
-          open={true}
-          onOpenChange={(open) => !open && setActiveModal(null)}
-          userType={userType}
           onClose={() => setActiveModal(null)}
-          onBudgetCreated={() => {
+          onSuccess={() => {
             setActiveModal(null);
             fetchBudgets();
           }}
@@ -467,57 +460,40 @@ const Dashboard = ({ userType }: DashboardProps) => {
       )}
 
       {activeModal === 'expense-sharing' && (
-        <ExpenseSharingForm
-          open={true}
-          onOpenChange={(open) => !open && setActiveModal(null)}
-          userType={userType}
-        />
+        <ExpenseSharingForm onClose={() => setActiveModal(null)} />
       )}
 
       {activeModal === 'generate-invoice' && (
-        <GenerateInvoiceForm
-          open={true}
-          onOpenChange={(open) => !open && setActiveModal(null)}
-        />
+        <GenerateInvoiceForm onClose={() => setActiveModal(null)} />
       )}
 
       {activeModal === 'upload-invoice' && (
-        <UploadInvoiceForm
-          open={true}
-          onOpenChange={(open) => !open && setActiveModal(null)}
-        />
+        <UploadInvoiceForm onClose={() => setActiveModal(null)} />
       )}
 
       {activeModal === 'view-reports' && (
-        <ViewReportsForm
-          open={true}
-          onOpenChange={(open) => !open && setActiveModal(null)}
-        />
+        <ViewReportsForm onClose={() => setActiveModal(null)} />
       )}
 
       {activeModal === 'view-archive' && (
-        <ViewArchiveForm
-          open={true}
-          onOpenChange={(open) => !open && setActiveModal(null)}
-          userType={userType}
-        />
+        <ViewArchiveForm onClose={() => setActiveModal(null)} />
       )}
 
       {/* Stats Details Modal */}
       <StatsDetailsModal
-        open={statsModal.isOpen}
-        onOpenChange={(open) => setStatsModal({ ...statsModal, isOpen: open })}
+        isOpen={statsModal.isOpen}
+        onClose={() => setStatsModal({ ...statsModal, isOpen: false })}
         type={statsModal.type}
-        value={statsModal.type === 'income' ? totalIncome : 
-               statsModal.type === 'expense' ? totalExpenses :
-               statsModal.type === 'balance' ? balance : transactions.length}
         transactions={transactions}
+        totalIncome={totalIncome}
+        totalExpenses={totalExpenses}
+        balance={balance}
       />
 
       {/* View All Modal */}
       <ViewAllModal
-        open={viewAllModal.isOpen}
-        onOpenChange={(open) => setViewAllModal({ ...viewAllModal, isOpen: open })}
+        isOpen={viewAllModal.isOpen}
+        onClose={() => setViewAllModal({ ...viewAllModal, isOpen: false })}
         type={viewAllModal.type}
         data={viewAllModal.type === 'transactions' ? transactions : budgets}
       />

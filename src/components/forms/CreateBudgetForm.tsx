@@ -16,12 +16,11 @@ interface CreateBudgetFormProps {
   userType: 'individual' | 'organization';
   editingBudget?: any;
   onClose?: () => void;
-  onBudgetCreated: () => void;
 }
 
 type BudgetCategory = "food" | "transport" | "entertainment" | "utilities" | "healthcare" | "shopping" | "education" | "investment" | "salary" | "freelance" | "business" | "other";
 
-const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose, onBudgetCreated }: CreateBudgetFormProps) => {
+const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose }: CreateBudgetFormProps) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
@@ -122,12 +121,7 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
       });
 
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
-      onBudgetCreated();
-      if (onClose) {
-        onClose();
-      } else {
-        onOpenChange(false);
-      }
+      onClose ? onClose() : onOpenChange(false);
     } catch (error: any) {
       console.error('Error saving budget:', error);
       toast.error(error.message || 'Failed to save budget');

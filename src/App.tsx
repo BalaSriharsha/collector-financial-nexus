@@ -19,69 +19,66 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import CancellationRefund from "./pages/CancellationRefund";
 import ShippingDelivery from "./pages/ShippingDelivery";
 import NotFound from "./pages/NotFound";
-import { ProtectedRoute } from "./components/ProtectedRoute";
+import ProtectedRoute from "./components/ProtectedRoute";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { AuthProvider } from "./hooks/useAuth";
 
 function App() {
   const [queryClient] = useState(() => new QueryClient());
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ThemeProvider>
-          <TooltipProvider>
-            <Toaster />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/features" element={<Features />} />
-                <Route path="/pricing" element={<Pricing />} />
-                <Route path="/careers" element={<Careers />} />
-                <Route path="/forum" element={<Forum />} />
-                <Route path="/terms" element={<TermsOfService />} />
-                <Route path="/privacy" element={<PrivacyPolicy />} />
-                <Route path="/cancellation-refund" element={<CancellationRefund />} />
-                <Route path="/shipping-delivery" element={<ShippingDelivery />} />
-                <Route
-                  path="/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/profile"
-                  element={
-                    <ProtectedRoute>
-                      <Profile />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/groups"
-                  element={
-                    <ProtectedRoute>
-                      <Groups />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/groups/:id"
-                  element={
-                    <ProtectedRoute>
-                      <GroupDetail />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </ThemeProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/features" element={<Features />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/careers" element={<Careers />} />
+              <Route path="/forum" element={<Forum />} />
+              <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/cancellation-refund" element={<CancellationRefund />} />
+              <Route path="/shipping-delivery" element={<ShippingDelivery />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/groups"
+                element={
+                  <ProtectedRoute>
+                    <Groups />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/groups/:id"
+                element={
+                  <ProtectedRoute>
+                    <GroupDetail />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
