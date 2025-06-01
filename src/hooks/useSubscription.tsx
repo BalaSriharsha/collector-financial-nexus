@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -16,6 +16,8 @@ export const useSubscription = () => {
   const { user } = useAuth();
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const fetchingRef = useRef(false);
+  const lastFetchRef = useRef(0);
 
   const fetchSubscription = async () => {
     if (!user) {
@@ -26,6 +28,16 @@ export const useSubscription = () => {
       setLoading(false);
       return;
     }
+
+    // Prevent concurrent fetches and rate limiting
+    const now = Date.now();
+    if (fetchingRef.current || (now - lastFetchRef.current < 2000)) {
+      console.log('Skipping fetch - too recent or already fetching');
+      return;
+    }
+
+    fetchingRef.current = true;
+    lastFetchRef.current = now;
 
     try {
       console.log('Fetching subscription status for user:', user.id);
@@ -59,6 +71,7 @@ export const useSubscription = () => {
       await fetchSubscriptionFallback();
     } finally {
       setLoading(false);
+      fetchingRef.current = false;
     }
   };
 
@@ -123,12 +136,19 @@ export const useSubscription = () => {
     fetchSubscription();
   }, [user]);
 
-  // Refresh subscription status with timeout protection
+  // Refresh subscription status with proper debouncing
   const refreshSubscription = async (forceRefresh = false) => {
     console.log('Refreshing subscription status...', forceRefresh ? '(forced)' : '');
     
-    // Don't set loading to true if we already have subscription data
-    if (!subscription || forceRefresh) {
+    // Check rate limiting
+    const now = Date.now();
+    if (!forceRefresh && (now - lastFetchRef.current < 3000)) {
+      console.log('Rate limited - skipping refresh');
+      return;
+    }
+    
+    // Don't set loading to true if we already have subscription data and it's not forced
+    if ((!subscription || forceRefresh) && !fetchingRef.current) {
       setLoading(true);
     }
     

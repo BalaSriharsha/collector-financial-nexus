@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -90,39 +89,16 @@ const Dashboard = ({ userType }: DashboardProps) => {
   // Get currency symbol based on user profile
   const currencySymbol = getCurrencySymbol(profile?.currency || 'USD');
 
-  // Enhanced subscription status checking with more frequent updates after potential payments
+  // Check subscription status only when window gains focus (reduce frequency)
   useEffect(() => {
-    const checkSubscriptionStatus = () => {
-      console.log('Checking subscription status...');
-      refreshSubscription();
-    };
-
-    // Check immediately
-    checkSubscriptionStatus();
-
-    // Check every 5 seconds for subscription updates (more frequent for better UX)
-    const interval = setInterval(checkSubscriptionStatus, 5000);
-
-    // Check when user returns to the page (useful after payment)
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        console.log('Page became visible, checking subscription status...');
-        refreshSubscription(true); // Force refresh when page becomes visible
-      }
-    };
-
-    // Check when window regains focus (useful after payment in new tab)
     const handleFocus = () => {
       console.log('Window focused, checking subscription status...');
-      refreshSubscription(true); // Force refresh when window gains focus
+      refreshSubscription(true);
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
-
+    
     return () => {
-      clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };
   }, [refreshSubscription]);
