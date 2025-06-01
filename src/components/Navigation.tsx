@@ -1,10 +1,11 @@
 
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Coins, Menu, LogOut, User as UserIcon, Settings, Users } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useSubscription } from "@/hooks/useSubscription";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Menu, X, User, LogOut, Crown, Gem } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,237 +15,263 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const Navigation = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const location = useLocation();
   const { user, signOut } = useAuth();
-
-  const navItems = [
-    { name: "Features", path: "/features" },
-    { name: "Pricing", path: "/pricing" },
-    { name: "Forum", path: "/forum" },
-    { name: "Careers", path: "/careers" },
-  ];
+  const { subscription } = useSubscription();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
+    navigate('/');
   };
 
-  const getUserInitials = () => {
-    if (!user?.user_metadata?.full_name && !user?.email) return "U";
-    
-    const name = user.user_metadata?.full_name || user.email;
-    return name
-      .split(" ")
-      .map((n: string) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
+  const navLinks = [
+    { to: "/features", label: "Features" },
+    { to: "/pricing", label: "Pricing" },
+    { to: "/forum", label: "Forum" },
+    { to: "/careers", label: "Careers" },
+  ];
+
+  const authenticatedLinks = [
+    { to: "/dashboard", label: "Dashboard" },
+    { to: "/groups", label: "Groups" },
+  ];
+
+  const isActivePath = (path: string) => location.pathname === path;
+
+  const getSubscriptionIcon = () => {
+    switch (subscription?.tier) {
+      case 'Premium':
+        return <Crown className="w-3 h-3 text-orange-600" />;
+      case 'Organization':
+        return <Crown className="w-3 h-3 text-purple-600" />;
+      default:
+        return <Gem className="w-3 h-3 text-blue-600" />;
+    }
+  };
+
+  const getSubscriptionColor = () => {
+    switch (subscription?.tier) {
+      case 'Premium':
+        return 'text-orange-600 border-orange-200';
+      case 'Organization':
+        return 'text-purple-600 border-purple-200';
+      default:
+        return 'text-blue-600 border-blue-200';
+    }
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-collector-gold/20 shadow-sm">
+    <nav className="bg-white/95 backdrop-blur-sm border-b border-collector-gold/20 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-3 lg:py-4">
+        <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3 group">
-            <div className="w-9 h-9 lg:w-10 lg:h-10 bg-blue-gradient rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <Coins className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
-            </div>
-            <h1 className="text-xl lg:text-2xl font-playfair font-bold text-collector-black">
+          <div className="flex-shrink-0">
+            <Link to="/" className="text-xl sm:text-2xl font-playfair font-bold text-collector-black">
               Collector
-            </h1>
-          </Link>
+            </Link>
+          </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6 lg:space-x-8">
-            {!user && navItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`text-sm font-medium transition-all duration-300 hover:text-collector-orange relative group ${
-                  location.pathname === item.path
-                    ? "text-collector-orange"
-                    : "text-collector-black/70"
-                }`}
-              >
-                {item.name}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-collector-orange transition-all duration-300 group-hover:w-full"></span>
-              </Link>
-            ))}
-            
+          <div className="hidden md:flex items-center space-x-6">
             {user ? (
-              <div className="flex items-center space-x-4">
-                <Link to="/dashboard">
-                  <Button className="bg-blue-gradient hover:bg-blue-600 text-white px-6 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-2 border-transparent hover:border-blue-300">
-                    Dashboard
-                  </Button>
+              <>
+                {authenticatedLinks.map((link) => (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    className={`text-sm font-medium transition-colors duration-200 ${
+                      isActivePath(link.to)
+                        ? 'text-collector-orange'
+                        : 'text-collector-black/70 hover:text-collector-orange'
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </>
+            ) : (
+              navLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={`text-sm font-medium transition-colors duration-200 ${
+                    isActivePath(link.to)
+                      ? 'text-collector-orange'
+                      : 'text-collector-black/70 hover:text-collector-orange'
+                  }`}
+                >
+                  {link.label}
                 </Link>
-                
-                <Link to="/groups">
-                  <Button variant="outline" className="border-collector-gold/30 text-collector-black hover:bg-collector-orange/5">
-                    <Users className="w-4 h-4 mr-2" />
-                    Groups
-                  </Button>
-                </Link>
-                
+              ))
+            )}
+          </div>
+
+          {/* User Menu / Auth Buttons */}
+          <div className="hidden md:flex items-center space-x-4">
+            {user ? (
+              <div className="flex items-center space-x-3">
+                {subscription && (
+                  <Badge variant="outline" className={`text-xs ${getSubscriptionColor()}`}>
+                    {getSubscriptionIcon()}
+                    <span className="ml-1">{subscription.tier}</span>
+                  </Badge>
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="w-10 h-10 rounded-full p-0 hover:bg-transparent">
-                      <Avatar className="w-10 h-10 border-2 border-collector-gold/20 shadow-sm hover:shadow-md transition-all duration-300">
-                        <AvatarImage 
-                          src={user.user_metadata?.avatar_url} 
-                          alt={user.user_metadata?.full_name || user.email} 
-                        />
-                        <AvatarFallback className="bg-blue-gradient text-white font-medium">
-                          {getUserInitials()}
-                        </AvatarFallback>
-                      </Avatar>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full">
+                      <User className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 bg-white shadow-lg border-collector-gold/20">
-                    <div className="px-3 py-2 border-b border-collector-gold/10">
-                      <p className="text-sm font-medium text-collector-black">
-                        {user.user_metadata?.full_name || "User"}
-                      </p>
-                      <p className="text-xs text-collector-black/60">{user.email}</p>
-                    </div>
-                    <DropdownMenuItem asChild>
-                      <Link to="/profile" className="flex items-center w-full px-3 py-2 text-sm hover:bg-collector-orange/5">
-                        <Settings className="w-4 h-4 mr-2" />
-                        Edit Profile
-                      </Link>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={() => navigate('/profile')}>
+                      <User className="mr-2 h-4 w-4" />
+                      Profile
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-collector-gold/10" />
-                    <DropdownMenuItem 
-                      onClick={handleSignOut} 
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-2"
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut}>
+                      <LogOut className="mr-2 h-4 w-4" />
                       Sign Out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
             ) : (
-              <Button 
-                className="bg-blue-gradient hover:bg-blue-600 text-white px-6 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-2 border-transparent hover:border-blue-300"
-                onClick={() => window.location.href = '/auth'}
-              >
-                Get Started
-              </Button>
-            )}
-          </div>
-
-          {/* Modern Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="md:hidden relative w-10 h-10 rounded-xl bg-white/80 backdrop-blur-sm border-2 border-collector-gold/20 shadow-sm hover:shadow-md transition-all duration-300"
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            <div className="relative w-5 h-5">
-              <span className={`absolute block h-0.5 w-5 bg-collector-black/80 transform transition-all duration-300 ${isOpen ? 'rotate-45 translate-y-0' : '-translate-y-1.5'}`}></span>
-              <span className={`absolute block h-0.5 w-5 bg-collector-black/80 transform transition-all duration-300 ${isOpen ? 'opacity-0' : 'opacity-100'}`}></span>
-              <span className={`absolute block h-0.5 w-5 bg-collector-black/80 transform transition-all duration-300 ${isOpen ? '-rotate-45 translate-y-0' : 'translate-y-1.5'}`}></span>
-            </div>
-          </Button>
-        </div>
-
-        {/* Modern Mobile Navigation */}
-        <div className={`md:hidden overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
-          <div className="py-4 space-y-1 bg-white/95 backdrop-blur-md rounded-2xl mx-2 mb-4 shadow-xl border-2 border-collector-gold/10">
-            {!user && navItems.map((item, index) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`block px-6 py-3 text-base font-medium transition-all duration-300 hover:bg-collector-orange/5 hover:text-collector-orange rounded-xl mx-2 group border border-transparent hover:border-collector-orange/20 ${
-                  location.pathname === item.path
-                    ? "text-collector-orange bg-collector-orange/5 border-collector-orange/20"
-                    : "text-collector-black/70"
-                }`}
-                onClick={() => setIsOpen(false)}
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <span className="flex items-center justify-between">
-                  {item.name}
-                  <span className="w-2 h-2 bg-collector-orange rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                </span>
-              </Link>
-            ))}
-            
-            <div className="px-2 pt-2">
-              {user ? (
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-3 px-4 py-3 bg-collector-orange/5 rounded-xl border border-collector-orange/20">
-                    <Avatar className="w-10 h-10 border-2 border-collector-gold/20">
-                      <AvatarImage 
-                        src={user.user_metadata?.avatar_url} 
-                        alt={user.user_metadata?.full_name || user.email} 
-                      />
-                      <AvatarFallback className="bg-blue-gradient text-white font-medium text-sm">
-                        {getUserInitials()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-collector-black truncate">
-                        {user.user_metadata?.full_name || "User"}
-                      </p>
-                      <p className="text-xs text-collector-black/60 truncate">{user.email}</p>
-                    </div>
-                  </div>
-                  
-                  <Link to="/dashboard" onClick={() => setIsOpen(false)}>
-                    <Button className="bg-blue-gradient hover:bg-blue-600 text-white w-full py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] border-2 border-transparent hover:border-blue-300">
-                      Dashboard
-                    </Button>
-                  </Link>
-                  
-                  <Link to="/groups" onClick={() => setIsOpen(false)}>
-                    <Button 
-                      variant="outline"
-                      className="w-full py-3 rounded-xl border-2 border-collector-gold/30 text-collector-black hover:bg-collector-orange/5"
-                    >
-                      <Users className="w-4 h-4 mr-2" />
-                      Groups
-                    </Button>
-                  </Link>
-                  
-                  <Link to="/profile" onClick={() => setIsOpen(false)}>
-                    <Button 
-                      variant="outline"
-                      className="w-full py-3 rounded-xl border-2 border-collector-gold/30 text-collector-black hover:bg-collector-orange/5"
-                    >
-                      <Settings className="w-4 h-4 mr-2" />
-                      Edit Profile
-                    </Button>
-                  </Link>
-                  
-                  <Button 
-                    onClick={() => {
-                      setIsOpen(false);
-                      handleSignOut();
-                    }}
-                    variant="outline"
-                    className="w-full py-3 rounded-xl border-2 border-red-300 text-red-600 hover:bg-red-50"
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </Button>
-                </div>
-              ) : (
+              <div className="flex items-center space-x-2">
                 <Button 
-                  className="bg-blue-gradient hover:bg-blue-600 text-white w-full py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] border-2 border-transparent hover:border-blue-300"
-                  onClick={() => {
-                    setIsOpen(false);
-                    window.location.href = '/auth';
-                  }}
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => navigate('/auth')}
+                  className="text-collector-black/70 hover:text-collector-orange"
+                >
+                  Sign In
+                </Button>
+                <Button 
+                  size="sm" 
+                  onClick={() => navigate('/auth')}
+                  className="bg-blue-gradient hover:bg-blue-600 text-white"
                 >
                   Get Started
                 </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="h-8 w-8 p-0"
+            >
+              {isMobileMenuOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {/* Mobile Navigation Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t border-collector-gold/20">
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              {user ? (
+                <>
+                  {/* Subscription Badge for mobile */}
+                  {subscription && (
+                    <div className="px-3 py-2">
+                      <Badge variant="outline" className={`text-xs ${getSubscriptionColor()}`}>
+                        {getSubscriptionIcon()}
+                        <span className="ml-1">{subscription.tier} Plan</span>
+                      </Badge>
+                    </div>
+                  )}
+                  
+                  {authenticatedLinks.map((link) => (
+                    <Link
+                      key={link.to}
+                      to={link.to}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`block px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                        isActivePath(link.to)
+                          ? 'text-collector-orange bg-orange-50'
+                          : 'text-collector-black/70 hover:text-collector-orange hover:bg-gray-50'
+                      }`}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                  
+                  <div className="border-t border-gray-200 pt-2 mt-2">
+                    <Link
+                      to="/profile"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block px-3 py-2 text-sm font-medium text-collector-black/70 hover:text-collector-orange hover:bg-gray-50 rounded-md"
+                    >
+                      <User className="inline mr-2 h-4 w-4" />
+                      Profile
+                    </Link>
+                    <button
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        handleSignOut();
+                      }}
+                      className="block w-full text-left px-3 py-2 text-sm font-medium text-collector-black/70 hover:text-collector-orange hover:bg-gray-50 rounded-md"
+                    >
+                      <LogOut className="inline mr-2 h-4 w-4" />
+                      Sign Out
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {navLinks.map((link) => (
+                    <Link
+                      key={link.to}
+                      to={link.to}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`block px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                        isActivePath(link.to)
+                          ? 'text-collector-orange bg-orange-50'
+                          : 'text-collector-black/70 hover:text-collector-orange hover:bg-gray-50'
+                      }`}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                  
+                  <div className="border-t border-gray-200 pt-2 mt-2 space-y-2 px-3">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        navigate('/auth');
+                      }}
+                      className="w-full justify-start text-collector-black/70 hover:text-collector-orange"
+                    >
+                      Sign In
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        navigate('/auth');
+                      }}
+                      className="w-full bg-blue-gradient hover:bg-blue-600 text-white"
+                    >
+                      Get Started
+                    </Button>
+                  </div>
+                </>
               )}
             </div>
           </div>
-        </div>
+        )}
       </div>
     </nav>
   );

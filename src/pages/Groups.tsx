@@ -1,15 +1,16 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Plus, Users, Edit, Trash2 } from "lucide-react";
+import { Plus, Users, Edit, Trash2, Crown, Lock } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import {
   Dialog,
@@ -33,17 +34,21 @@ interface Group {
 
 const Groups = () => {
   const { user } = useAuth();
+  const { subscription, canAccess } = useSubscription();
   const navigate = useNavigate();
   const [groups, setGroups] = useState<Group[]>([]);
   const [newGroup, setNewGroup] = useState({ 
     name: "", 
-    description: ""
+    description: "",
+    department_name: "",
+    team_name: ""
   });
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showEditGroup, setShowEditGroup] = useState(false);
   const [editingGroup, setEditingGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
     if (!user) {
@@ -51,9 +56,20 @@ const Groups = () => {
       return;
     }
 
-    const fetchGroups = async () => {
+    const fetchData = async () => {
       setIsLoading(true);
       try {
+        // Fetch user profile to check user type
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('user_type')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError) throw profileError;
+        setUserProfile(profile);
+
+        // Fetch groups
         const { data, error } = await supabase
           .from('groups')
           .select(`
@@ -71,35 +87,49 @@ const Groups = () => {
         if (error) throw error;
         setGroups(data || []);
       } catch (error: any) {
-        console.error("Error fetching groups:", error);
-        toast.error(error.message || "Failed to fetch groups");
+        console.error("Error fetching data:", error);
+        toast.error(error.message || "Failed to fetch data");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchGroups();
+    fetchData();
   }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
+    // Check if user can access expense sharing
+    if (!canAccess('expense-sharing')) {
+      toast.error('Upgrade to Premium or Organization plan to create groups');
+      return;
+    }
+
     setLoading(true);
     try {
+      const groupData: any = {
+        name: newGroup.name,
+        description: newGroup.description || null,
+        created_by: user.id,
+      };
+
+      // Only add department and team if user is organization type
+      if (userProfile?.user_type === 'organization') {
+        groupData.department_name = newGroup.department_name || null;
+        groupData.team_name = newGroup.team_name || null;
+      }
+
       const { data: group, error } = await supabase
         .from('groups')
-        .insert({
-          name: newGroup.name,
-          description: newGroup.description || null,
-          created_by: user.id,
-        })
+        .insert(groupData)
         .select()
         .single();
 
       if (error) throw error;
 
-      // Refresh the groups list to get the updated data with the auto-added member
+      // Refresh the groups list
       const { data: updatedGroups, error: fetchError } = await supabase
         .from('groups')
         .select(`
@@ -117,7 +147,7 @@ const Groups = () => {
       if (fetchError) throw fetchError;
       setGroups(updatedGroups || []);
 
-      setNewGroup({ name: "", description: "" });
+      setNewGroup({ name: "", description: "", department_name: "", team_name: "" });
       setShowCreateGroup(false);
       toast.success('Group created successfully!');
     } catch (error: any) {
@@ -134,12 +164,20 @@ const Groups = () => {
 
     setLoading(true);
     try {
+      const updateData: any = {
+        name: editingGroup.name,
+        description: editingGroup.description,
+      };
+
+      // Only update department and team if user is organization type
+      if (userProfile?.user_type === 'organization') {
+        updateData.department_name = editingGroup.department_name;
+        updateData.team_name = editingGroup.team_name;
+      }
+
       const { error } = await supabase
         .from('groups')
-        .update({
-          name: editingGroup.name,
-          description: editingGroup.description,
-        })
+        .update(updateData)
         .eq('id', editingGroup.id);
 
       if (error) throw error;
@@ -200,30 +238,49 @@ const Groups = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50">
+    <div className="min-h-screen bg-gradient-to-br from-white via-orange-50/30 to-amber-50/30">
       <Navigation />
       
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
+      <div className="max-w-6xl mx-auto px-4 py-4 sm:py-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-playfair font-bold text-collector-black mb-2">
+            <h1 className="text-2xl sm:text-3xl font-playfair font-bold text-collector-black">
               Groups
             </h1>
-            <p className="text-collector-black/70">
+            <p className="text-collector-black/70 text-sm sm:text-base">
               Manage your expense sharing groups
             </p>
           </div>
           <Button
             onClick={() => setShowCreateGroup(true)}
-            className="bg-blue-500 hover:bg-blue-200 text-white hover:text-collector-black transition-all duration-200"
+            disabled={!canAccess('expense-sharing')}
+            className="bg-blue-500 hover:bg-blue-600 text-white transition-all duration-200 text-sm sm:text-base"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Group
+            {!canAccess('expense-sharing') ? (
+              <>
+                <Lock className="w-4 h-4 mr-2" />
+                Upgrade Required
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Group
+              </>
+            )}
           </Button>
         </div>
 
+        {!canAccess('expense-sharing') && (
+          <Alert className="mb-6 border-orange-200 bg-orange-50">
+            <Crown className="h-4 w-4 text-orange-600" />
+            <AlertDescription className="text-orange-800">
+              Upgrade to Premium or Organization plan to create and manage groups for expense sharing.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Groups List */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {isLoading ? (
             <div className="col-span-full text-center py-8">
               <div className="w-8 h-8 border-4 border-collector-orange border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -233,43 +290,55 @@ const Groups = () => {
             groups.map((group) => (
               <Card 
                 key={group.id} 
-                className="shadow-lg border-collector-gold/20 hover:shadow-xl transition-all duration-200"
+                className="shadow-sm border-collector-gold/20 hover:shadow-md transition-all duration-200"
               >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 cursor-pointer" onClick={() => navigate(`/groups/${group.id}`)}>
-                      <CardTitle className="text-collector-black">{group.name}</CardTitle>
-                      <CardDescription className="mt-1">{group.description}</CardDescription>
-                    </div>
-                    <div className="flex gap-1">
-                      {group.created_by === user?.id && (
-                        <Badge variant="outline" className="text-xs text-blue-600 border-blue-200">
-                          Owner
-                        </Badge>
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 cursor-pointer min-w-0" onClick={() => navigate(`/groups/${group.id}`)}>
+                      <CardTitle className="text-base sm:text-lg text-collector-black truncate">{group.name}</CardTitle>
+                      {group.description && (
+                        <CardDescription className="mt-1 text-sm line-clamp-2">{group.description}</CardDescription>
                       )}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openEditDialog(group)}
-                        className="hover:bg-blue-200 transition-all duration-200"
-                      >
-                        <Edit className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDeleteGroup(group.id, group.name)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-200 transition-all duration-200"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
+                      {userProfile?.user_type === 'organization' && (group.department_name || group.team_name) && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {group.department_name && (
+                            <Badge variant="secondary" className="text-xs">{group.department_name}</Badge>
+                          )}
+                          {group.team_name && (
+                            <Badge variant="outline" className="text-xs">{group.team_name}</Badge>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Badge variant="outline" className="text-xs text-blue-600 border-blue-200">
+                        Owner
+                      </Badge>
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openEditDialog(group)}
+                          className="h-7 w-7 p-0 hover:bg-blue-50"
+                        >
+                          <Edit className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeleteGroup(group.id, group.name)}
+                          className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between text-sm text-collector-black/60">
+                <CardContent className="pt-0">
+                  <div className="flex items-center justify-between text-xs text-collector-black/60 mb-3">
                     <div className="flex items-center">
-                      <Users className="w-4 h-4 mr-1" />
+                      <Users className="w-3 h-3 mr-1" />
                       <span>{group.group_members?.length || 0} members</span>
                     </div>
                     <span>Created {new Date(group.created_at).toLocaleDateString()}</span>
@@ -277,18 +346,18 @@ const Groups = () => {
                   
                   {/* Member avatars */}
                   {group.group_members && group.group_members.length > 0 && (
-                    <div className="flex -space-x-2 mt-3">
+                    <div className="flex -space-x-1">
                       {group.group_members.slice(0, 4).map((member: any, index: number) => (
                         <div 
                           key={member.id}
-                          className="w-8 h-8 bg-blue-gradient rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white"
+                          className="w-6 h-6 bg-blue-gradient rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white"
                           title={member.profiles?.full_name || member.profiles?.email}
                         >
                           {member.profiles?.full_name?.[0] || member.profiles?.email?.[0]}
                         </div>
                       ))}
                       {group.group_members.length > 4 && (
-                        <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white">
+                        <div className="w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white">
                           +{group.group_members.length - 4}
                         </div>
                       )}
@@ -299,23 +368,30 @@ const Groups = () => {
             ))
           ) : (
             <div className="col-span-full text-center py-12">
-              <Users className="w-16 h-16 text-collector-black/30 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-collector-black/70 mb-2">No groups yet</h3>
-              <p className="text-collector-black/50 mb-4">Create your first group to start sharing expenses</p>
-              <Button
-                onClick={() => setShowCreateGroup(true)}
-                className="bg-blue-500 hover:bg-blue-200 text-white hover:text-collector-black transition-all duration-200"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Create Group
-              </Button>
+              <Users className="w-12 sm:w-16 h-12 sm:h-16 text-collector-black/30 mx-auto mb-4" />
+              <h3 className="text-base sm:text-lg font-medium text-collector-black/70 mb-2">No groups yet</h3>
+              <p className="text-sm text-collector-black/50 mb-4">
+                {canAccess('expense-sharing') 
+                  ? 'Create your first group to start sharing expenses'
+                  : 'Upgrade to Premium to create groups'
+                }
+              </p>
+              {canAccess('expense-sharing') && (
+                <Button
+                  onClick={() => setShowCreateGroup(true)}
+                  className="bg-blue-500 hover:bg-blue-600 text-white transition-all duration-200"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Group
+                </Button>
+              )}
             </div>
           )}
         </div>
 
         {/* Create Group Modal */}
         <Dialog open={showCreateGroup} onOpenChange={setShowCreateGroup}>
-          <DialogContent className="border-2 border-collector-gold/30">
+          <DialogContent className="border-2 border-collector-gold/30 max-w-md mx-4">
             <DialogHeader>
               <DialogTitle>Create New Group</DialogTitle>
               <DialogDescription>
@@ -324,39 +400,67 @@ const Groups = () => {
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="groupName">Group Name *</Label>
+                <Label htmlFor="groupName" className="text-sm">Group Name *</Label>
                 <Input
                   id="groupName"
                   value={newGroup.name}
                   onChange={(e) => setNewGroup(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="e.g., Roommates, Trip to Paris..."
                   required
-                  className="border-2 border-collector-gold/30 focus:border-collector-orange"
+                  className="border-2 border-collector-gold/30 focus:border-collector-orange text-sm"
                 />
               </div>
               <div>
-                <Label htmlFor="groupDescription">Description (Optional)</Label>
+                <Label htmlFor="groupDescription" className="text-sm">Description (Optional)</Label>
                 <Textarea
                   id="groupDescription"
                   value={newGroup.description}
                   onChange={(e) => setNewGroup(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Brief description of the group..."
-                  className="border-2 border-collector-gold/30 focus:border-collector-orange"
+                  className="border-2 border-collector-gold/30 focus:border-collector-orange text-sm"
+                  rows={3}
                 />
               </div>
-              <div className="flex gap-3">
+              
+              {/* Show department/team fields only for organization users */}
+              {userProfile?.user_type === 'organization' && (
+                <>
+                  <div>
+                    <Label htmlFor="departmentName" className="text-sm">Department (Optional)</Label>
+                    <Input
+                      id="departmentName"
+                      value={newGroup.department_name}
+                      onChange={(e) => setNewGroup(prev => ({ ...prev, department_name: e.target.value }))}
+                      placeholder="e.g., Engineering, Marketing..."
+                      className="border-2 border-collector-gold/30 focus:border-collector-orange text-sm"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="teamName" className="text-sm">Team (Optional)</Label>
+                    <Input
+                      id="teamName"
+                      value={newGroup.team_name}
+                      onChange={(e) => setNewGroup(prev => ({ ...prev, team_name: e.target.value }))}
+                      placeholder="e.g., Frontend, Sales Team..."
+                      className="border-2 border-collector-gold/30 focus:border-collector-orange text-sm"
+                    />
+                  </div>
+                </>
+              )}
+              
+              <div className="flex gap-3 pt-2">
                 <Button 
                   type="button" 
                   variant="outline" 
                   onClick={() => setShowCreateGroup(false)} 
-                  className="flex-1 hover:bg-gray-200 transition-all duration-200"
+                  className="flex-1 hover:bg-gray-50 text-sm"
                 >
                   Cancel
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={loading} 
-                  className="flex-1 bg-blue-500 hover:bg-blue-200 text-white hover:text-collector-black transition-all duration-200"
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-sm"
                 >
                   {loading ? 'Creating...' : 'Create Group'}
                 </Button>
@@ -367,7 +471,7 @@ const Groups = () => {
 
         {/* Edit Group Modal */}
         <Dialog open={showEditGroup} onOpenChange={setShowEditGroup}>
-          <DialogContent className="border-2 border-collector-gold/30">
+          <DialogContent className="border-2 border-collector-gold/30 max-w-md mx-4">
             <DialogHeader>
               <DialogTitle>Edit Group</DialogTitle>
               <DialogDescription>
@@ -377,39 +481,67 @@ const Groups = () => {
             {editingGroup && (
               <form onSubmit={handleUpdateGroup} className="space-y-4">
                 <div>
-                  <Label htmlFor="editGroupName">Group Name *</Label>
+                  <Label htmlFor="editGroupName" className="text-sm">Group Name *</Label>
                   <Input
                     id="editGroupName"
                     value={editingGroup.name}
                     onChange={(e) => setEditingGroup(prev => prev ? { ...prev, name: e.target.value } : null)}
                     placeholder="e.g., Roommates, Trip to Paris..."
                     required
-                    className="border-2 border-collector-gold/30 focus:border-collector-orange"
+                    className="border-2 border-collector-gold/30 focus:border-collector-orange text-sm"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="editGroupDescription">Description (Optional)</Label>
+                  <Label htmlFor="editGroupDescription" className="text-sm">Description (Optional)</Label>
                   <Textarea
                     id="editGroupDescription"
                     value={editingGroup.description || ""}
                     onChange={(e) => setEditingGroup(prev => prev ? { ...prev, description: e.target.value } : null)}
                     placeholder="Brief description of the group..."
-                    className="border-2 border-collector-gold/30 focus:border-collector-orange"
+                    className="border-2 border-collector-gold/30 focus:border-collector-orange text-sm"
+                    rows={3}
                   />
                 </div>
-                <div className="flex gap-3">
+                
+                {/* Show department/team fields only for organization users */}
+                {userProfile?.user_type === 'organization' && (
+                  <>
+                    <div>
+                      <Label htmlFor="editDepartmentName" className="text-sm">Department (Optional)</Label>
+                      <Input
+                        id="editDepartmentName"
+                        value={editingGroup.department_name || ""}
+                        onChange={(e) => setEditingGroup(prev => prev ? { ...prev, department_name: e.target.value } : null)}
+                        placeholder="e.g., Engineering, Marketing..."
+                        className="border-2 border-collector-gold/30 focus:border-collector-orange text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="editTeamName" className="text-sm">Team (Optional)</Label>
+                      <Input
+                        id="editTeamName"
+                        value={editingGroup.team_name || ""}
+                        onChange={(e) => setEditingGroup(prev => prev ? { ...prev, team_name: e.target.value } : null)}
+                        placeholder="e.g., Frontend, Sales Team..."
+                        className="border-2 border-collector-gold/30 focus:border-collector-orange text-sm"
+                      />
+                    </div>
+                  </>
+                )}
+                
+                <div className="flex gap-3 pt-2">
                   <Button 
                     type="button" 
                     variant="outline" 
                     onClick={() => setShowEditGroup(false)} 
-                    className="flex-1 hover:bg-gray-200 transition-all duration-200"
+                    className="flex-1 hover:bg-gray-50 text-sm"
                   >
                     Cancel
                   </Button>
                   <Button 
                     type="submit" 
                     disabled={loading} 
-                    className="flex-1 bg-blue-500 hover:bg-blue-200 text-white hover:text-collector-black transition-all duration-200"
+                    className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-sm"
                   >
                     {loading ? 'Updating...' : 'Update Group'}
                   </Button>
