@@ -89,13 +89,15 @@ const RazorpayCheckout = ({ planType, onSuccess }: RazorpayCheckoutProps) => {
         },
         handler: async function (response: any) {
           console.log('Payment successful:', response);
-          toast.success('Payment successful! Your subscription is now active.');
+          toast.success('Payment successful! Updating your subscription...');
           
-          // Wait a bit for webhook processing, then refresh subscription
+          // Wait longer for webhook processing
           setTimeout(async () => {
+            console.log('Refreshing subscription after payment...');
             await refreshSubscription();
             onSuccess?.();
-          }, 3000);
+            toast.success('Your subscription has been activated!');
+          }, 5000); // Increased delay to 5 seconds
         },
         modal: {
           ondismiss: function() {

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -17,7 +17,7 @@ export const useSubscription = () => {
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchSubscription = async () => {
+  const fetchSubscription = useCallback(async (skipDelay = false) => {
     if (!user) {
       setLoading(false);
       return;
@@ -80,24 +80,24 @@ export const useSubscription = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchSubscription();
-  }, [user]);
+  }, [fetchSubscription]);
 
-  // Refresh subscription status with debouncing
-  const refreshSubscription = async () => {
+  // Refresh subscription status with delay for webhook processing
+  const refreshSubscription = useCallback(async () => {
     console.log('Refreshing subscription status...');
     setLoading(true);
     
-    // Add a small delay to allow webhook processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Add a delay to allow webhook processing
+    await new Promise(resolve => setTimeout(resolve, 3000));
     
-    await fetchSubscription();
-  };
+    await fetchSubscription(true);
+  }, [fetchSubscription]);
 
-  const canAccess = (feature: string) => {
+  const canAccess = useCallback((feature: string) => {
     if (!subscription) return false;
 
     const features = {
@@ -110,7 +110,7 @@ export const useSubscription = () => {
     };
 
     return features[feature as keyof typeof features]?.includes(subscription.tier) || false;
-  };
+  }, [subscription]);
 
   const manageSubscription = async () => {
     if (!user) {
