@@ -17,6 +17,10 @@ import DashboardPage from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Groups from "./pages/Groups";
 import GroupDetail from "./pages/GroupDetail";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import CancellationRefund from "./pages/CancellationRefund";
+import ShippingDelivery from "./pages/ShippingDelivery";
 
 const queryClient = new QueryClient();
 
