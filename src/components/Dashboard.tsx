@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ interface Transaction {
   category: string;
   date: string;
   description?: string;
+  created_at: string;
 }
 
 interface DashboardStats {
@@ -54,6 +56,12 @@ interface Budget {
   end_date: string;
 }
 
+interface Metrics {
+  type: string;
+  value: number;
+  label: string;
+}
+
 const Dashboard = ({ userType }: DashboardProps) => {
   const { user } = useAuth();
   const { profile } = useProfile();
@@ -69,8 +77,15 @@ const Dashboard = ({ userType }: DashboardProps) => {
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  const [selectedMetric, setSelectedMetric] = useState<{ type: string; value: number; label: string } | null>(null);
+  const [selectedMetrics, setSelectedMetrics] = useState<Metrics | null>(null);
   const [showAllTransactions, setShowAllTransactions] = useState(false);
+  const [showAddTransaction, setShowAddTransaction] = useState(false);
+  const [showCreateBudget, setShowCreateBudget] = useState(false);
+  const [showGenerateInvoice, setShowGenerateInvoice] = useState(false);
+  const [showUploadInvoice, setShowUploadInvoice] = useState(false);
+  const [showViewReports, setShowViewReports] = useState(false);
+  const [showViewArchive, setShowViewArchive] = useState(false);
+  const [showExpenseSharing, setShowExpenseSharing] = useState(false);
 
   // Get currency symbol based on user profile
   const currencySymbol = getCurrencySymbol(profile?.currency || 'USD');
@@ -129,6 +144,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
     fetchDashboardData();
   };
 
+  const handleMetricClick = (type: string, value: number, label: string) => {
+    setSelectedMetrics({ type, value, label });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50">
@@ -148,155 +167,156 @@ const Dashboard = ({ userType }: DashboardProps) => {
       <Navigation />
       
       <div className="max-w-7xl mx-auto px-4 py-4 sm:py-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        {/* Header Section - Improved visibility */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 p-6 bg-white/80 backdrop-blur-sm rounded-xl border border-collector-gold/30 shadow-lg">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-playfair font-bold text-collector-black">
+            <h1 className="text-3xl sm:text-4xl font-playfair font-bold text-collector-black mb-2">
               {userType === 'organization' ? 'Organization Dashboard' : 'Personal Dashboard'}
             </h1>
-            <p className="text-collector-black/70 text-sm sm:text-base">
+            <p className="text-collector-black/70 text-base">
               Welcome back! Here's your financial overview.
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="text-sm px-3 py-1 border-collector-gold/50 bg-white/50">
               {subscription?.tier} Plan
             </Badge>
             {subscription?.tier !== 'Individual' && (
-              <Badge className="bg-gradient-to-r from-orange-400 to-amber-400 text-white text-xs">
-                <Crown className="w-3 h-3 mr-1" />
+              <Badge className="bg-gradient-to-r from-orange-400 to-amber-400 text-white text-sm px-3 py-1">
+                <Crown className="w-4 h-4 mr-1" />
                 Premium
               </Badge>
             )}
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {/* Stats Cards - Enhanced design */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card 
-            className="cursor-pointer hover:shadow-md transition-shadow border-collector-gold/20"
-            onClick={() => setSelectedMetric({ type: 'income', value: stats.totalIncome, label: 'Total Income' })}
+            className="cursor-pointer hover:shadow-xl transition-all duration-300 border-collector-gold/30 bg-white/90 backdrop-blur-sm hover:scale-105"
+            onClick={() => handleMetricClick('income', stats.totalIncome, 'Total Income')}
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Income</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-600" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-medium text-collector-black">Total Income</CardTitle>
+              <TrendingUp className="h-5 w-5 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-3xl font-bold text-green-600 mb-1">
                 {currencySymbol}{stats.totalIncome.toLocaleString()}
               </div>
             </CardContent>
           </Card>
 
           <Card 
-            className="cursor-pointer hover:shadow-md transition-shadow border-collector-gold/20"
-            onClick={() => setSelectedMetric({ type: 'expense', value: stats.totalExpense, label: 'Total Expenses' })}
+            className="cursor-pointer hover:shadow-xl transition-all duration-300 border-collector-gold/30 bg-white/90 backdrop-blur-sm hover:scale-105"
+            onClick={() => handleMetricClick('expense', stats.totalExpense, 'Total Expenses')}
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
-              <TrendingDown className="h-4 w-4 text-red-600" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-medium text-collector-black">Total Expenses</CardTitle>
+              <TrendingDown className="h-5 w-5 text-red-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">
+              <div className="text-3xl font-bold text-red-600 mb-1">
                 {currencySymbol}{stats.totalExpense.toLocaleString()}
               </div>
             </CardContent>
           </Card>
 
           <Card 
-            className="cursor-pointer hover:shadow-md transition-shadow border-collector-gold/20"
-            onClick={() => setSelectedMetric({ type: 'balance', value: stats.balance, label: 'Net Balance' })}
+            className="cursor-pointer hover:shadow-xl transition-all duration-300 border-collector-gold/30 bg-white/90 backdrop-blur-sm hover:scale-105"
+            onClick={() => handleMetricClick('balance', stats.balance, 'Net Balance')}
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Balance</CardTitle>
-              <DollarSign className="h-4 w-4 text-blue-600" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-medium text-collector-black">Balance</CardTitle>
+              <DollarSign className="h-5 w-5 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${stats.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`text-3xl font-bold mb-1 ${stats.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {currencySymbol}{stats.balance.toLocaleString()}
               </div>
             </CardContent>
           </Card>
 
           <Card 
-            className="cursor-pointer hover:shadow-md transition-shadow border-collector-gold/20"
+            className="cursor-pointer hover:shadow-xl transition-all duration-300 border-collector-gold/30 bg-white/90 backdrop-blur-sm hover:scale-105"
             onClick={() => setShowAllTransactions(true)}
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Transactions</CardTitle>
-              <FileText className="h-4 w-4 text-collector-orange" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-medium text-collector-black">Transactions</CardTitle>
+              <FileText className="h-5 w-5 text-collector-orange" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-collector-orange">
+              <div className="text-3xl font-bold text-collector-orange mb-1">
                 {stats.transactionCount}
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 bg-white/50 backdrop-blur-sm border border-collector-gold/20">
-            <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
-            <TabsTrigger value="transactions" className="text-xs sm:text-sm">Add Transaction</TabsTrigger>
-            <TabsTrigger value="budgets" className="text-xs sm:text-sm">Budgets</TabsTrigger>
-            <TabsTrigger value="invoices" className="text-xs sm:text-sm">Invoices</TabsTrigger>
-            <TabsTrigger value="upload" className="text-xs sm:text-sm">Upload</TabsTrigger>
-            <TabsTrigger value="reports" className="text-xs sm:text-sm">Reports</TabsTrigger>
-            <TabsTrigger value="archive" className="text-xs sm:text-sm">Archive</TabsTrigger>
+        {/* Main Content Tabs - Improved visibility */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 bg-white/70 backdrop-blur-sm border border-collector-gold/30 shadow-lg h-12">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm font-medium data-[state=active]:bg-collector-orange data-[state=active]:text-white">Overview</TabsTrigger>
+            <TabsTrigger value="transactions" className="text-xs sm:text-sm font-medium data-[state=active]:bg-collector-orange data-[state=active]:text-white">Add Transaction</TabsTrigger>
+            <TabsTrigger value="budgets" className="text-xs sm:text-sm font-medium data-[state=active]:bg-collector-orange data-[state=active]:text-white">Budgets</TabsTrigger>
+            <TabsTrigger value="invoices" className="text-xs sm:text-sm font-medium data-[state=active]:bg-collector-orange data-[state=active]:text-white">Invoices</TabsTrigger>
+            <TabsTrigger value="upload" className="text-xs sm:text-sm font-medium data-[state=active]:bg-collector-orange data-[state=active]:text-white">Upload</TabsTrigger>
+            <TabsTrigger value="reports" className="text-xs sm:text-sm font-medium data-[state=active]:bg-collector-orange data-[state=active]:text-white">Reports</TabsTrigger>
+            <TabsTrigger value="archive" className="text-xs sm:text-sm font-medium data-[state=active]:bg-collector-orange data-[state=active]:text-white">Archive</TabsTrigger>
             {userType === 'organization' && (
-              <TabsTrigger value="teams" className="text-xs sm:text-sm">Teams</TabsTrigger>
+              <TabsTrigger value="teams" className="text-xs sm:text-sm font-medium data-[state=active]:bg-collector-orange data-[state=active]:text-white">Teams</TabsTrigger>
             )}
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Recent Transactions */}
-              <Card className="border-collector-gold/20">
-                <CardHeader className="pb-4">
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Recent Transactions - Enhanced visibility */}
+              <Card className="border-collector-gold/30 bg-white/90 backdrop-blur-sm shadow-lg">
+                <CardHeader className="pb-4 border-b border-collector-gold/20">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">Recent Transactions</CardTitle>
+                    <CardTitle className="text-xl text-collector-black">Recent Transactions</CardTitle>
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => setShowAllTransactions(true)}
-                      className="text-xs"
+                      className="text-sm border-collector-orange text-collector-orange hover:bg-collector-orange hover:text-white"
                     >
                       View All
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-4">
                   {recentTransactions.length > 0 ? (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {recentTransactions.map((transaction) => (
                         <div 
                           key={transaction.id}
-                          className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
+                          className="flex items-center justify-between p-4 rounded-lg border border-collector-gold/20 hover:bg-collector-orange/5 cursor-pointer transition-all duration-200 hover:shadow-md"
                           onClick={() => setSelectedTransaction(transaction)}
                         >
                           <div className="flex-1">
-                            <div className="font-medium text-sm">{transaction.title}</div>
-                            <div className="text-xs text-gray-500">{transaction.category}</div>
+                            <div className="font-semibold text-collector-black text-sm mb-1">{transaction.title}</div>
+                            <div className="text-xs text-collector-black/60">{transaction.category}</div>
                           </div>
                           <div className="text-right">
-                            <div className={`font-semibold text-sm ${
+                            <div className={`font-bold text-sm ${
                               transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
                             }`}>
                               {transaction.type === 'income' ? '+' : '-'}{currencySymbol}{Number(transaction.amount).toLocaleString()}
                             </div>
-                            <div className="text-xs text-gray-500">{transaction.date}</div>
+                            <div className="text-xs text-collector-black/60">{transaction.date}</div>
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">No transactions yet</p>
+                    <div className="text-center py-12 text-collector-black/60">
+                      <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p className="text-sm mb-4">No transactions yet</p>
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="mt-2"
+                        className="border-collector-orange text-collector-orange hover:bg-collector-orange hover:text-white"
                         onClick={() => setActiveTab('transactions')}
                       >
                         Add Transaction
@@ -306,21 +326,21 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 </CardContent>
               </Card>
 
-              {/* Budgets Overview */}
-              <Card className="border-collector-gold/20">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-lg">Budget Overview</CardTitle>
+              {/* Budgets Overview - Enhanced visibility */}
+              <Card className="border-collector-gold/30 bg-white/90 backdrop-blur-sm shadow-lg">
+                <CardHeader className="pb-4 border-b border-collector-gold/20">
+                  <CardTitle className="text-xl text-collector-black">Budget Overview</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-4">
                   {budgets.length > 0 ? (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {budgets.slice(0, 3).map((budget) => (
-                        <div key={budget.id} className="p-3 rounded-lg border border-gray-100">
+                        <div key={budget.id} className="p-4 rounded-lg border border-collector-gold/20 bg-white/50">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium text-sm">{budget.name}</span>
-                            <span className="text-sm font-semibold">{currencySymbol}{Number(budget.amount).toLocaleString()}</span>
+                            <span className="font-semibold text-collector-black text-sm">{budget.name}</span>
+                            <span className="text-sm font-bold text-collector-orange">{currencySymbol}{Number(budget.amount).toLocaleString()}</span>
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-collector-black/60">
                             {budget.category} • {budget.period}
                           </div>
                         </div>
@@ -329,7 +349,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          className="w-full"
+                          className="w-full border-collector-orange text-collector-orange hover:bg-collector-orange hover:text-white"
                           onClick={() => setActiveTab('budgets')}
                         >
                           View All Budgets
@@ -337,13 +357,13 @@ const Dashboard = ({ userType }: DashboardProps) => {
                       )}
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <Target className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">No budgets created</p>
+                    <div className="text-center py-12 text-collector-black/60">
+                      <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p className="text-sm mb-4">No budgets created</p>
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="mt-2"
+                        className="border-collector-orange text-collector-orange hover:bg-collector-orange hover:text-white"
                         onClick={() => setActiveTab('budgets')}
                       >
                         Create Budget
@@ -354,65 +374,65 @@ const Dashboard = ({ userType }: DashboardProps) => {
               </Card>
             </div>
 
-            {/* Quick Actions */}
-            <Card className="border-collector-gold/20">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg">Quick Actions</CardTitle>
+            {/* Quick Actions - Enhanced design */}
+            <Card className="border-collector-gold/30 bg-white/90 backdrop-blur-sm shadow-lg">
+              <CardHeader className="pb-4 border-b border-collector-gold/20">
+                <CardTitle className="text-xl text-collector-black">Quick Actions</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
                   <Button
                     variant="outline"
-                    className="flex flex-col items-center gap-2 h-auto py-4 border-collector-gold/30 hover:border-collector-orange"
+                    className="flex flex-col items-center gap-3 h-auto py-6 border-collector-gold/40 hover:border-collector-orange hover:bg-collector-orange/10 transition-all duration-200"
                     onClick={() => setActiveTab('transactions')}
                   >
-                    <PlusCircle className="w-5 h-5" />
-                    <span className="text-xs">Add Transaction</span>
+                    <PlusCircle className="w-6 h-6 text-collector-orange" />
+                    <span className="text-xs font-medium">Add Transaction</span>
                   </Button>
                   
                   <Button
                     variant="outline"
-                    className="flex flex-col items-center gap-2 h-auto py-4 border-collector-gold/30 hover:border-collector-orange"
+                    className="flex flex-col items-center gap-3 h-auto py-6 border-collector-gold/40 hover:border-collector-orange hover:bg-collector-orange/10 transition-all duration-200"
                     onClick={() => setActiveTab('budgets')}
                   >
-                    <Target className="w-5 h-5" />
-                    <span className="text-xs">Create Budget</span>
+                    <Target className="w-6 h-6 text-collector-orange" />
+                    <span className="text-xs font-medium">Create Budget</span>
                   </Button>
                   
                   <Button
                     variant="outline"
-                    className="flex flex-col items-center gap-2 h-auto py-4 border-collector-gold/30 hover:border-collector-orange"
+                    className="flex flex-col items-center gap-3 h-auto py-6 border-collector-gold/40 hover:border-collector-orange hover:bg-collector-orange/10 transition-all duration-200"
                     onClick={() => setActiveTab('invoices')}
                   >
-                    <FileText className="w-5 h-5" />
-                    <span className="text-xs">Generate Invoice</span>
+                    <FileText className="w-6 h-6 text-collector-orange" />
+                    <span className="text-xs font-medium">Generate Invoice</span>
                   </Button>
                   
                   <Button
                     variant="outline"
-                    className="flex flex-col items-center gap-2 h-auto py-4 border-collector-gold/30 hover:border-collector-orange"
+                    className="flex flex-col items-center gap-3 h-auto py-6 border-collector-gold/40 hover:border-collector-orange hover:bg-collector-orange/10 transition-all duration-200"
                     onClick={() => setActiveTab('upload')}
                   >
-                    <Upload className="w-5 h-5" />
-                    <span className="text-xs">Upload Invoice</span>
+                    <Upload className="w-6 h-6 text-collector-orange" />
+                    <span className="text-xs font-medium">Upload Invoice</span>
                   </Button>
                   
                   <Button
                     variant="outline"
-                    className="flex flex-col items-center gap-2 h-auto py-4 border-collector-gold/30 hover:border-collector-orange"
+                    className="flex flex-col items-center gap-3 h-auto py-6 border-collector-gold/40 hover:border-collector-orange hover:bg-collector-orange/10 transition-all duration-200"
                     onClick={() => setActiveTab('reports')}
                   >
-                    <BarChart3 className="w-5 h-5" />
-                    <span className="text-xs">View Reports</span>
+                    <BarChart3 className="w-6 h-6 text-collector-orange" />
+                    <span className="text-xs font-medium">View Reports</span>
                   </Button>
                   
                   <Button
                     variant="outline"
-                    className="flex flex-col items-center gap-2 h-auto py-4 border-collector-gold/30 hover:border-collector-orange"
+                    className="flex flex-col items-center gap-3 h-auto py-6 border-collector-gold/40 hover:border-collector-orange hover:bg-collector-orange/10 transition-all duration-200"
                     onClick={handleRefresh}
                   >
-                    <Download className="w-5 h-5" />
-                    <span className="text-xs">Refresh</span>
+                    <Download className="w-6 h-6 text-collector-orange" />
+                    <span className="text-xs font-medium">Refresh</span>
                   </Button>
                 </div>
               </CardContent>
@@ -420,53 +440,81 @@ const Dashboard = ({ userType }: DashboardProps) => {
           </TabsContent>
 
           <TabsContent value="transactions">
-            <AddTransactionForm onSuccess={handleRefresh} />
+            <AddTransactionForm 
+              open={showAddTransaction} 
+              onOpenChange={setShowAddTransaction} 
+              userType={userType}
+              onSuccess={handleRefresh} 
+            />
           </TabsContent>
 
           <TabsContent value="budgets">
-            <CreateBudgetForm onSuccess={handleRefresh} />
+            <CreateBudgetForm 
+              open={showCreateBudget} 
+              onOpenChange={setShowCreateBudget} 
+              userType={userType}
+              onSuccess={handleRefresh} 
+            />
           </TabsContent>
 
           <TabsContent value="invoices">
-            <GenerateInvoiceForm />
+            <GenerateInvoiceForm 
+              open={showGenerateInvoice} 
+              onOpenChange={setShowGenerateInvoice} 
+            />
           </TabsContent>
 
           <TabsContent value="upload">
-            <UploadInvoiceForm />
+            <UploadInvoiceForm 
+              open={showUploadInvoice} 
+              onOpenChange={setShowUploadInvoice} 
+            />
           </TabsContent>
 
           <TabsContent value="reports">
-            <ViewReportsForm />
+            <ViewReportsForm 
+              open={showViewReports} 
+              onOpenChange={setShowViewReports} 
+            />
           </TabsContent>
 
           <TabsContent value="archive">
-            <ViewArchiveForm />
+            <ViewArchiveForm 
+              open={showViewArchive} 
+              onOpenChange={setShowViewArchive} 
+            />
           </TabsContent>
 
           {userType === 'organization' && (
             <TabsContent value="teams">
-              <OrganizationTeams />
+              <OrganizationTeams 
+                onCreateInvoice={() => setShowGenerateInvoice(true)} 
+              />
             </TabsContent>
           )}
         </Tabs>
 
         {/* Expense Sharing for Premium/Organization users */}
         {canAccess('expense-sharing') && (
-          <Card className="mt-6 border-collector-gold/20">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-collector-orange" />
-                <CardTitle className="text-lg">Expense Sharing</CardTitle>
-                <Badge className="bg-gradient-to-r from-orange-400 to-amber-400 text-white text-xs">
+          <Card className="mt-8 border-collector-gold/30 bg-white/90 backdrop-blur-sm shadow-lg">
+            <CardHeader className="border-b border-collector-gold/20">
+              <div className="flex items-center gap-3">
+                <Users className="w-6 h-6 text-collector-orange" />
+                <CardTitle className="text-xl text-collector-black">Expense Sharing</CardTitle>
+                <Badge className="bg-gradient-to-r from-orange-400 to-amber-400 text-white text-sm px-3 py-1">
                   Premium Feature
                 </Badge>
               </div>
-              <CardDescription>
+              <CardDescription className="text-collector-black/60">
                 Share expenses with friends and colleagues
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <ExpenseSharingForm />
+            <CardContent className="pt-6">
+              <ExpenseSharingForm 
+                open={showExpenseSharing} 
+                onOpenChange={setShowExpenseSharing} 
+                userType={userType} 
+              />
             </CardContent>
           </Card>
         )}
@@ -482,11 +530,11 @@ const Dashboard = ({ userType }: DashboardProps) => {
         />
       )}
 
-      {selectedMetric && (
+      {selectedMetrics && (
         <MetricDetailsModal
-          metric={selectedMetric}
-          open={!!selectedMetric}
-          onClose={() => setSelectedMetric(null)}
+          metrics={selectedMetrics}
+          open={!!selectedMetrics}
+          onClose={() => setSelectedMetrics(null)}
           currencySymbol={currencySymbol}
         />
       )}
@@ -494,8 +542,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
       {showAllTransactions && (
         <AllTransactionsModal
           open={showAllTransactions}
-          onClose={() => setShowAllTransactions(false)}
-          currencySymbol={currencySymbol}
+          onOpenChange={setShowAllTransactions}
         />
       )}
     </div>
