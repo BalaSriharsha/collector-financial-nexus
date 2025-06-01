@@ -93,7 +93,7 @@ const AddTransactionForm = ({ open, onOpenChange, userType, onClose, editingTran
         title,
         amount: parseFloat(amount),
         type,
-        category,
+        category: category as any, // Type assertion to handle the enum
         date,
         description,
         user_id: user.id,
@@ -112,7 +112,7 @@ const AddTransactionForm = ({ open, onOpenChange, userType, onClose, editingTran
         // Create new transaction
         const { error: insertError } = await supabase
           .from('transactions')
-          .insert([transactionData]);
+          .insert(transactionData);
         error = insertError;
       }
 
@@ -129,9 +129,31 @@ const AddTransactionForm = ({ open, onOpenChange, userType, onClose, editingTran
     }
   };
 
+  // Updated categories to match database schema
   const categories = {
-    income: ['Salary', 'Freelance', 'Investment', 'Business', 'Gift', 'Other'],
-    expense: ['Food', 'Transportation', 'Housing', 'Entertainment', 'Healthcare', 'Shopping', 'Utilities', 'Other']
+    income: ['salary', 'freelance', 'investment', 'business', 'other'],
+    expense: ['food', 'transport', 'entertainment', 'utilities', 'healthcare', 'shopping', 'education', 'other']
+  };
+
+  // Map display names to database values
+  const categoryDisplayNames = {
+    income: {
+      'salary': 'Salary',
+      'freelance': 'Freelance',
+      'investment': 'Investment',
+      'business': 'Business',
+      'other': 'Other'
+    },
+    expense: {
+      'food': 'Food',
+      'transport': 'Transportation',
+      'entertainment': 'Entertainment',
+      'utilities': 'Utilities',
+      'healthcare': 'Healthcare',
+      'shopping': 'Shopping',
+      'education': 'Education',
+      'other': 'Other'
+    }
   };
 
   return (
@@ -200,7 +222,9 @@ const AddTransactionForm = ({ open, onOpenChange, userType, onClose, editingTran
               </SelectTrigger>
               <SelectContent>
                 {categories[type].map((cat) => (
-                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  <SelectItem key={cat} value={cat}>
+                    {categoryDisplayNames[type][cat as keyof typeof categoryDisplayNames[typeof type]]}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
