@@ -442,6 +442,9 @@ const Dashboard = ({ userType }: DashboardProps) => {
       {/* Modals */}
       {activeModal === 'add-transaction' && (
         <AddTransactionForm
+          open={true}
+          onOpenChange={(open) => !open && setActiveModal(null)}
+          userType={userType}
           onClose={() => setActiveModal(null)}
           onTransactionAdded={() => {
             setActiveModal(null);
@@ -452,6 +455,9 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
       {activeModal === 'create-budget' && (
         <CreateBudgetForm
+          open={true}
+          onOpenChange={(open) => !open && setActiveModal(null)}
+          userType={userType}
           onClose={() => setActiveModal(null)}
           onBudgetCreated={() => {
             setActiveModal(null);
@@ -461,23 +467,40 @@ const Dashboard = ({ userType }: DashboardProps) => {
       )}
 
       {activeModal === 'expense-sharing' && (
-        <ExpenseSharingForm />
+        <ExpenseSharingForm
+          open={true}
+          onOpenChange={(open) => !open && setActiveModal(null)}
+          userType={userType}
+        />
       )}
 
       {activeModal === 'generate-invoice' && (
-        <GenerateInvoiceForm />
+        <GenerateInvoiceForm
+          open={true}
+          onOpenChange={(open) => !open && setActiveModal(null)}
+        />
       )}
 
       {activeModal === 'upload-invoice' && (
-        <UploadInvoiceForm />
+        <UploadInvoiceForm
+          open={true}
+          onOpenChange={(open) => !open && setActiveModal(null)}
+        />
       )}
 
       {activeModal === 'view-reports' && (
-        <ViewReportsForm />
+        <ViewReportsForm
+          open={true}
+          onOpenChange={(open) => !open && setActiveModal(null)}
+        />
       )}
 
       {activeModal === 'view-archive' && (
-        <ViewArchiveForm />
+        <ViewArchiveForm
+          open={true}
+          onOpenChange={(open) => !open && setActiveModal(null)}
+          userType={userType}
+        />
       )}
 
       {/* Stats Details Modal */}

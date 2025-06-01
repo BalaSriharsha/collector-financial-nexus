@@ -17,10 +17,11 @@ interface AddTransactionFormProps {
   onOpenChange: (open: boolean) => void;
   userType: 'individual' | 'organization';
   onClose: () => void;
+  onTransactionAdded: () => void;
   editingTransactionId?: string | null;
 }
 
-const AddTransactionForm = ({ open, onOpenChange, userType, onClose, editingTransactionId }: AddTransactionFormProps) => {
+const AddTransactionForm = ({ open, onOpenChange, userType, onClose, onTransactionAdded, editingTransactionId }: AddTransactionFormProps) => {
   const { user } = useAuth();
   const [type, setType] = useState<'income' | 'expense'>('expense');
   const [title, setTitle] = useState("");
@@ -120,6 +121,7 @@ const AddTransactionForm = ({ open, onOpenChange, userType, onClose, editingTran
 
       toast.success(editingTransactionId ? 'Transaction updated successfully!' : 'Transaction added successfully!');
       resetForm();
+      onTransactionAdded();
       onClose();
     } catch (error: any) {
       console.error('Error saving transaction:', error);
