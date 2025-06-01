@@ -22,7 +22,6 @@ import BudgetDetailsModal from "./BudgetDetailsModal";
 import StatsDetailsModal from "./StatsDetailsModal";
 import ViewAllModal from "./ViewAllModal";
 import { getCurrencySymbol } from "@/utils/currency";
-
 interface DashboardProps {
   userType: 'individual' | 'organization';
 }
@@ -336,7 +335,7 @@ const Dashboard = ({
         </div>
 
         {/* Stats Cards - Improved Single Row Layout */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
           <Card className="bg-white/95 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer hover:border-green-300" onClick={() => handleStatClick('income', 'Total Income', stats.totalIncome)}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
               <CardTitle className="text-xs sm:text-sm font-semibold text-gray-700 leading-tight">Total Income</CardTitle>
@@ -579,5 +578,4 @@ const Dashboard = ({
       <ViewAllModal open={showViewAllBudgets} onOpenChange={setShowViewAllBudgets} type="budgets" data={budgets} title="All Budgets" />
     </div>;
 };
-
 export default Dashboard;
