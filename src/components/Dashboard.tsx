@@ -22,7 +22,6 @@ import BudgetDetailsModal from "./BudgetDetailsModal";
 import StatsDetailsModal from "./StatsDetailsModal";
 import ViewAllModal from "./ViewAllModal";
 import { getCurrencySymbol } from "@/utils/currency";
-
 interface DashboardProps {
   userType: 'individual' | 'organization';
 }
@@ -278,6 +277,7 @@ const Dashboard = ({
               Welcome back! Here's your financial overview.
             </p>
           </div>
+          
         </div>
 
         {/* Quick Menu - Hidden on mobile */}
@@ -334,65 +334,53 @@ const Dashboard = ({
           </div>
         </div>
 
-        {/* Stats Cards - Enhanced Single Row Layout */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
-          <Card className="bg-white/95 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer hover:border-green-300 hover:-translate-y-0.5 group" onClick={() => handleStatClick('income', 'Total Income', stats.totalIncome)}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-4 lg:px-5 pt-3 sm:pt-4 lg:pt-5">
-              <CardTitle className="text-xs sm:text-sm lg:text-sm font-medium text-gray-600 leading-tight">Total Income</CardTitle>
-              <div className="h-7 w-7 sm:h-8 sm:w-8 lg:h-9 lg:w-9 rounded-full bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors duration-300 flex-shrink-0">
-                <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-4 lg:w-4 text-green-600" />
-              </div>
+        {/* Stats Cards - Single Row with 4 Columns, All Clickable */}
+        <div className="grid grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => handleStatClick('income', 'Total Income', stats.totalIncome)}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
+              <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Total Income</CardTitle>
+              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
             </CardHeader>
-            <CardContent className="px-3 sm:px-4 lg:px-5 pb-3 sm:pb-4 lg:pb-5">
-              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600 mb-1 sm:mb-2">
+            <CardContent className="pt-0">
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600 mb-1">
                 {currencySymbol}{stats.totalIncome.toLocaleString()}
               </div>
-              <p className="text-[10px] sm:text-xs text-gray-500">Click to view details</p>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/95 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer hover:border-red-300 hover:-translate-y-0.5 group" onClick={() => handleStatClick('expenses', 'Total Expenses', stats.totalExpense)}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-4 lg:px-5 pt-3 sm:pt-4 lg:pt-5">
-              <CardTitle className="text-xs sm:text-sm lg:text-sm font-medium text-gray-600 leading-tight">Total Expenses</CardTitle>
-              <div className="h-7 w-7 sm:h-8 sm:w-8 lg:h-9 lg:w-9 rounded-full bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors duration-300 flex-shrink-0">
-                <TrendingDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-4 lg:w-4 text-red-600" />
-              </div>
+          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => handleStatClick('expenses', 'Total Expenses', stats.totalExpense)}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
+              <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Total Expenses</CardTitle>
+              <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
             </CardHeader>
-            <CardContent className="px-3 sm:px-4 lg:px-5 pb-3 sm:pb-4 lg:pb-5">
-              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-red-600 mb-1 sm:mb-2">
+            <CardContent className="pt-0">
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-red-600 mb-1">
                 {currencySymbol}{stats.totalExpense.toLocaleString()}
               </div>
-              <p className="text-[10px] sm:text-xs text-gray-500">Click to view details</p>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/95 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer hover:border-blue-300 hover:-translate-y-0.5 group" onClick={() => handleStatClick('balance', 'Balance', stats.balance)}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-4 lg:px-5 pt-3 sm:pt-4 lg:pt-5">
-              <CardTitle className="text-xs sm:text-sm lg:text-sm font-medium text-gray-600 leading-tight">Balance</CardTitle>
-              <div className={`h-7 w-7 sm:h-8 sm:w-8 lg:h-9 lg:w-9 rounded-full flex items-center justify-center transition-colors duration-300 flex-shrink-0 ${stats.balance >= 0 ? 'bg-blue-100 group-hover:bg-blue-200' : 'bg-red-100 group-hover:bg-red-200'}`}>
-                <DollarSign className={`h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-4 lg:w-4 ${stats.balance >= 0 ? 'text-blue-600' : 'text-red-600'}`} />
-              </div>
+          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => handleStatClick('balance', 'Balance', stats.balance)}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
+              <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Balance</CardTitle>
+              <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
             </CardHeader>
-            <CardContent className="px-3 sm:px-4 lg:px-5 pb-3 sm:pb-4 lg:pb-5">
-              <div className={`text-lg sm:text-xl lg:text-2xl font-bold mb-1 sm:mb-2 ${stats.balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+            <CardContent className="pt-0">
+              <div className={`text-lg sm:text-xl lg:text-2xl font-bold mb-1 ${stats.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {currencySymbol}{stats.balance.toLocaleString()}
               </div>
-              <p className="text-[10px] sm:text-xs text-gray-500">Click to view details</p>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/95 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer hover:border-orange-300 hover:-translate-y-0.5 group" onClick={() => handleStatClick('transactions', 'Transactions', stats.transactionCount)}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-4 lg:px-5 pt-3 sm:pt-4 lg:pt-5">
-              <CardTitle className="text-xs sm:text-sm lg:text-sm font-medium text-gray-600 leading-tight">Transactions</CardTitle>
-              <div className="h-7 w-7 sm:h-8 sm:w-8 lg:h-9 lg:w-9 rounded-full bg-orange-100 flex items-center justify-center group-hover:bg-orange-200 transition-colors duration-300 flex-shrink-0">
-                <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-4 lg:w-4 text-orange-600" />
-              </div>
+          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => handleStatClick('transactions', 'Transactions', stats.transactionCount)}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
+              <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Transactions</CardTitle>
+              <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
             </CardHeader>
-            <CardContent className="px-3 sm:px-4 lg:px-5 pb-3 sm:pb-4 lg:pb-5">
-              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-orange-600 mb-1 sm:mb-2">
+            <CardContent className="pt-0">
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-orange-600 mb-1">
                 {stats.transactionCount}
               </div>
-              <p className="text-[10px] sm:text-xs text-gray-500">Click to view details</p>
             </CardContent>
           </Card>
         </div>
@@ -578,5 +566,4 @@ const Dashboard = ({
       <ViewAllModal open={showViewAllBudgets} onOpenChange={setShowViewAllBudgets} type="budgets" data={budgets} title="All Budgets" />
     </div>;
 };
-
 export default Dashboard;
