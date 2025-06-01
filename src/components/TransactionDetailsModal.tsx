@@ -1,7 +1,8 @@
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Calendar, Tag, FileText, MapPin, CreditCard } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TrendingUp, TrendingDown, Calendar, Tag, FileText, CreditCard, Edit, Trash2 } from "lucide-react";
 
 interface Transaction {
   id: string;
@@ -18,9 +19,11 @@ interface TransactionDetailsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   transaction: Transaction | null;
+  onEdit?: (transactionId: string) => void;
+  onDelete?: (transactionId: string) => Promise<void>;
 }
 
-const TransactionDetailsModal = ({ open, onOpenChange, transaction }: TransactionDetailsModalProps) => {
+const TransactionDetailsModal = ({ open, onOpenChange, transaction, onEdit, onDelete }: TransactionDetailsModalProps) => {
   if (!transaction) return null;
 
   const formatCurrency = (amount: number) => {
@@ -50,6 +53,20 @@ const TransactionDetailsModal = ({ open, onOpenChange, transaction }: Transactio
 
   const getStatus = () => {
     return 'Completed';
+  };
+
+  const handleEdit = () => {
+    if (onEdit) {
+      onEdit(transaction.id);
+      onOpenChange(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (onDelete && confirm('Are you sure you want to delete this transaction?')) {
+      await onDelete(transaction.id);
+      onOpenChange(false);
+    }
   };
 
   return (
@@ -162,6 +179,31 @@ const TransactionDetailsModal = ({ open, onOpenChange, transaction }: Transactio
               </CardContent>
             </Card>
           </div>
+
+          {(onEdit || onDelete) && (
+            <div className="flex gap-2 pt-4">
+              {onEdit && (
+                <Button
+                  onClick={handleEdit}
+                  variant="outline"
+                  className="flex-1 border-gray-400 text-gray-800 hover-navy transition-colors"
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Transaction
+                </Button>
+              )}
+              {onDelete && (
+                <Button
+                  onClick={handleDelete}
+                  variant="outline"
+                  className="flex-1 border-red-400 text-red-600 hover-black transition-colors"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Transaction
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
