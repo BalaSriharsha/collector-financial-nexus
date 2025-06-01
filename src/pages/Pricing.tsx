@@ -1,11 +1,50 @@
 
+import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, Crown, Gem } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const Pricing = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState<string | null>(null);
+
+  const handleSubscribe = async (planType: string) => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    if (planType === "Individual") {
+      toast.info("You're already on the Individual plan!");
+      return;
+    }
+
+    setLoading(planType);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { planType }
+      });
+
+      if (error) throw error;
+
+      // Open Stripe checkout in a new tab
+      window.open(data.url, '_blank');
+    } catch (error: any) {
+      console.error('Error creating checkout:', error);
+      toast.error(error.message || 'Failed to create checkout session');
+    } finally {
+      setLoading(null);
+    }
+  };
+
   const plans = [
     {
       name: "Individual",
@@ -21,7 +60,8 @@ const Pricing = () => {
       ],
       cta: "Get Started",
       popular: false,
-      trial: false
+      trial: false,
+      planType: "Individual"
     },
     {
       name: "Premium",
@@ -39,7 +79,8 @@ const Pricing = () => {
       ],
       cta: "Start 7-Day Free Trial",
       popular: true,
-      trial: true
+      trial: true,
+      planType: "Premium"
     },
     {
       name: "Organization",
@@ -55,9 +96,10 @@ const Pricing = () => {
         "API access",
         "Dedicated support"
       ],
-      cta: "Contact Sales",
+      cta: "Subscribe Now",
       popular: false,
-      trial: false
+      trial: false,
+      planType: "Organization"
     }
   ];
 
@@ -69,9 +111,9 @@ const Pricing = () => {
         {/* Hero Section */}
         <section className="max-w-7xl mx-auto px-4 py-12 sm:py-16">
           <div className="text-center mb-12 sm:mb-16">
-            <h1 className="text-3xl sm:text-4xl lg:text-6xl font-playfair font-bold text-collector-black mb-6">
+            <h1 className="text-3xl sm:text-4xl lg:text-6xl font-playfair font-bold text-gray-900 mb-6">
               Choose Your
-              <span className="gradient-text block">Financial Plan</span>
+              <span className="bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent block">Financial Plan</span>
             </h1>
             <p className="text-base sm:text-lg lg:text-xl text-gray-700 max-w-3xl mx-auto">
               From individual users to large organizations, we have the perfect plan to help you master your finances.
@@ -81,10 +123,10 @@ const Pricing = () => {
           {/* Pricing Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
             {plans.map((plan, index) => (
-              <Card key={index} className={`border-2 border-collector-gold/20 shadow-lg hover:shadow-xl transition-all duration-300 bg-white relative ${plan.popular ? 'ring-2 ring-collector-orange' : ''}`}>
+              <Card key={index} className={`border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300 bg-white relative ${plan.popular ? 'ring-2 ring-orange-500' : ''}`}>
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-orange-gradient text-white px-4 py-2 rounded-full text-sm font-medium">
+                    <span className="bg-gradient-to-r from-orange-400 to-amber-400 text-white px-4 py-2 rounded-full text-sm font-medium">
                       Most Popular
                     </span>
                   </div>
@@ -94,8 +136,8 @@ const Pricing = () => {
                   <div className="w-12 sm:w-16 h-12 sm:h-16 mx-auto mb-4 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full flex items-center justify-center">
                     <plan.icon className="w-6 sm:w-8 h-6 sm:h-8 text-white" />
                   </div>
-                  <CardTitle className="text-xl sm:text-2xl font-playfair text-collector-black">{plan.name}</CardTitle>
-                  <div className="text-2xl sm:text-3xl font-bold text-collector-black mt-4">
+                  <CardTitle className="text-xl sm:text-2xl font-playfair text-gray-900">{plan.name}</CardTitle>
+                  <div className="text-2xl sm:text-3xl font-bold text-gray-900 mt-4">
                     {plan.price}
                   </div>
                   {plan.trial && (
@@ -119,9 +161,11 @@ const Pricing = () => {
                   </ul>
                   
                   <Button 
-                    className={`w-full text-sm sm:text-base ${plan.popular ? 'bg-orange-gradient hover:bg-orange-600' : 'bg-blue-gradient hover:bg-blue-600'} text-white`}
+                    className={`w-full text-sm sm:text-base ${plan.popular ? 'bg-gradient-to-r from-orange-400 to-amber-400 hover:from-orange-500 hover:to-amber-500' : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'} text-white`}
+                    onClick={() => handleSubscribe(plan.planType)}
+                    disabled={loading === plan.planType}
                   >
-                    {plan.cta}
+                    {loading === plan.planType ? 'Processing...' : plan.cta}
                   </Button>
                 </CardContent>
               </Card>
@@ -132,7 +176,7 @@ const Pricing = () => {
         {/* FAQ Section */}
         <section className="max-w-4xl mx-auto px-4 py-12 sm:py-16">
           <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-playfair font-bold text-collector-black mb-4">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-playfair font-bold text-gray-900 mb-4">
               Frequently Asked Questions
             </h2>
           </div>
@@ -156,9 +200,9 @@ const Pricing = () => {
                 answer: "We offer a 30-day money-back guarantee for all paid plans. No questions asked."
               }
             ].map((faq, index) => (
-              <Card key={index} className="border-2 border-collector-gold/20 bg-white shadow-sm">
+              <Card key={index} className="border-2 border-amber-200 bg-white shadow-sm">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base sm:text-lg text-collector-black">{faq.question}</CardTitle>
+                  <CardTitle className="text-base sm:text-lg text-gray-900">{faq.question}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-700 text-sm sm:text-base">{faq.answer}</p>

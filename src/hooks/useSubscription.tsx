@@ -15,15 +15,27 @@ export const useSubscription = () => {
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchSubscription = async () => {
     if (!user) {
       setLoading(false);
       return;
     }
 
-    const fetchSubscription = async () => {
+    try {
+      // Use the check-subscription function to get the latest status
+      const { data, error } = await supabase.functions.invoke('check-subscription');
+      
+      if (error) throw error;
+
+      setSubscription({
+        tier: data.subscription_tier || 'Individual',
+        subscribed: data.subscribed || false,
+        subscriptionEnd: data.subscription_end
+      });
+    } catch (error: any) {
+      console.error('Error fetching subscription:', error);
+      // Fallback to database query
       try {
-        // First check profiles table for subscription tier
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('subscription_tier')
@@ -32,7 +44,6 @@ export const useSubscription = () => {
 
         if (profileError) throw profileError;
 
-        // Check subscribers table for additional info
         const { data: subscriber } = await supabase
           .from('subscribers')
           .select('subscribed, subscription_end')
@@ -44,20 +55,27 @@ export const useSubscription = () => {
           subscribed: subscriber?.subscribed || false,
           subscriptionEnd: subscriber?.subscription_end
         });
-      } catch (error: any) {
-        console.error('Error fetching subscription:', error);
-        // Default to Individual if error
+      } catch (fallbackError: any) {
+        console.error('Error in fallback subscription fetch:', fallbackError);
         setSubscription({
           tier: 'Individual',
           subscribed: false
         });
-      } finally {
-        setLoading(false);
       }
-    };
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchSubscription();
   }, [user]);
+
+  // Refresh subscription status (useful after checkout)
+  const refreshSubscription = async () => {
+    setLoading(true);
+    await fetchSubscription();
+  };
 
   const canAccess = (feature: string) => {
     if (!subscription) return false;
@@ -74,23 +92,22 @@ export const useSubscription = () => {
     return features[feature as keyof typeof features]?.includes(subscription.tier) || false;
   };
 
-  const updateSubscription = async (newTier: 'Individual' | 'Premium' | 'Organization') => {
-    if (!user) return { error: new Error('No user found') };
+  const manageSubscription = async () => {
+    if (!user) {
+      toast.error('Please log in to manage your subscription');
+      return;
+    }
 
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ subscription_tier: newTier })
-        .eq('id', user.id);
-
+      const { data, error } = await supabase.functions.invoke('customer-portal');
+      
       if (error) throw error;
 
-      setSubscription(prev => prev ? { ...prev, tier: newTier } : null);
-      toast.success('Subscription updated successfully!');
-      return { error: null };
+      // Open customer portal in new tab
+      window.open(data.url, '_blank');
     } catch (error: any) {
-      toast.error(error.message);
-      return { error };
+      console.error('Error opening customer portal:', error);
+      toast.error(error.message || 'Failed to open customer portal');
     }
   };
 
@@ -98,6 +115,7 @@ export const useSubscription = () => {
     subscription,
     loading,
     canAccess,
-    updateSubscription
+    refreshSubscription,
+    manageSubscription
   };
 };

@@ -2,15 +2,17 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Crown, Gem, Check } from "lucide-react";
+import { Crown, Gem, Check, Settings } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useNavigate } from "react-router-dom";
 
 interface SubscriptionCardProps {
   onUpgrade?: () => void;
 }
 
 const SubscriptionCard = ({ onUpgrade }: SubscriptionCardProps) => {
-  const { subscription, loading } = useSubscription();
+  const { subscription, loading, manageSubscription } = useSubscription();
+  const navigate = useNavigate();
 
   if (loading) {
     return (
@@ -35,6 +37,14 @@ const SubscriptionCard = ({ onUpgrade }: SubscriptionCardProps) => {
   };
 
   const Icon = tierIcons[subscription?.tier || 'Individual'];
+
+  const handleUpgrade = () => {
+    if (onUpgrade) {
+      onUpgrade();
+    } else {
+      navigate('/pricing');
+    }
+  };
 
   return (
     <Card className="w-full">
@@ -90,13 +100,30 @@ const SubscriptionCard = ({ onUpgrade }: SubscriptionCardProps) => {
           )}
         </div>
         
-        {subscription?.tier === 'Individual' && onUpgrade && (
-          <Button 
-            onClick={onUpgrade}
-            className="w-full mt-4 bg-orange-gradient hover:bg-orange-600 text-white"
-          >
-            Upgrade Plan
-          </Button>
+        <div className="flex gap-2 mt-4">
+          {subscription?.tier === 'Individual' ? (
+            <Button 
+              onClick={handleUpgrade}
+              className="flex-1 bg-gradient-to-r from-orange-400 to-amber-400 hover:from-orange-500 hover:to-amber-500 text-white"
+            >
+              Upgrade Plan
+            </Button>
+          ) : (
+            <Button 
+              onClick={manageSubscription}
+              variant="outline"
+              className="flex-1"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Manage Subscription
+            </Button>
+          )}
+        </div>
+
+        {subscription?.subscriptionEnd && (
+          <p className="text-xs text-gray-500 mt-2">
+            Next billing: {new Date(subscription.subscriptionEnd).toLocaleDateString()}
+          </p>
         )}
       </CardContent>
     </Card>
