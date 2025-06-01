@@ -46,7 +46,7 @@ interface ViewAllModalProps {
 const ViewAllModal = ({ open, onOpenChange, type, data, onEdit, onDelete, onItemClick }: ViewAllModalProps) => {
   const { profile } = useProfile();
   const currencySymbol = getCurrencySymbol(profile?.currency || 'USD');
-  const [filteredData, setFilteredData] = useState(data);
+  const [filteredData, setFilteredData] = useState<Transaction[] | Budget[]>(data);
   const [filter, setFilter] = useState('all');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
@@ -56,61 +56,125 @@ const ViewAllModal = ({ open, onOpenChange, type, data, onEdit, onDelete, onItem
   }, [data, filter, customStartDate, customEndDate]);
 
   const filterData = () => {
-    let filtered = [...data];
+    let filtered: Transaction[] | Budget[];
     const now = new Date();
 
-    switch (filter) {
-      case 'daily':
-        filtered = filtered.filter(item => {
-          const itemDate = new Date(type === 'transactions' ? (item as Transaction).date : (item as Budget).created_at);
-          return itemDate.toDateString() === now.toDateString();
-        });
-        break;
-      case 'weekly':
-        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        filtered = filtered.filter(item => {
-          const itemDate = new Date(type === 'transactions' ? (item as Transaction).date : (item as Budget).created_at);
-          return itemDate >= weekAgo;
-        });
-        break;
-      case 'monthly':
-        const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-        filtered = filtered.filter(item => {
-          const itemDate = new Date(type === 'transactions' ? (item as Transaction).date : (item as Budget).created_at);
-          return itemDate >= monthAgo;
-        });
-        break;
-      case 'quarterly':
-        const quarterAgo = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
-        filtered = filtered.filter(item => {
-          const itemDate = new Date(type === 'transactions' ? (item as Transaction).date : (item as Budget).created_at);
-          return itemDate >= quarterAgo;
-        });
-        break;
-      case 'half-yearly':
-        const halfYearAgo = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
-        filtered = filtered.filter(item => {
-          const itemDate = new Date(type === 'transactions' ? (item as Transaction).date : (item as Budget).created_at);
-          return itemDate >= halfYearAgo;
-        });
-        break;
-      case 'yearly':
-        const yearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
-        filtered = filtered.filter(item => {
-          const itemDate = new Date(type === 'transactions' ? (item as Transaction).date : (item as Budget).created_at);
-          return itemDate >= yearAgo;
-        });
-        break;
-      case 'custom':
-        if (customStartDate && customEndDate) {
-          const startDate = new Date(customStartDate);
-          const endDate = new Date(customEndDate);
-          filtered = filtered.filter(item => {
-            const itemDate = new Date(type === 'transactions' ? (item as Transaction).date : (item as Budget).created_at);
-            return itemDate >= startDate && itemDate <= endDate;
+    if (type === 'transactions') {
+      const transactionData = data as Transaction[];
+      let filteredTransactions = [...transactionData];
+
+      switch (filter) {
+        case 'daily':
+          filteredTransactions = filteredTransactions.filter(item => {
+            const itemDate = new Date(item.date);
+            return itemDate.toDateString() === now.toDateString();
           });
-        }
-        break;
+          break;
+        case 'weekly':
+          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          filteredTransactions = filteredTransactions.filter(item => {
+            const itemDate = new Date(item.date);
+            return itemDate >= weekAgo;
+          });
+          break;
+        case 'monthly':
+          const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+          filteredTransactions = filteredTransactions.filter(item => {
+            const itemDate = new Date(item.date);
+            return itemDate >= monthAgo;
+          });
+          break;
+        case 'quarterly':
+          const quarterAgo = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+          filteredTransactions = filteredTransactions.filter(item => {
+            const itemDate = new Date(item.date);
+            return itemDate >= quarterAgo;
+          });
+          break;
+        case 'half-yearly':
+          const halfYearAgo = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+          filteredTransactions = filteredTransactions.filter(item => {
+            const itemDate = new Date(item.date);
+            return itemDate >= halfYearAgo;
+          });
+          break;
+        case 'yearly':
+          const yearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+          filteredTransactions = filteredTransactions.filter(item => {
+            const itemDate = new Date(item.date);
+            return itemDate >= yearAgo;
+          });
+          break;
+        case 'custom':
+          if (customStartDate && customEndDate) {
+            const startDate = new Date(customStartDate);
+            const endDate = new Date(customEndDate);
+            filteredTransactions = filteredTransactions.filter(item => {
+              const itemDate = new Date(item.date);
+              return itemDate >= startDate && itemDate <= endDate;
+            });
+          }
+          break;
+      }
+      filtered = filteredTransactions;
+    } else {
+      const budgetData = data as Budget[];
+      let filteredBudgets = [...budgetData];
+
+      switch (filter) {
+        case 'daily':
+          filteredBudgets = filteredBudgets.filter(item => {
+            const itemDate = new Date(item.created_at);
+            return itemDate.toDateString() === now.toDateString();
+          });
+          break;
+        case 'weekly':
+          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          filteredBudgets = filteredBudgets.filter(item => {
+            const itemDate = new Date(item.created_at);
+            return itemDate >= weekAgo;
+          });
+          break;
+        case 'monthly':
+          const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+          filteredBudgets = filteredBudgets.filter(item => {
+            const itemDate = new Date(item.created_at);
+            return itemDate >= monthAgo;
+          });
+          break;
+        case 'quarterly':
+          const quarterAgo = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+          filteredBudgets = filteredBudgets.filter(item => {
+            const itemDate = new Date(item.created_at);
+            return itemDate >= quarterAgo;
+          });
+          break;
+        case 'half-yearly':
+          const halfYearAgo = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+          filteredBudgets = filteredBudgets.filter(item => {
+            const itemDate = new Date(item.created_at);
+            return itemDate >= halfYearAgo;
+          });
+          break;
+        case 'yearly':
+          const yearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+          filteredBudgets = filteredBudgets.filter(item => {
+            const itemDate = new Date(item.created_at);
+            return itemDate >= yearAgo;
+          });
+          break;
+        case 'custom':
+          if (customStartDate && customEndDate) {
+            const startDate = new Date(customStartDate);
+            const endDate = new Date(customEndDate);
+            filteredBudgets = filteredBudgets.filter(item => {
+              const itemDate = new Date(item.created_at);
+              return itemDate >= startDate && itemDate <= endDate;
+            });
+          }
+          break;
+      }
+      filtered = filteredBudgets;
     }
 
     setFilteredData(filtered);
