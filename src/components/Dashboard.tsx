@@ -2,9 +2,21 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, TrendingUp, TrendingDown, DollarSign, Users, Target, FileText, Archive, BarChart3, UserPlus, Crown, Edit, Trash2 } from "lucide-react";
+import { 
+  PlusCircle, 
+  TrendingUp, 
+  TrendingDown, 
+  DollarSign, 
+  Target, 
+  FileText, 
+  Archive, 
+  BarChart3, 
+  Upload,
+  Crown,
+  Edit,
+  Trash2
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -13,12 +25,10 @@ import { toast } from "sonner";
 import Navigation from "./Navigation";
 import AddTransactionForm from "./forms/AddTransactionForm";
 import CreateBudgetForm from "./forms/CreateBudgetForm";
-import ExpenseSharingForm from "./forms/ExpenseSharingForm";
 import GenerateInvoiceForm from "./forms/GenerateInvoiceForm";
 import UploadInvoiceForm from "./forms/UploadInvoiceForm";
 import ViewArchiveForm from "./forms/ViewArchiveForm";
 import ViewReportsForm from "./forms/ViewReportsForm";
-import OrganizationTeams from "./OrganizationTeams";
 import { getCurrencySymbol } from "@/utils/currency";
 
 interface DashboardProps {
@@ -57,7 +67,6 @@ const Dashboard = ({ userType }: DashboardProps) => {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { subscription, canAccess } = useSubscription();
-  const [activeTab, setActiveTab] = useState("overview");
   const [stats, setStats] = useState<DashboardStats>({
     totalIncome: 0,
     totalExpense: 0,
@@ -73,7 +82,6 @@ const Dashboard = ({ userType }: DashboardProps) => {
   const [showUploadInvoice, setShowUploadInvoice] = useState(false);
   const [showViewReports, setShowViewReports] = useState(false);
   const [showViewArchive, setShowViewArchive] = useState(false);
-  const [showExpenseSharing, setShowExpenseSharing] = useState(false);
   const [editingTransactionId, setEditingTransactionId] = useState<string | null>(null);
 
   // Get currency symbol based on user profile
@@ -140,11 +148,6 @@ const Dashboard = ({ userType }: DashboardProps) => {
     fetchDashboardData();
   }, [user]);
 
-  const handleRefresh = () => {
-    setLoading(true);
-    fetchDashboardData();
-  };
-
   const handleTransactionSuccess = () => {
     fetchDashboardData();
     setShowAddTransaction(false);
@@ -180,6 +183,58 @@ const Dashboard = ({ userType }: DashboardProps) => {
     }
   };
 
+  // Quick menu items configuration
+  const quickMenuItems = [
+    {
+      icon: PlusCircle,
+      label: "Add Transaction",
+      onClick: () => setShowAddTransaction(true),
+      bgColor: "bg-blue-500/20",
+      iconColor: "text-blue-400",
+      hoverColor: "hover:bg-blue-500/30"
+    },
+    {
+      icon: Target,
+      label: "Create Budget",
+      onClick: () => setShowCreateBudget(true),
+      bgColor: "bg-orange-500/20",
+      iconColor: "text-orange-400",
+      hoverColor: "hover:bg-orange-500/30"
+    },
+    ...(userType === 'organization' ? [{
+      icon: FileText,
+      label: "Generate Invoice",
+      onClick: () => setShowGenerateInvoice(true),
+      bgColor: "bg-green-500/20",
+      iconColor: "text-green-400",
+      hoverColor: "hover:bg-green-500/30"
+    }] : []),
+    {
+      icon: Upload,
+      label: "Upload",
+      onClick: () => setShowUploadInvoice(true),
+      bgColor: "bg-purple-500/20",
+      iconColor: "text-purple-400",
+      hoverColor: "hover:bg-purple-500/30"
+    },
+    {
+      icon: BarChart3,
+      label: "Reports",
+      onClick: () => setShowViewReports(true),
+      bgColor: "bg-cyan-500/20",
+      iconColor: "text-cyan-400",
+      hoverColor: "hover:bg-cyan-500/30"
+    },
+    {
+      icon: Archive,
+      label: "Archive",
+      onClick: () => setShowViewArchive(true),
+      bgColor: "bg-gray-500/20",
+      iconColor: "text-gray-300",
+      hoverColor: "hover:bg-gray-500/30"
+    }
+  ];
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
@@ -198,375 +253,234 @@ const Dashboard = ({ userType }: DashboardProps) => {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
       <Navigation />
       
-      <div className="max-w-7xl mx-auto px-4 py-4 sm:py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Header Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-playfair font-bold text-white mb-2">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-playfair font-bold text-white mb-2">
               {userType === 'organization' ? 'Organization Dashboard' : 'Personal Dashboard'}
             </h1>
-            <p className="text-white/80 text-base">
+            <p className="text-white/80 text-sm sm:text-base">
               Welcome back! Here's your financial overview.
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Badge variant="outline" className="text-sm px-3 py-1 border-white/30 text-white bg-white/10">
+            <Badge variant="outline" className="text-xs sm:text-sm px-2 sm:px-3 py-1 border-white/30 text-white bg-white/10">
               {subscription?.tier} Plan
             </Badge>
             {subscription?.tier !== 'Individual' && (
-              <Badge className="bg-gradient-to-r from-orange-400 to-amber-400 text-white text-sm px-3 py-1">
-                <Crown className="w-4 h-4 mr-1" />
+              <Badge className="bg-gradient-to-r from-orange-400 to-amber-400 text-white text-xs sm:text-sm px-2 sm:px-3 py-1">
+                <Crown className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                 Premium
               </Badge>
             )}
           </div>
         </div>
 
+        {/* Quick Menu */}
+        <div className="mb-6 sm:mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+            {quickMenuItems.map((item, index) => (
+              <Button
+                key={index}
+                onClick={item.onClick}
+                variant="ghost"
+                className={`${item.bgColor} ${item.hoverColor} border border-white/20 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-white backdrop-blur-sm transition-all duration-200`}
+              >
+                <item.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${item.iconColor}`} />
+                <span className="text-xs sm:text-sm font-medium text-center leading-tight">
+                  {item.label}
+                </span>
+              </Button>
+            ))}
+          </div>
+        </div>
+
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-medium text-white">Total Income</CardTitle>
-              <TrendingUp className="h-5 w-5 text-green-400" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
+              <CardTitle className="text-xs sm:text-sm font-medium text-white">Total Income</CardTitle>
+              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-400" />
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-green-400 mb-1">
+            <CardContent className="pt-0">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-400 mb-1">
                 {currencySymbol}{stats.totalIncome.toLocaleString()}
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-medium text-white">Total Expenses</CardTitle>
-              <TrendingDown className="h-5 w-5 text-red-400" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
+              <CardTitle className="text-xs sm:text-sm font-medium text-white">Total Expenses</CardTitle>
+              <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-red-400" />
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-red-400 mb-1">
+            <CardContent className="pt-0">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-red-400 mb-1">
                 {currencySymbol}{stats.totalExpense.toLocaleString()}
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-medium text-white">Balance</CardTitle>
-              <DollarSign className="h-5 w-5 text-blue-400" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
+              <CardTitle className="text-xs sm:text-sm font-medium text-white">Balance</CardTitle>
+              <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400" />
             </CardHeader>
-            <CardContent>
-              <div className={`text-3xl font-bold mb-1 ${stats.balance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+            <CardContent className="pt-0">
+              <div className={`text-xl sm:text-2xl lg:text-3xl font-bold mb-1 ${stats.balance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                 {currencySymbol}{stats.balance.toLocaleString()}
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-medium text-white">Transactions</CardTitle>
-              <FileText className="h-5 w-5 text-orange-400" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
+              <CardTitle className="text-xs sm:text-sm font-medium text-white">Transactions</CardTitle>
+              <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-orange-400" />
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-orange-400 mb-1">
+            <CardContent className="pt-0">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-orange-400 mb-1">
                 {stats.transactionCount}
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 bg-white/10 backdrop-blur-sm h-12 border-white/20">
-            <TabsTrigger value="overview" className="text-xs sm:text-sm font-medium text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Overview</TabsTrigger>
-            <TabsTrigger value="transactions" className="text-xs sm:text-sm font-medium text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Add Transaction</TabsTrigger>
-            <TabsTrigger value="budgets" className="text-xs sm:text-sm font-medium text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Budgets</TabsTrigger>
-            <TabsTrigger value="invoices" className="text-xs sm:text-sm font-medium text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Invoices</TabsTrigger>
-            <TabsTrigger value="upload" className="text-xs sm:text-sm font-medium text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Upload</TabsTrigger>
-            <TabsTrigger value="reports" className="text-xs sm:text-sm font-medium text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Reports</TabsTrigger>
-            <TabsTrigger value="archive" className="text-xs sm:text-sm font-medium text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Archive</TabsTrigger>
-            {userType === 'organization' && (
-              <TabsTrigger value="teams" className="text-xs sm:text-sm font-medium text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Teams</TabsTrigger>
-            )}
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Recent Transactions */}
-              <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="text-xl text-white">Recent Transactions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {recentTransactions.length > 0 ? (
-                    <div className="space-y-4">
-                      {recentTransactions.map((transaction) => (
-                        <div 
-                          key={transaction.id}
-                          className="flex items-center justify-between p-4 rounded-lg border border-white/20 hover:bg-white/5 transition-colors"
-                        >
-                          <div className="flex-1">
-                            <div className="font-semibold text-white text-sm mb-1">{transaction.title}</div>
-                            <div className="text-xs text-white/70">{transaction.category}</div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="text-right">
-                              <div className={`font-bold text-sm ${
-                                transaction.type === 'income' ? 'text-green-400' : 'text-red-400'
-                              }`}>
-                                {transaction.type === 'income' ? '+' : '-'}{currencySymbol}{Number(transaction.amount).toLocaleString()}
-                              </div>
-                              <div className="text-xs text-white/70">{transaction.date}</div>
-                            </div>
-                            <div className="flex flex-col gap-1">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleEditTransaction(transaction.id)}
-                                className="h-7 w-7 p-0 border-white/30 text-white hover:bg-white/10"
-                              >
-                                <Edit className="w-3 h-3" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDeleteTransaction(transaction.id)}
-                                className="h-7 w-7 p-0 border-red-400/30 text-red-400 hover:bg-red-400/10"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                      <div className="flex gap-2 pt-4">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => setShowAddTransaction(true)}
-                          className="flex-1 border-white/30 text-white hover:bg-white/10"
-                        >
-                          <PlusCircle className="w-4 h-4 mr-2" />
-                          Add Transaction
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => setShowViewArchive(true)}
-                          className="flex-1 border-white/30 text-white hover:bg-white/10"
-                        >
-                          <Archive className="w-4 h-4 mr-2" />
-                          View Archive
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 text-white/70">
-                      <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p className="text-sm mb-4">No transactions yet</p>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setShowAddTransaction(true)}
-                        className="border-white/30 text-white hover:bg-white/10"
-                      >
-                        Add Transaction
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Budgets Overview */}
-              <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="text-xl text-white">Budget Overview</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {budgets.length > 0 ? (
-                    <div className="space-y-4">
-                      {budgets.slice(0, 3).map((budget) => (
-                        <div key={budget.id} className="p-4 rounded-lg border border-white/20 bg-white/5">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-semibold text-white text-sm">{budget.name}</span>
-                            <span className="text-sm font-bold text-orange-400">{currencySymbol}{Number(budget.amount).toLocaleString()}</span>
-                          </div>
-                          <div className="text-xs text-white/70">
-                            {budget.category} • {budget.period}
-                          </div>
-                        </div>
-                      ))}
-                      {budgets.length > 3 && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="w-full border-white/30 text-white hover:bg-white/10"
-                          onClick={() => setShowCreateBudget(true)}
-                        >
-                          View All Budgets
-                        </Button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 text-white/70">
-                      <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p className="text-sm mb-4">No budgets created</p>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setShowCreateBudget(true)}
-                        className="border-white/30 text-white hover:bg-white/10"
-                      >
-                        Create Budget
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="transactions">
-            <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-xl text-white">Add New Transaction</CardTitle>
-                <CardDescription className="text-white/70">Record your income or expense transactions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  onClick={() => setShowAddTransaction(true)}
-                  className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
-                >
-                  <PlusCircle className="w-4 h-4 mr-2" />
-                  Add Transaction
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="budgets">
-            <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-xl text-white">Budget Management</CardTitle>
-                <CardDescription className="text-white/70">Create and manage your budgets</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  onClick={() => setShowCreateBudget(true)}
-                  className="bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white"
-                >
-                  <Target className="w-4 h-4 mr-2" />
-                  Create Budget
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="invoices">
-            <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-xl text-white">Invoice Management</CardTitle>
-                <CardDescription className="text-white/70">Generate and manage invoices</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  onClick={() => setShowGenerateInvoice(true)}
-                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
-                >
-                  <FileText className="w-4 h-4 mr-2" />
-                  Generate Invoice
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="upload">
-            <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-xl text-white">Upload Documents</CardTitle>
-                <CardDescription className="text-white/70">Upload invoices and financial documents</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  onClick={() => setShowUploadInvoice(true)}
-                  className="bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 text-white"
-                >
-                  <Archive className="w-4 h-4 mr-2" />
-                  Upload Invoice
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="reports">
-            <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-xl text-white">Financial Reports</CardTitle>
-                <CardDescription className="text-white/70">View detailed financial reports and analytics</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  onClick={() => setShowViewReports(true)}
-                  className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white"
-                >
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  View Reports
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="archive">
-            <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-xl text-white">Archive</CardTitle>
-                <CardDescription className="text-white/70">View and manage archived financial data</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  onClick={() => setShowViewArchive(true)}
-                  className="bg-gradient-to-r from-gray-500 to-slate-600 hover:from-gray-600 hover:to-slate-700 text-white"
-                >
-                  <Archive className="w-4 h-4 mr-2" />
-                  View Archive
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {userType === 'organization' && (
-            <TabsContent value="teams">
-              <OrganizationTeams 
-                onCreateInvoice={() => setShowGenerateInvoice(true)} 
-              />
-            </TabsContent>
-          )}
-        </Tabs>
-
-        {/* Expense Sharing for Premium/Organization users */}
-        {canAccess('expense-sharing') && (
-          <Card className="mt-8 bg-white/10 border-white/20 backdrop-blur-sm">
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+          {/* Recent Transactions */}
+          <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
             <CardHeader>
-              <div className="flex items-center gap-3">
-                <Users className="w-6 h-6 text-orange-400" />
-                <CardTitle className="text-xl text-white">Expense Sharing</CardTitle>
-                <Badge className="bg-gradient-to-r from-orange-400 to-amber-400 text-white text-sm px-3 py-1">
-                  Premium Feature
-                </Badge>
-              </div>
-              <CardDescription className="text-white/70">
-                Share expenses with friends and colleagues
-              </CardDescription>
+              <CardTitle className="text-lg sm:text-xl text-white">Recent Transactions</CardTitle>
             </CardHeader>
             <CardContent>
-              <Button 
-                onClick={() => setShowExpenseSharing(true)}
-                className="bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white"
-              >
-                <Users className="w-4 h-4 mr-2" />
-                Share Expenses
-              </Button>
+              {recentTransactions.length > 0 ? (
+                <div className="space-y-3 sm:space-y-4">
+                  {recentTransactions.map((transaction) => (
+                    <div 
+                      key={transaction.id}
+                      className="flex items-center justify-between p-3 sm:p-4 rounded-lg border border-white/20 hover:bg-white/5 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-white text-sm mb-1 truncate">{transaction.title}</div>
+                        <div className="text-xs text-white/70 truncate">{transaction.category}</div>
+                      </div>
+                      <div className="flex items-center gap-2 sm:gap-3 ml-2">
+                        <div className="text-right">
+                          <div className={`font-bold text-sm ${
+                            transaction.type === 'income' ? 'text-green-400' : 'text-red-400'
+                          }`}>
+                            {transaction.type === 'income' ? '+' : '-'}{currencySymbol}{Number(transaction.amount).toLocaleString()}
+                          </div>
+                          <div className="text-xs text-white/70">{transaction.date}</div>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditTransaction(transaction.id)}
+                            className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-white/30 text-white hover:bg-white/10"
+                          >
+                            <Edit className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteTransaction(transaction.id)}
+                            className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-red-400/30 text-red-400 hover:bg-red-400/10"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex gap-2 pt-4">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setShowAddTransaction(true)}
+                      className="flex-1 border-white/30 text-white hover:bg-white/10 text-xs sm:text-sm"
+                    >
+                      <PlusCircle className="w-4 h-4 mr-2" />
+                      Add Transaction
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setShowViewArchive(true)}
+                      className="flex-1 border-white/30 text-white hover:bg-white/10 text-xs sm:text-sm"
+                    >
+                      <Archive className="w-4 h-4 mr-2" />
+                      View Archive
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 sm:py-12 text-white/70">
+                  <FileText className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-4 opacity-50" />
+                  <p className="text-sm mb-4">No transactions yet</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowAddTransaction(true)}
+                    className="border-white/30 text-white hover:bg-white/10"
+                  >
+                    Add Transaction
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
-        )}
+
+          {/* Budgets Overview */}
+          <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-lg sm:text-xl text-white">Budget Overview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {budgets.length > 0 ? (
+                <div className="space-y-3 sm:space-y-4">
+                  {budgets.slice(0, 3).map((budget) => (
+                    <div key={budget.id} className="p-3 sm:p-4 rounded-lg border border-white/20 bg-white/5">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-semibold text-white text-sm truncate flex-1">{budget.name}</span>
+                        <span className="text-sm font-bold text-orange-400 ml-2">{currencySymbol}{Number(budget.amount).toLocaleString()}</span>
+                      </div>
+                      <div className="text-xs text-white/70">
+                        {budget.category} • {budget.period}
+                      </div>
+                    </div>
+                  ))}
+                  {budgets.length > 3 && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full border-white/30 text-white hover:bg-white/10 text-xs sm:text-sm"
+                      onClick={() => setShowCreateBudget(true)}
+                    >
+                      View All Budgets
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8 sm:py-12 text-white/70">
+                  <Target className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-4 opacity-50" />
+                  <p className="text-sm mb-4">No budgets created</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowCreateBudget(true)}
+                    className="border-white/30 text-white hover:bg-white/10"
+                  >
+                    Create Budget
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Form Modals */}
@@ -574,27 +488,22 @@ const Dashboard = ({ userType }: DashboardProps) => {
         open={showAddTransaction} 
         onOpenChange={setShowAddTransaction} 
         userType={userType}
-        onClose={() => {
-          setShowAddTransaction(false);
-          setEditingTransactionId(null);
-          fetchDashboardData();
-        }}
+        onClose={handleTransactionSuccess}
       />
 
       <CreateBudgetForm 
         open={showCreateBudget} 
         onOpenChange={setShowCreateBudget} 
         userType={userType}
-        onClose={() => {
-          setShowCreateBudget(false);
-          fetchDashboardData();
-        }}
+        onClose={handleBudgetSuccess}
       />
 
-      <GenerateInvoiceForm 
-        open={showGenerateInvoice} 
-        onOpenChange={setShowGenerateInvoice} 
-      />
+      {userType === 'organization' && (
+        <GenerateInvoiceForm 
+          open={showGenerateInvoice} 
+          onOpenChange={setShowGenerateInvoice} 
+        />
+      )}
 
       <UploadInvoiceForm 
         open={showUploadInvoice} 
@@ -609,12 +518,6 @@ const Dashboard = ({ userType }: DashboardProps) => {
       <ViewArchiveForm 
         open={showViewArchive} 
         onOpenChange={setShowViewArchive} 
-      />
-
-      <ExpenseSharingForm 
-        open={showExpenseSharing} 
-        onOpenChange={setShowExpenseSharing} 
-        userType={userType} 
       />
     </div>
   );
