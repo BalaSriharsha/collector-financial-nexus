@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, TrendingUp, TrendingDown, DollarSign, Users, Target, FileText, Upload, Archive, BarChart3, Download, UserPlus, Crown } from "lucide-react";
+import { PlusCircle, TrendingUp, TrendingDown, DollarSign, Users, Target, FileText, Archive, BarChart3, UserPlus, Crown, Edit, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -74,6 +74,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
   const [showViewReports, setShowViewReports] = useState(false);
   const [showViewArchive, setShowViewArchive] = useState(false);
   const [showExpenseSharing, setShowExpenseSharing] = useState(false);
+  const [editingTransactionId, setEditingTransactionId] = useState<string | null>(null);
 
   // Get currency symbol based on user profile
   const currencySymbol = getCurrencySymbol(profile?.currency || 'USD');
@@ -147,6 +148,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
   const handleTransactionSuccess = () => {
     fetchDashboardData();
     setShowAddTransaction(false);
+    setEditingTransactionId(null);
   };
 
   const handleBudgetSuccess = () => {
@@ -154,14 +156,38 @@ const Dashboard = ({ userType }: DashboardProps) => {
     setShowCreateBudget(false);
   };
 
+  const handleEditTransaction = (transactionId: string) => {
+    setEditingTransactionId(transactionId);
+    setShowAddTransaction(true);
+  };
+
+  const handleDeleteTransaction = async (transactionId: string) => {
+    if (!confirm('Are you sure you want to delete this transaction?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', transactionId);
+
+      if (error) throw error;
+      
+      toast.success('Transaction deleted successfully');
+      fetchDashboardData();
+    } catch (error: any) {
+      console.error('Error deleting transaction:', error);
+      toast.error('Failed to delete transaction');
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
         <Navigation />
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="text-center py-8">
-            <div className="w-8 h-8 border-4 border-collector-orange border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-collector-black/70">Loading dashboard...</p>
+            <div className="w-8 h-8 border-4 border-orange-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-white/80">Loading dashboard...</p>
           </div>
         </div>
       </div>
@@ -169,22 +195,22 @@ const Dashboard = ({ userType }: DashboardProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
       <Navigation />
       
       <div className="max-w-7xl mx-auto px-4 py-4 sm:py-8">
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-playfair font-bold text-collector-black mb-2">
+            <h1 className="text-3xl sm:text-4xl font-playfair font-bold text-white mb-2">
               {userType === 'organization' ? 'Organization Dashboard' : 'Personal Dashboard'}
             </h1>
-            <p className="text-collector-black/70 text-base">
+            <p className="text-white/80 text-base">
               Welcome back! Here's your financial overview.
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Badge variant="outline" className="text-sm px-3 py-1">
+            <Badge variant="outline" className="text-sm px-3 py-1 border-white/30 text-white bg-white/10">
               {subscription?.tier} Plan
             </Badge>
             {subscription?.tier !== 'Individual' && (
@@ -196,115 +222,51 @@ const Dashboard = ({ userType }: DashboardProps) => {
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-xl text-collector-black">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-              <Button
-                variant="outline"
-                className="flex flex-col items-center gap-3 h-auto py-6"
-                onClick={() => setShowAddTransaction(true)}
-              >
-                <PlusCircle className="w-6 h-6 text-collector-orange" />
-                <span className="text-xs font-medium">Add Transaction</span>
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="flex flex-col items-center gap-3 h-auto py-6"
-                onClick={() => setShowCreateBudget(true)}
-              >
-                <Target className="w-6 h-6 text-collector-orange" />
-                <span className="text-xs font-medium">Create Budget</span>
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="flex flex-col items-center gap-3 h-auto py-6"
-                onClick={() => setShowGenerateInvoice(true)}
-              >
-                <FileText className="w-6 h-6 text-collector-orange" />
-                <span className="text-xs font-medium">Generate Invoice</span>
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="flex flex-col items-center gap-3 h-auto py-6"
-                onClick={() => setShowUploadInvoice(true)}
-              >
-                <Upload className="w-6 h-6 text-collector-orange" />
-                <span className="text-xs font-medium">Upload Invoice</span>
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="flex flex-col items-center gap-3 h-auto py-6"
-                onClick={() => setShowViewReports(true)}
-              >
-                <BarChart3 className="w-6 h-6 text-collector-orange" />
-                <span className="text-xs font-medium">View Reports</span>
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="flex flex-col items-center gap-3 h-auto py-6"
-                onClick={handleRefresh}
-              >
-                <Download className="w-6 h-6 text-collector-orange" />
-                <span className="text-xs font-medium">Refresh</span>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
+          <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-medium text-collector-black">Total Income</CardTitle>
-              <TrendingUp className="h-5 w-5 text-green-600" />
+              <CardTitle className="text-sm font-medium text-white">Total Income</CardTitle>
+              <TrendingUp className="h-5 w-5 text-green-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-600 mb-1">
+              <div className="text-3xl font-bold text-green-400 mb-1">
                 {currencySymbol}{stats.totalIncome.toLocaleString()}
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-medium text-collector-black">Total Expenses</CardTitle>
-              <TrendingDown className="h-5 w-5 text-red-600" />
+              <CardTitle className="text-sm font-medium text-white">Total Expenses</CardTitle>
+              <TrendingDown className="h-5 w-5 text-red-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-red-600 mb-1">
+              <div className="text-3xl font-bold text-red-400 mb-1">
                 {currencySymbol}{stats.totalExpense.toLocaleString()}
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-medium text-collector-black">Balance</CardTitle>
-              <DollarSign className="h-5 w-5 text-blue-600" />
+              <CardTitle className="text-sm font-medium text-white">Balance</CardTitle>
+              <DollarSign className="h-5 w-5 text-blue-400" />
             </CardHeader>
             <CardContent>
-              <div className={`text-3xl font-bold mb-1 ${stats.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`text-3xl font-bold mb-1 ${stats.balance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                 {currencySymbol}{stats.balance.toLocaleString()}
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-medium text-collector-black">Transactions</CardTitle>
-              <FileText className="h-5 w-5 text-collector-orange" />
+              <CardTitle className="text-sm font-medium text-white">Transactions</CardTitle>
+              <FileText className="h-5 w-5 text-orange-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-collector-orange mb-1">
+              <div className="text-3xl font-bold text-orange-400 mb-1">
                 {stats.transactionCount}
               </div>
             </CardContent>
@@ -313,25 +275,25 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 bg-white/70 backdrop-blur-sm h-12">
-            <TabsTrigger value="overview" className="text-xs sm:text-sm font-medium">Overview</TabsTrigger>
-            <TabsTrigger value="transactions" className="text-xs sm:text-sm font-medium">Add Transaction</TabsTrigger>
-            <TabsTrigger value="budgets" className="text-xs sm:text-sm font-medium">Budgets</TabsTrigger>
-            <TabsTrigger value="invoices" className="text-xs sm:text-sm font-medium">Invoices</TabsTrigger>
-            <TabsTrigger value="upload" className="text-xs sm:text-sm font-medium">Upload</TabsTrigger>
-            <TabsTrigger value="reports" className="text-xs sm:text-sm font-medium">Reports</TabsTrigger>
-            <TabsTrigger value="archive" className="text-xs sm:text-sm font-medium">Archive</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 bg-white/10 backdrop-blur-sm h-12 border-white/20">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm font-medium text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Overview</TabsTrigger>
+            <TabsTrigger value="transactions" className="text-xs sm:text-sm font-medium text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Add Transaction</TabsTrigger>
+            <TabsTrigger value="budgets" className="text-xs sm:text-sm font-medium text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Budgets</TabsTrigger>
+            <TabsTrigger value="invoices" className="text-xs sm:text-sm font-medium text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Invoices</TabsTrigger>
+            <TabsTrigger value="upload" className="text-xs sm:text-sm font-medium text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Upload</TabsTrigger>
+            <TabsTrigger value="reports" className="text-xs sm:text-sm font-medium text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Reports</TabsTrigger>
+            <TabsTrigger value="archive" className="text-xs sm:text-sm font-medium text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Archive</TabsTrigger>
             {userType === 'organization' && (
-              <TabsTrigger value="teams" className="text-xs sm:text-sm font-medium">Teams</TabsTrigger>
+              <TabsTrigger value="teams" className="text-xs sm:text-sm font-medium text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Teams</TabsTrigger>
             )}
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Recent Transactions */}
-              <Card>
+              <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle className="text-xl text-collector-black">Recent Transactions</CardTitle>
+                  <CardTitle className="text-xl text-white">Recent Transactions</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {recentTransactions.length > 0 ? (
@@ -339,31 +301,72 @@ const Dashboard = ({ userType }: DashboardProps) => {
                       {recentTransactions.map((transaction) => (
                         <div 
                           key={transaction.id}
-                          className="flex items-center justify-between p-4 rounded-lg border hover:bg-gray-50 transition-colors"
+                          className="flex items-center justify-between p-4 rounded-lg border border-white/20 hover:bg-white/5 transition-colors"
                         >
                           <div className="flex-1">
-                            <div className="font-semibold text-collector-black text-sm mb-1">{transaction.title}</div>
-                            <div className="text-xs text-collector-black/60">{transaction.category}</div>
+                            <div className="font-semibold text-white text-sm mb-1">{transaction.title}</div>
+                            <div className="text-xs text-white/70">{transaction.category}</div>
                           </div>
-                          <div className="text-right">
-                            <div className={`font-bold text-sm ${
-                              transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                            }`}>
-                              {transaction.type === 'income' ? '+' : '-'}{currencySymbol}{Number(transaction.amount).toLocaleString()}
+                          <div className="flex items-center gap-3">
+                            <div className="text-right">
+                              <div className={`font-bold text-sm ${
+                                transaction.type === 'income' ? 'text-green-400' : 'text-red-400'
+                              }`}>
+                                {transaction.type === 'income' ? '+' : '-'}{currencySymbol}{Number(transaction.amount).toLocaleString()}
+                              </div>
+                              <div className="text-xs text-white/70">{transaction.date}</div>
                             </div>
-                            <div className="text-xs text-collector-black/60">{transaction.date}</div>
+                            <div className="flex flex-col gap-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEditTransaction(transaction.id)}
+                                className="h-7 w-7 p-0 border-white/30 text-white hover:bg-white/10"
+                              >
+                                <Edit className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDeleteTransaction(transaction.id)}
+                                className="h-7 w-7 p-0 border-red-400/30 text-red-400 hover:bg-red-400/10"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       ))}
+                      <div className="flex gap-2 pt-4">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setShowAddTransaction(true)}
+                          className="flex-1 border-white/30 text-white hover:bg-white/10"
+                        >
+                          <PlusCircle className="w-4 h-4 mr-2" />
+                          Add Transaction
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setShowViewArchive(true)}
+                          className="flex-1 border-white/30 text-white hover:bg-white/10"
+                        >
+                          <Archive className="w-4 h-4 mr-2" />
+                          View Archive
+                        </Button>
+                      </div>
                     </div>
                   ) : (
-                    <div className="text-center py-12 text-collector-black/60">
+                    <div className="text-center py-12 text-white/70">
                       <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
                       <p className="text-sm mb-4">No transactions yet</p>
                       <Button 
                         variant="outline" 
                         size="sm" 
                         onClick={() => setShowAddTransaction(true)}
+                        className="border-white/30 text-white hover:bg-white/10"
                       >
                         Add Transaction
                       </Button>
@@ -373,20 +376,20 @@ const Dashboard = ({ userType }: DashboardProps) => {
               </Card>
 
               {/* Budgets Overview */}
-              <Card>
+              <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle className="text-xl text-collector-black">Budget Overview</CardTitle>
+                  <CardTitle className="text-xl text-white">Budget Overview</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {budgets.length > 0 ? (
                     <div className="space-y-4">
                       {budgets.slice(0, 3).map((budget) => (
-                        <div key={budget.id} className="p-4 rounded-lg border bg-white/50">
+                        <div key={budget.id} className="p-4 rounded-lg border border-white/20 bg-white/5">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="font-semibold text-collector-black text-sm">{budget.name}</span>
-                            <span className="text-sm font-bold text-collector-orange">{currencySymbol}{Number(budget.amount).toLocaleString()}</span>
+                            <span className="font-semibold text-white text-sm">{budget.name}</span>
+                            <span className="text-sm font-bold text-orange-400">{currencySymbol}{Number(budget.amount).toLocaleString()}</span>
                           </div>
-                          <div className="text-xs text-collector-black/60">
+                          <div className="text-xs text-white/70">
                             {budget.category} • {budget.period}
                           </div>
                         </div>
@@ -395,7 +398,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          className="w-full"
+                          className="w-full border-white/30 text-white hover:bg-white/10"
                           onClick={() => setShowCreateBudget(true)}
                         >
                           View All Budgets
@@ -403,13 +406,14 @@ const Dashboard = ({ userType }: DashboardProps) => {
                       )}
                     </div>
                   ) : (
-                    <div className="text-center py-12 text-collector-black/60">
+                    <div className="text-center py-12 text-white/70">
                       <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
                       <p className="text-sm mb-4">No budgets created</p>
                       <Button 
                         variant="outline" 
                         size="sm" 
                         onClick={() => setShowCreateBudget(true)}
+                        className="border-white/30 text-white hover:bg-white/10"
                       >
                         Create Budget
                       </Button>
@@ -421,13 +425,16 @@ const Dashboard = ({ userType }: DashboardProps) => {
           </TabsContent>
 
           <TabsContent value="transactions">
-            <Card>
+            <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-xl text-collector-black">Add New Transaction</CardTitle>
-                <CardDescription>Record your income or expense transactions</CardDescription>
+                <CardTitle className="text-xl text-white">Add New Transaction</CardTitle>
+                <CardDescription className="text-white/70">Record your income or expense transactions</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button onClick={() => setShowAddTransaction(true)}>
+                <Button 
+                  onClick={() => setShowAddTransaction(true)}
+                  className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
+                >
                   <PlusCircle className="w-4 h-4 mr-2" />
                   Add Transaction
                 </Button>
@@ -436,13 +443,16 @@ const Dashboard = ({ userType }: DashboardProps) => {
           </TabsContent>
 
           <TabsContent value="budgets">
-            <Card>
+            <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-xl text-collector-black">Budget Management</CardTitle>
-                <CardDescription>Create and manage your budgets</CardDescription>
+                <CardTitle className="text-xl text-white">Budget Management</CardTitle>
+                <CardDescription className="text-white/70">Create and manage your budgets</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button onClick={() => setShowCreateBudget(true)}>
+                <Button 
+                  onClick={() => setShowCreateBudget(true)}
+                  className="bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white"
+                >
                   <Target className="w-4 h-4 mr-2" />
                   Create Budget
                 </Button>
@@ -451,31 +461,75 @@ const Dashboard = ({ userType }: DashboardProps) => {
           </TabsContent>
 
           <TabsContent value="invoices">
-            <GenerateInvoiceForm 
-              open={showGenerateInvoice} 
-              onOpenChange={setShowGenerateInvoice} 
-            />
+            <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-xl text-white">Invoice Management</CardTitle>
+                <CardDescription className="text-white/70">Generate and manage invoices</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={() => setShowGenerateInvoice(true)}
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Generate Invoice
+                </Button>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="upload">
-            <UploadInvoiceForm 
-              open={showUploadInvoice} 
-              onOpenChange={setShowUploadInvoice} 
-            />
+            <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-xl text-white">Upload Documents</CardTitle>
+                <CardDescription className="text-white/70">Upload invoices and financial documents</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={() => setShowUploadInvoice(true)}
+                  className="bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 text-white"
+                >
+                  <Archive className="w-4 h-4 mr-2" />
+                  Upload Invoice
+                </Button>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="reports">
-            <ViewReportsForm 
-              open={showViewReports} 
-              onOpenChange={setShowViewReports} 
-            />
+            <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-xl text-white">Financial Reports</CardTitle>
+                <CardDescription className="text-white/70">View detailed financial reports and analytics</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={() => setShowViewReports(true)}
+                  className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white"
+                >
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  View Reports
+                </Button>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="archive">
-            <ViewArchiveForm 
-              open={showViewArchive} 
-              onOpenChange={setShowViewArchive} 
-            />
+            <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-xl text-white">Archive</CardTitle>
+                <CardDescription className="text-white/70">View and manage archived financial data</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={() => setShowViewArchive(true)}
+                  className="bg-gradient-to-r from-gray-500 to-slate-600 hover:from-gray-600 hover:to-slate-700 text-white"
+                >
+                  <Archive className="w-4 h-4 mr-2" />
+                  View Archive
+                </Button>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {userType === 'organization' && (
@@ -489,21 +543,24 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
         {/* Expense Sharing for Premium/Organization users */}
         {canAccess('expense-sharing') && (
-          <Card className="mt-8">
+          <Card className="mt-8 bg-white/10 border-white/20 backdrop-blur-sm">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <Users className="w-6 h-6 text-collector-orange" />
-                <CardTitle className="text-xl text-collector-black">Expense Sharing</CardTitle>
+                <Users className="w-6 h-6 text-orange-400" />
+                <CardTitle className="text-xl text-white">Expense Sharing</CardTitle>
                 <Badge className="bg-gradient-to-r from-orange-400 to-amber-400 text-white text-sm px-3 py-1">
                   Premium Feature
                 </Badge>
               </div>
-              <CardDescription className="text-collector-black/60">
+              <CardDescription className="text-white/70">
                 Share expenses with friends and colleagues
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button onClick={() => setShowExpenseSharing(true)}>
+              <Button 
+                onClick={() => setShowExpenseSharing(true)}
+                className="bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white"
+              >
                 <Users className="w-4 h-4 mr-2" />
                 Share Expenses
               </Button>
@@ -519,6 +576,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
         userType={userType}
         onClose={() => {
           setShowAddTransaction(false);
+          setEditingTransactionId(null);
           fetchDashboardData();
         }}
       />
@@ -531,6 +589,26 @@ const Dashboard = ({ userType }: DashboardProps) => {
           setShowCreateBudget(false);
           fetchDashboardData();
         }}
+      />
+
+      <GenerateInvoiceForm 
+        open={showGenerateInvoice} 
+        onOpenChange={setShowGenerateInvoice} 
+      />
+
+      <UploadInvoiceForm 
+        open={showUploadInvoice} 
+        onOpenChange={setShowUploadInvoice} 
+      />
+
+      <ViewReportsForm 
+        open={showViewReports} 
+        onOpenChange={setShowViewReports} 
+      />
+
+      <ViewArchiveForm 
+        open={showViewArchive} 
+        onOpenChange={setShowViewArchive} 
       />
 
       <ExpenseSharingForm 
