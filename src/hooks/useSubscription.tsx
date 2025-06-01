@@ -19,6 +19,10 @@ export const useSubscription = () => {
 
   const fetchSubscription = async () => {
     if (!user) {
+      setSubscription({
+        tier: 'Individual',
+        subscribed: false
+      });
       setLoading(false);
       return;
     }
@@ -40,11 +44,16 @@ export const useSubscription = () => {
 
       console.log('Subscription data from function:', data);
 
-      setSubscription({
-        tier: (data.subscription_tier as SubscriptionTier) || 'Individual',
-        subscribed: data.subscribed || false,
-        subscriptionEnd: data.subscription_end
-      });
+      if (data) {
+        setSubscription({
+          tier: (data.subscription_tier as SubscriptionTier) || 'Individual',
+          subscribed: data.subscribed || false,
+          subscriptionEnd: data.subscription_end
+        });
+      } else {
+        // If no data returned, use fallback
+        await fetchSubscriptionFallback();
+      }
     } catch (error: any) {
       console.error('Error fetching subscription:', error);
       await fetchSubscriptionFallback();
@@ -114,10 +123,14 @@ export const useSubscription = () => {
     fetchSubscription();
   }, [user]);
 
-  // Refresh subscription status with more aggressive polling after payment
+  // Refresh subscription status with timeout protection
   const refreshSubscription = async (forceRefresh = false) => {
     console.log('Refreshing subscription status...', forceRefresh ? '(forced)' : '');
-    setLoading(true);
+    
+    // Don't set loading to true if we already have subscription data
+    if (!subscription || forceRefresh) {
+      setLoading(true);
+    }
     
     if (forceRefresh) {
       // Add longer delay for payment processing
