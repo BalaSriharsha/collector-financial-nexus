@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -87,6 +86,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
   });
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddTransaction, setShowAddTransaction] = useState(false);
   const [showCreateBudget, setShowCreateBudget] = useState(false);
@@ -102,6 +102,12 @@ const Dashboard = ({ userType }: DashboardProps) => {
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
   const [showTransactionDetails, setShowTransactionDetails] = useState(false);
   const [showBudgetDetails, setShowBudgetDetails] = useState(false);
+  const [showStatsDetails, setShowStatsDetails] = useState(false);
+  const [selectedStatType, setSelectedStatType] = useState<'income' | 'expenses' | 'balance' | 'transactions'>('income');
+  const [selectedStatTitle, setSelectedStatTitle] = useState('');
+  const [selectedStatAmount, setSelectedStatAmount] = useState(0);
+  const [showViewAllTransactions, setShowViewAllTransactions] = useState(false);
+  const [showViewAllBudgets, setShowViewAllBudgets] = useState(false);
 
   // Get currency symbol based on user profile
   const currencySymbol = getCurrencySymbol(profile?.currency || 'USD');
@@ -133,7 +139,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
     return () => {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
     };
   }, [refreshSubscription]);
 
@@ -160,7 +166,8 @@ const Dashboard = ({ userType }: DashboardProps) => {
         transactionCount: transactions?.length || 0
       });
 
-      const mappedTransactions = transactions?.slice(0, 5).map(t => ({
+      // Store all transactions for modals
+      const mappedAllTransactions = transactions?.map(t => ({
         id: t.id,
         title: t.title,
         amount: Number(t.amount),
@@ -171,7 +178,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
         created_at: t.created_at,
         updated_at: t.updated_at
       })) || [];
+      setAllTransactions(mappedAllTransactions);
 
+      // Show only 4 recent transactions
+      const mappedTransactions = mappedAllTransactions.slice(0, 4);
       setRecentTransactions(mappedTransactions);
 
       const { data: budgetData, error: budgetError } = await supabase
@@ -276,6 +286,13 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
   const handleUpgradeClick = () => {
     navigate('/pricing');
+  };
+
+  const handleStatClick = (type: 'income' | 'expenses' | 'balance' | 'transactions', title: string, amount: number) => {
+    setSelectedStatType(type);
+    setSelectedStatTitle(title);
+    setSelectedStatAmount(amount);
+    setShowStatsDetails(true);
   };
 
   if (loading) {
@@ -404,9 +421,12 @@ const Dashboard = ({ userType }: DashboardProps) => {
           </div>
         </div>
 
-        {/* Stats Cards - 2x2 Grid */}
-        <div className="grid grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm hover:bg-gray-50 transition-colors">
+        {/* Stats Cards - Single Row with 4 Columns, All Clickable */}
+        <div className="grid grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <Card 
+            className="bg-white/90 border-gray-200 backdrop-blur-sm hover:bg-gray-50 transition-colors cursor-pointer"
+            onClick={() => handleStatClick('income', 'Total Income', stats.totalIncome)}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
               <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Total Income</CardTitle>
               <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
@@ -418,7 +438,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm hover:bg-gray-50 transition-colors">
+          <Card 
+            className="bg-white/90 border-gray-200 backdrop-blur-sm hover:bg-gray-50 transition-colors cursor-pointer"
+            onClick={() => handleStatClick('expenses', 'Total Expenses', stats.totalExpense)}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
               <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Total Expenses</CardTitle>
               <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
@@ -430,7 +453,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm hover:bg-gray-50 transition-colors">
+          <Card 
+            className="bg-white/90 border-gray-200 backdrop-blur-sm hover:bg-gray-50 transition-colors cursor-pointer"
+            onClick={() => handleStatClick('balance', 'Balance', stats.balance)}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
               <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Balance</CardTitle>
               <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
@@ -442,7 +468,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm hover:bg-gray-50 transition-colors">
+          <Card 
+            className="bg-white/90 border-gray-200 backdrop-blur-sm hover:bg-gray-50 transition-colors cursor-pointer"
+            onClick={() => handleStatClick('transactions', 'Transactions', stats.transactionCount)}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
               <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Transactions</CardTitle>
               <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
@@ -459,8 +488,16 @@ const Dashboard = ({ userType }: DashboardProps) => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
           {/* Recent Transactions */}
           <Card className="bg-white/90 border-gray-200 backdrop-blur-sm">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg sm:text-xl text-gray-800">Recent Transactions</CardTitle>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowViewAllTransactions(true)}
+                className="border-gray-400 text-gray-800 hover-navy transition-colors"
+              >
+                View All
+              </Button>
             </CardHeader>
             <CardContent>
               {recentTransactions.length > 0 ? (
@@ -523,13 +560,21 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
           {/* Budgets Overview */}
           <Card className="bg-white/90 border-gray-200 backdrop-blur-sm">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg sm:text-xl text-gray-800">Budget Overview</CardTitle>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowViewAllBudgets(true)}
+                className="border-gray-400 text-gray-800 hover-navy transition-colors"
+              >
+                View All
+              </Button>
             </CardHeader>
             <CardContent>
               {budgets.length > 0 ? (
                 <div className="space-y-3 sm:space-y-4">
-                  {budgets.slice(0, 3).map((budget) => (
+                  {budgets.slice(0, 4).map((budget) => (
                     <div 
                       key={budget.id} 
                       className="p-3 sm:p-4 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
@@ -570,16 +615,6 @@ const Dashboard = ({ userType }: DashboardProps) => {
                       </div>
                     </div>
                   ))}
-                  {budgets.length > 3 && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full border-gray-400 text-gray-800 hover-navy text-xs sm:text-sm transition-colors"
-                      onClick={() => setShowCreateBudget(true)}
-                    >
-                      View All Budgets
-                    </Button>
-                  )}
                 </div>
               ) : (
                 <div className="text-center py-8 sm:py-12 text-gray-600">
@@ -752,6 +787,33 @@ const Dashboard = ({ userType }: DashboardProps) => {
         onOpenChange={setShowBudgetDetails}
         onEdit={handleEditBudget}
         onDelete={handleDeleteBudget}
+      />
+
+      {/* Stats Details Modal */}
+      <StatsDetailsModal
+        open={showStatsDetails}
+        onOpenChange={setShowStatsDetails}
+        type={selectedStatType}
+        title={selectedStatTitle}
+        amount={selectedStatAmount}
+        transactions={allTransactions}
+      />
+
+      {/* View All Modals */}
+      <ViewAllModal
+        open={showViewAllTransactions}
+        onOpenChange={setShowViewAllTransactions}
+        type="transactions"
+        data={allTransactions}
+        title="All Transactions"
+      />
+
+      <ViewAllModal
+        open={showViewAllBudgets}
+        onOpenChange={setShowViewAllBudgets}
+        type="budgets"
+        data={budgets}
+        title="All Budgets"
       />
     </div>
   );
