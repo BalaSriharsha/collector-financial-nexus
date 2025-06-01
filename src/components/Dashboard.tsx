@@ -89,19 +89,23 @@ const Dashboard = ({ userType }: DashboardProps) => {
   // Get currency symbol based on user profile
   const currencySymbol = getCurrencySymbol(profile?.currency || 'USD');
 
-  // Check subscription status only when window gains focus (reduce frequency)
+  // Only check subscription status when window gains focus (reduce frequency)
   useEffect(() => {
     const handleFocus = () => {
       console.log('Window focused, checking subscription status...');
       refreshSubscription(true);
     };
 
-    window.addEventListener('focus', handleFocus);
+    // Add a longer delay before attaching the focus listener to prevent immediate calls
+    const timer = setTimeout(() => {
+      window.addEventListener('focus', handleFocus);
+    }, 5000);
     
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('focus', handleFocus);
     };
-  }, [refreshSubscription]);
+  }, []);
 
   const fetchDashboardData = async () => {
     if (!user) return;

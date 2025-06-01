@@ -18,6 +18,8 @@ export const useSubscription = () => {
   const [loading, setLoading] = useState(true);
   const fetchingRef = useRef(false);
   const lastFetchRef = useRef(0);
+  const retryCountRef = useRef(0);
+  const maxRetries = 3;
 
   const fetchSubscription = async () => {
     if (!user) {
@@ -31,7 +33,7 @@ export const useSubscription = () => {
 
     // Prevent concurrent fetches and rate limiting
     const now = Date.now();
-    if (fetchingRef.current || (now - lastFetchRef.current < 2000)) {
+    if (fetchingRef.current || (now - lastFetchRef.current < 5000)) {
       console.log('Skipping fetch - too recent or already fetching');
       return;
     }
@@ -42,97 +44,86 @@ export const useSubscription = () => {
     try {
       console.log('Fetching subscription status for user:', user.id);
       
-      // Call the manage-subscription function to get the latest status
-      const { data, error } = await supabase.functions.invoke('manage-subscription', {
-        body: { action: 'get_status' }
-      });
-      
-      if (error) {
-        console.error('Error from manage-subscription function:', error);
-        // Fallback to direct database query
-        await fetchSubscriptionFallback();
+      // Try to get subscription status from database first (faster)
+      const { data: dbSubscription, error: dbError } = await supabase
+        .from('subscribers')
+        .select('subscribed, subscription_tier, subscription_end')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!dbError && dbSubscription) {
+        console.log('Found subscription in database:', dbSubscription);
+        const subscriptionInfo = {
+          tier: (dbSubscription.subscription_tier as SubscriptionTier) || 'Individual',
+          subscribed: dbSubscription.subscribed || false,
+          subscriptionEnd: dbSubscription.subscription_end
+        };
+        setSubscription(subscriptionInfo);
+        setLoading(false);
+        fetchingRef.current = false;
+        retryCountRef.current = 0;
         return;
       }
 
-      console.log('Subscription data from function:', data);
-
-      if (data) {
-        setSubscription({
-          tier: (data.subscription_tier as SubscriptionTier) || 'Individual',
-          subscribed: data.subscribed || false,
-          subscriptionEnd: data.subscription_end
+      // If no database record or error, try the manage-subscription function
+      if (retryCountRef.current < maxRetries) {
+        retryCountRef.current++;
+        console.log(`Trying manage-subscription function (attempt ${retryCountRef.current})`);
+        
+        const { data, error } = await supabase.functions.invoke('manage-subscription', {
+          body: { action: 'get_status' }
         });
+        
+        if (error) {
+          console.error('Error from manage-subscription function:', error);
+          throw error;
+        }
+
+        console.log('Subscription data from function:', data);
+
+        if (data) {
+          const subscriptionInfo = {
+            tier: (data.subscription_tier as SubscriptionTier) || 'Individual',
+            subscribed: data.subscribed || false,
+            subscriptionEnd: data.subscription_end
+          };
+          setSubscription(subscriptionInfo);
+        } else {
+          // Set default if no data
+          setSubscription({
+            tier: 'Individual',
+            subscribed: false
+          });
+        }
       } else {
-        // If no data returned, use fallback
-        await fetchSubscriptionFallback();
+        console.log('Max retries reached, using default subscription');
+        setSubscription({
+          tier: 'Individual',
+          subscribed: false
+        });
       }
     } catch (error: any) {
       console.error('Error fetching subscription:', error);
-      await fetchSubscriptionFallback();
+      
+      // Set default subscription on error to prevent loading state
+      setSubscription({
+        tier: 'Individual',
+        subscribed: false
+      });
+      
+      // Only show error toast if it's not a network issue and we haven't exceeded retries
+      if (retryCountRef.current >= maxRetries) {
+        toast.error('Unable to load subscription status. Please refresh the page.');
+      }
     } finally {
       setLoading(false);
       fetchingRef.current = false;
     }
   };
 
-  const fetchSubscriptionFallback = async () => {
-    if (!user) return;
-
-    try {
-      console.log('Using fallback subscription fetch');
-      
-      // Get profile data
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('subscription_tier')
-        .eq('id', user.id)
-        .single();
-
-      if (profileError) {
-        console.error('Profile error:', profileError);
-      }
-
-      // Get subscriber data
-      const { data: subscriber, error: subscriberError } = await supabase
-        .from('subscribers')
-        .select('subscribed, subscription_end, subscription_tier')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (subscriberError) {
-        console.error('Subscriber error:', subscriberError);
-      }
-
-      console.log('Profile data:', profile);
-      console.log('Subscriber data:', subscriber);
-
-      const tierFromSubscriber = subscriber?.subscription_tier;
-      const tierFromProfile = profile?.subscription_tier;
-      const finalTier = (tierFromSubscriber || tierFromProfile) as string;
-      
-      // Ensure the tier is one of the allowed values
-      const validTier: SubscriptionTier = ['Individual', 'Premium', 'Organization'].includes(finalTier) 
-        ? finalTier as SubscriptionTier 
-        : 'Individual';
-
-      const subscriptionInfo = {
-        tier: validTier,
-        subscribed: subscriber?.subscribed || false,
-        subscriptionEnd: subscriber?.subscription_end
-      };
-
-      console.log('Final subscription info:', subscriptionInfo);
-      setSubscription(subscriptionInfo);
-    } catch (fallbackError: any) {
-      console.error('Error in fallback subscription fetch:', fallbackError);
-      setSubscription({
-        tier: 'Individual',
-        subscribed: false
-      });
-    }
-  };
-
   useEffect(() => {
+    // Reset retry counter when user changes
+    retryCountRef.current = 0;
     fetchSubscription();
   }, [user]);
 
@@ -140,24 +131,18 @@ export const useSubscription = () => {
   const refreshSubscription = async (forceRefresh = false) => {
     console.log('Refreshing subscription status...', forceRefresh ? '(forced)' : '');
     
-    // Check rate limiting
+    // Check rate limiting - increase minimum time between calls
     const now = Date.now();
-    if (!forceRefresh && (now - lastFetchRef.current < 3000)) {
+    if (!forceRefresh && (now - lastFetchRef.current < 10000)) {
       console.log('Rate limited - skipping refresh');
       return;
     }
     
-    // Don't set loading to true if we already have subscription data and it's not forced
-    if ((!subscription || forceRefresh) && !fetchingRef.current) {
-      setLoading(true);
-    }
-    
+    // Reset retry counter on forced refresh
     if (forceRefresh) {
+      retryCountRef.current = 0;
       // Add longer delay for payment processing
       await new Promise(resolve => setTimeout(resolve, 3000));
-    } else {
-      // Add a small delay to allow webhook processing
-      await new Promise(resolve => setTimeout(resolve, 1000));
     }
     
     await fetchSubscription();
@@ -192,7 +177,7 @@ export const useSubscription = () => {
       if (error) throw error;
 
       toast.success('Subscription cancelled successfully');
-      await refreshSubscription();
+      await refreshSubscription(true);
     } catch (error: any) {
       console.error('Error managing subscription:', error);
       toast.error(error.message || 'Failed to manage subscription');
