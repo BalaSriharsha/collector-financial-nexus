@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Menu, X, User, LogOut, Crown, Gem } from "lucide-react";
+import { Menu, X, User, LogOut, Crown, Gem, Coins } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,8 +68,13 @@ const Navigation = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link to="/" className="text-xl sm:text-2xl font-playfair font-bold text-collector-black">
-              Collector
+            <Link to="/" className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-blue-gradient rounded-xl flex items-center justify-center">
+                <Coins className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xl sm:text-2xl font-playfair font-bold text-collector-black">
+                Vittas
+              </span>
             </Link>
           </div>
 

@@ -13,7 +13,7 @@ const Footer = () => {
               <div className="w-10 h-10 bg-blue-gradient rounded-xl flex items-center justify-center">
                 <Coins className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-2xl font-playfair font-bold">Collector</h1>
+              <h1 className="text-2xl font-playfair font-bold">Vittas</h1>
             </div>
             <p className="text-gray-300 text-sm">
               Ancient wisdom meets modern finance. Master your financial empire with precision and elegance.
@@ -64,7 +64,7 @@ const Footer = () => {
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
                 <Mail className="w-4 h-4 text-collector-gold" />
-                <span className="text-gray-300 text-sm">support@collector.app</span>
+                <span className="text-gray-300 text-sm">support@vittas.app</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Phone className="w-4 h-4 text-collector-gold" />
@@ -80,7 +80,7 @@ const Footer = () => {
 
         <div className="border-t border-gray-700 mt-8 pt-8 text-center">
           <p className="text-gray-400 text-sm">
-            © 2024 Collector. All rights reserved. Ancient wisdom, modern solutions.
+            © 2024 Vittas. All rights reserved. Ancient wisdom, modern solutions.
           </p>
         </div>
       </div>

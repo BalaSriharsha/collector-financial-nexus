@@ -20,7 +20,8 @@ const Pricing = () => {
         "Email support"
       ],
       cta: "Get Started",
-      popular: false
+      popular: false,
+      trial: false
     },
     {
       name: "Premium",
@@ -36,8 +37,9 @@ const Pricing = () => {
         "Priority support",
         "Export to PDF/CSV"
       ],
-      cta: "Start Free Trial",
-      popular: true
+      cta: "Start 7-Day Free Trial",
+      popular: true,
+      trial: true
     },
     {
       name: "Organization",
@@ -54,7 +56,8 @@ const Pricing = () => {
         "Dedicated support"
       ],
       cta: "Contact Sales",
-      popular: false
+      popular: false,
+      trial: false
     }
   ];
 
@@ -95,6 +98,11 @@ const Pricing = () => {
                   <div className="text-3xl font-bold text-collector-black mt-4">
                     {plan.price}
                   </div>
+                  {plan.trial && (
+                    <div className="text-sm text-green-600 font-medium mt-2">
+                      7-day free trial included
+                    </div>
+                  )}
                   <CardDescription className="text-collector-black/70 mt-2">
                     {plan.description}
                   </CardDescription>
@@ -134,6 +142,10 @@ const Pricing = () => {
               {
                 question: "Can I switch plans anytime?",
                 answer: "Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately."
+              },
+              {
+                question: "What happens after my 7-day free trial?",
+                answer: "After your 7-day Premium trial ends, you'll be automatically billed monthly unless you cancel before the trial period expires."
               },
               {
                 question: "Is my data secure?",
