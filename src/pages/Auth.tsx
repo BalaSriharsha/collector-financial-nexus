@@ -1,5 +1,5 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,7 +30,15 @@ const Auth = () => {
     organizationIndustry: ''
   });
 
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const { user, signIn, signUp, signInWithGoogle } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect to dashboard if user is already authenticated
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -40,17 +48,18 @@ const Auth = () => {
     setLoading(true);
     
     try {
+      let result;
       if (authMode === 'login') {
-        await signIn(formData.email, formData.password);
+        result = await signIn(formData.email, formData.password);
       } else if (authMode === 'signup-individual') {
-        await signUp(formData.email, formData.password, {
+        result = await signUp(formData.email, formData.password, {
           full_name: formData.fullName,
           gender: formData.gender,
           date_of_birth: formData.dateOfBirth,
           user_type: 'individual'
         });
       } else if (authMode === 'signup-org') {
-        await signUp(formData.email, formData.password, {
+        result = await signUp(formData.email, formData.password, {
           full_name: formData.fullName,
           user_type: 'organization',
           organization_name: formData.organizationName,
@@ -58,6 +67,11 @@ const Auth = () => {
           organization_size: formData.organizationSize,
           organization_industry: formData.organizationIndustry
         });
+      }
+
+      // If sign-in was successful and we have a user, redirect to dashboard
+      if (authMode === 'login' && result && !result.error) {
+        navigate('/dashboard');
       }
     } finally {
       setLoading(false);
@@ -68,6 +82,7 @@ const Auth = () => {
     setLoading(true);
     try {
       await signInWithGoogle();
+      // Google auth will handle the redirect via the callback URL
     } finally {
       setLoading(false);
     }
@@ -81,6 +96,18 @@ const Auth = () => {
       setAuthMode('signup-individual');
     }
   };
+
+  // Don't render the auth form if user is already authenticated
+  if (user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-collector-orange border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-collector-black/70">Redirecting to dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50 flex flex-col">
