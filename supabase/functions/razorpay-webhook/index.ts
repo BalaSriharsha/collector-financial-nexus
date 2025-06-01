@@ -58,20 +58,28 @@ serve(async (req) => {
       const subscriptionStart = trialDays > 0 ? new Date(now.getTime() + (trialDays * 24 * 60 * 60 * 1000)) : now;
       const subscriptionEnd = new Date(subscriptionStart.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 days from start
 
-      // Update subscribers table
-      await supabaseClient.from("subscribers").upsert({
+      // Update subscribers table - use upsert to handle existing records
+      const { error: subscriberError } = await supabaseClient.from("subscribers").upsert({
         email: email,
         user_id: userId,
         subscribed: true,
         subscription_tier: planType,
         subscription_end: subscriptionEnd.toISOString(),
         updated_at: new Date().toISOString(),
-      }, { onConflict: 'email' });
+      }, { onConflict: 'user_id' });
+
+      if (subscriberError) {
+        logStep("Error updating subscriber", { error: subscriberError });
+      }
 
       // Update profiles table
-      await supabaseClient.from("profiles").update({
+      const { error: profileError } = await supabaseClient.from("profiles").update({
         subscription_tier: planType
       }).eq("id", userId);
+
+      if (profileError) {
+        logStep("Error updating profile", { error: profileError });
+      }
 
       logStep("Subscription activated", { userId, planType, subscriptionEnd });
     }

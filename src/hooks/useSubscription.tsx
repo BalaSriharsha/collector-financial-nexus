@@ -22,12 +22,15 @@ export const useSubscription = () => {
     }
 
     try {
-      // Use the manage-subscription function to get the latest status
+      // First try to get fresh data from the manage-subscription function
       const { data, error } = await supabase.functions.invoke('manage-subscription', {
         body: { action: 'get_status' }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error from manage-subscription function:', error);
+        throw error;
+      }
 
       setSubscription({
         tier: data.subscription_tier || 'Individual',
@@ -48,12 +51,12 @@ export const useSubscription = () => {
 
         const { data: subscriber } = await supabase
           .from('subscribers')
-          .select('subscribed, subscription_end')
+          .select('subscribed, subscription_end, subscription_tier')
           .eq('user_id', user.id)
           .maybeSingle();
 
         setSubscription({
-          tier: (profile?.subscription_tier as 'Individual' | 'Premium' | 'Organization') || 'Individual',
+          tier: (subscriber?.subscription_tier || profile?.subscription_tier as 'Individual' | 'Premium' | 'Organization') || 'Individual',
           subscribed: subscriber?.subscribed || false,
           subscriptionEnd: subscriber?.subscription_end
         });
