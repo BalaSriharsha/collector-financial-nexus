@@ -39,22 +39,22 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Support */}
+          {/* Legal */}
           <div className="space-y-4">
-            <h3 className="text-lg font-playfair font-semibold">Support</h3>
+            <h3 className="text-lg font-playfair font-semibold">Legal</h3>
             <div className="space-y-2">
-              <a href="#" className="block text-gray-300 hover:text-white transition-colors text-sm">
-                Help Center
-              </a>
-              <a href="#" className="block text-gray-300 hover:text-white transition-colors text-sm">
-                Documentation
-              </a>
-              <a href="#" className="block text-gray-300 hover:text-white transition-colors text-sm">
+              <Link to="/privacy-policy" className="block text-gray-300 hover:text-white transition-colors text-sm">
                 Privacy Policy
-              </a>
-              <a href="#" className="block text-gray-300 hover:text-white transition-colors text-sm">
+              </Link>
+              <Link to="/terms-of-service" className="block text-gray-300 hover:text-white transition-colors text-sm">
                 Terms of Service
-              </a>
+              </Link>
+              <Link to="/cancellation-refund" className="block text-gray-300 hover:text-white transition-colors text-sm">
+                Cancellation & Refund
+              </Link>
+              <Link to="/shipping-delivery" className="block text-gray-300 hover:text-white transition-colors text-sm">
+                Shipping & Delivery
+              </Link>
             </div>
           </div>
 
