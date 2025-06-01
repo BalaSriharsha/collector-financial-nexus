@@ -57,7 +57,6 @@ interface Budget {
 }
 
 interface DashboardMetrics {
-  type: string;
   value: number;
   label: string;
 }
@@ -156,8 +155,8 @@ const Dashboard = ({ userType }: DashboardProps) => {
     fetchDashboardData();
   };
 
-  const handleMetricClick = (type: string, value: number, label: string) => {
-    setSelectedMetrics({ type, value, label });
+  const handleMetricClick = (value: number, label: string) => {
+    setSelectedMetrics({ value, label });
   };
 
   const handleTransactionSuccess = () => {
@@ -280,7 +279,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card 
             className="cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => handleMetricClick('income', stats.totalIncome, 'Total Income')}
+            onClick={() => handleMetricClick(stats.totalIncome, 'Total Income')}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-collector-black">Total Income</CardTitle>
@@ -295,7 +294,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
           <Card 
             className="cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => handleMetricClick('expense', stats.totalExpense, 'Total Expenses')}
+            onClick={() => handleMetricClick(stats.totalExpense, 'Total Expenses')}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-collector-black">Total Expenses</CardTitle>
@@ -310,7 +309,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
 
           <Card 
             className="cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => handleMetricClick('balance', stats.balance, 'Net Balance')}
+            onClick={() => handleMetricClick(stats.balance, 'Net Balance')}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-collector-black">Balance</CardTitle>
@@ -551,7 +550,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
             created_at: selectedTransaction.created_at
           }}
           open={!!selectedTransaction}
-          onClose={() => setSelectedTransaction(null)}
+          onOpenChange={(open) => !open && setSelectedTransaction(null)}
           currencySymbol={currencySymbol}
         />
       )}
@@ -559,12 +558,11 @@ const Dashboard = ({ userType }: DashboardProps) => {
       {selectedMetrics && (
         <MetricDetailsModal
           metrics={{
-            type: selectedMetrics.type,
             value: selectedMetrics.value,
             label: selectedMetrics.label
           }}
           open={!!selectedMetrics}
-          onClose={() => setSelectedMetrics(null)}
+          onOpenChange={(open) => !open && setSelectedMetrics(null)}
           currencySymbol={currencySymbol}
         />
       )}
