@@ -91,12 +91,6 @@ export default {
 					900: '#0c4a6e',
 				}
 			},
-			backgroundImage: {
-				'orange-gradient': 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
-				'gold-gradient': 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-				'blue-gradient': 'linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)',
-				'ancient-paper': 'linear-gradient(135deg, #fef7ed 0%, #fed7aa 100%)',
-			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',

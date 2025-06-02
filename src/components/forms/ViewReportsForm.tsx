@@ -250,12 +250,12 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-4xl overflow-y-auto">
+      <SheetContent className="w-full sm:max-w-4xl overflow-y-auto bg-white">
         <SheetHeader>
-          <SheetTitle className="font-playfair text-collector-black">
+          <SheetTitle className="font-playfair text-gray-900">
             Financial Reports
           </SheetTitle>
-          <SheetDescription>
+          <SheetDescription className="text-gray-600">
             View and download your financial reports and analytics
           </SheetDescription>
         </SheetHeader>
@@ -264,9 +264,9 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
           {/* Report Controls */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label>Report Type</Label>
+              <Label className="text-gray-700">Report Type</Label>
               <Select value={reportType} onValueChange={(value: 'transactions' | 'budgets' | 'summary') => setReportType(value)}>
-                <SelectTrigger className="border-2 border-collector-gold/30 focus:border-collector-orange hover:bg-navy-500 hover:text-orange-500 transition-colors">
+                <SelectTrigger className="border-2 border-gray-300 focus:border-blue-500 bg-white text-gray-900">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
@@ -278,9 +278,9 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
             </div>
 
             <div>
-              <Label>Date Range</Label>
+              <Label className="text-gray-700">Date Range</Label>
               <Select value={dateRange} onValueChange={(value: 'week' | 'month' | 'quarter' | 'year' | 'custom') => setDateRange(value)}>
-                <SelectTrigger className="border-2 border-collector-gold/30 focus:border-collector-orange hover:bg-navy-500 hover:text-orange-500 transition-colors">
+                <SelectTrigger className="border-2 border-gray-300 focus:border-blue-500 bg-white text-gray-900">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
@@ -296,7 +296,7 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
             <div className="flex gap-2">
               <Button 
                 onClick={handleDownloadPDF}
-                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
               >
                 <Download className="w-4 h-4 mr-2" />
                 PDF
@@ -305,7 +305,7 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
                 <Button 
                   onClick={handleDownloadCSV}
                   variant="outline"
-                  className="flex-1 hover:bg-navy-500 hover:text-orange-500 transition-colors"
+                  className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50"
                 >
                   <Download className="w-4 h-4 mr-2" />
                   CSV
@@ -318,21 +318,21 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
           {dateRange === 'custom' && (
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Start Date</Label>
+                <Label className="text-gray-700">Start Date</Label>
                 <Input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="border-2 border-collector-gold/30 focus:border-collector-orange hover:bg-navy-500 hover:text-orange-500 transition-colors"
+                  className="border-2 border-gray-300 focus:border-blue-500 bg-white text-gray-900"
                 />
               </div>
               <div>
-                <Label>End Date</Label>
+                <Label className="text-gray-700">End Date</Label>
                 <Input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="border-2 border-collector-gold/30 focus:border-collector-orange hover:bg-navy-500 hover:text-orange-500 transition-colors"
+                  className="border-2 border-gray-300 focus:border-blue-500 bg-white text-gray-900"
                 />
               </div>
             </div>
@@ -341,11 +341,11 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
           {/* Summary Cards */}
           {reportType === 'summary' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="border-collector-gold/20 hover:bg-gray-50 transition-colors">
+              <Card className="border-gray-200 hover:bg-gray-50 transition-colors bg-white">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Total Income</p>
+                      <p className="text-sm text-gray-600">Total Income</p>
                       <p className="text-2xl font-bold text-green-600">{currencySymbol}{totalIncome.toFixed(2)}</p>
                     </div>
                     <TrendingUp className="w-8 h-8 text-green-600" />
@@ -353,11 +353,11 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
                 </CardContent>
               </Card>
 
-              <Card className="border-collector-gold/20 hover:bg-gray-50 transition-colors">
+              <Card className="border-gray-200 hover:bg-gray-50 transition-colors bg-white">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Total Expenses</p>
+                      <p className="text-sm text-gray-600">Total Expenses</p>
                       <p className="text-2xl font-bold text-red-600">{currencySymbol}{totalExpenses.toFixed(2)}</p>
                     </div>
                     <TrendingDown className="w-8 h-8 text-red-600" />
@@ -365,11 +365,11 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
                 </CardContent>
               </Card>
 
-              <Card className="border-collector-gold/20 hover:bg-gray-50 transition-colors">
+              <Card className="border-gray-200 hover:bg-gray-50 transition-colors bg-white">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Net Amount</p>
+                      <p className="text-sm text-gray-600">Net Amount</p>
                       <p className={`text-2xl font-bold ${netAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {currencySymbol}{netAmount.toFixed(2)}
                       </p>
@@ -379,11 +379,11 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
                 </CardContent>
               </Card>
 
-              <Card className="border-collector-gold/20 hover:bg-gray-50 transition-colors">
+              <Card className="border-gray-200 hover:bg-gray-50 transition-colors bg-white">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Total Budgets</p>
+                      <p className="text-sm text-gray-600">Total Budgets</p>
                       <p className="text-2xl font-bold text-blue-600">{currencySymbol}{totalBudgets.toFixed(2)}</p>
                     </div>
                     <PieChart className="w-8 h-8 text-blue-600" />
@@ -396,17 +396,17 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
           {/* Category Breakdown - Show both income and expenses */}
           {reportType === 'summary' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="border-collector-gold/20">
+              <Card className="border-gray-200 bg-white">
                 <CardHeader>
                   <CardTitle className="text-lg text-green-600">Income by Category</CardTitle>
-                  <CardDescription>Total: {currencySymbol}{totalIncome.toFixed(2)}</CardDescription>
+                  <CardDescription className="text-gray-600">Total: {currencySymbol}{totalIncome.toFixed(2)}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {Object.entries(incomeByCategory).length > 0 ? (
                       Object.entries(incomeByCategory).map(([category, amount]) => (
                         <div key={category} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded transition-colors">
-                          <span className="capitalize font-medium">{category}</span>
+                          <span className="capitalize font-medium text-gray-900">{category}</span>
                           <Badge variant="outline" className="text-green-600 border-green-200">
                             {currencySymbol}{amount.toFixed(2)}
                           </Badge>
@@ -419,17 +419,17 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
                 </CardContent>
               </Card>
 
-              <Card className="border-collector-gold/20">
+              <Card className="border-gray-200 bg-white">
                 <CardHeader>
                   <CardTitle className="text-lg text-red-600">Expenses by Category</CardTitle>
-                  <CardDescription>Total: {currencySymbol}{totalExpenses.toFixed(2)}</CardDescription>
+                  <CardDescription className="text-gray-600">Total: {currencySymbol}{totalExpenses.toFixed(2)}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {Object.entries(expensesByCategory).length > 0 ? (
                       Object.entries(expensesByCategory).map(([category, amount]) => (
                         <div key={category} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded transition-colors">
-                          <span className="capitalize font-medium">{category}</span>
+                          <span className="capitalize font-medium text-gray-900">{category}</span>
                           <Badge variant="outline" className="text-red-600 border-red-200">
                             {currencySymbol}{amount.toFixed(2)}
                           </Badge>
@@ -446,23 +446,23 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
 
           {/* Detailed Data - Transactions */}
           {reportType === 'transactions' && (
-            <Card className="border-collector-gold/20">
+            <Card className="border-gray-200 bg-white">
               <CardHeader>
-                <CardTitle>Transaction Details</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-gray-900">Transaction Details</CardTitle>
+                <CardDescription className="text-gray-600">
                   {transactions.length} transactions from {start} to {end}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {transactionsLoading ? (
-                    <p>Loading transactions...</p>
+                    <p className="text-gray-700">Loading transactions...</p>
                   ) : transactions.length > 0 ? (
                     transactions.map((transaction) => (
                       <div key={transaction.id} className="flex justify-between items-center p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                         <div className="flex-1">
                           <div className="flex justify-between items-start mb-1">
-                            <p className="font-medium text-gray-800">{transaction.title}</p>
+                            <p className="font-medium text-gray-900">{transaction.title}</p>
                             <Badge variant={transaction.type === 'income' ? 'default' : 'destructive'} className="ml-2">
                               {transaction.type === 'income' ? '+' : '-'}{currencySymbol}{Number(transaction.amount).toFixed(2)}
                             </Badge>
@@ -486,23 +486,23 @@ const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
 
           {/* Detailed Data - Budgets */}
           {reportType === 'budgets' && (
-            <Card className="border-collector-gold/20">
+            <Card className="border-gray-200 bg-white">
               <CardHeader>
-                <CardTitle>Budget Details</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-gray-900">Budget Details</CardTitle>
+                <CardDescription className="text-gray-600">
                   {budgets.length} budgets from {start} to {end}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {budgetsLoading ? (
-                    <p>Loading budgets...</p>
+                    <p className="text-gray-700">Loading budgets...</p>
                   ) : budgets.length > 0 ? (
                     budgets.map((budget) => (
                       <div key={budget.id} className="flex justify-between items-center p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                         <div className="flex-1">
                           <div className="flex justify-between items-start mb-1">
-                            <p className="font-medium text-gray-800">{budget.name}</p>
+                            <p className="font-medium text-gray-900">{budget.name}</p>
                             <Badge variant="outline" className="ml-2">
                               {currencySymbol}{Number(budget.amount).toFixed(2)}
                             </Badge>

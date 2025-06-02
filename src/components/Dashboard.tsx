@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -302,7 +303,7 @@ const Dashboard = ({
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="text-center py-8">
             <div className="w-8 h-8 border-4 border-orange-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-700">Loading dashboard...</p>
+            <p className="text-gray-800">Loading dashboard...</p>
           </div>
         </div>
       </div>;
@@ -326,10 +327,10 @@ const Dashboard = ({
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-gray-600" />
             <Select value={timePeriod} onValueChange={(value: 'day' | 'week' | 'month' | 'quarter' | 'year') => setTimePeriod(value)}>
-              <SelectTrigger className="w-32 text-sm">
+              <SelectTrigger className="w-32 text-sm bg-white border-gray-300 text-gray-900">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                 <SelectItem value="day">Today</SelectItem>
                 <SelectItem value="week">This Week</SelectItem>
                 <SelectItem value="month">This Month</SelectItem>
@@ -343,49 +344,49 @@ const Dashboard = ({
         {/* Quick Menu - Hidden on mobile */}
         <div className="mb-6 sm:mb-8 hidden md:block">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 xl:grid-cols-7 gap-3 sm:gap-4">
-            <Button onClick={() => setShowAddTransaction(true)} variant="ghost" className="bg-blue-500/20 hover-navy border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200">
+            <Button onClick={() => setShowAddTransaction(true)} variant="ghost" className="bg-blue-100 hover:bg-blue-200 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 transition-all duration-200">
               <PlusCircle className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
               <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
                 Add Transaction
               </span>
             </Button>
             
-            <Button onClick={() => setShowCreateBudget(true)} variant="ghost" className="bg-orange-500/20 hover-navy border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200">
+            <Button onClick={() => setShowCreateBudget(true)} variant="ghost" className="bg-orange-100 hover:bg-orange-200 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 transition-all duration-200">
               <Target className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
               <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
                 Create Budget
               </span>
             </Button>
 
-            {userType === 'organization' && <Button onClick={() => setShowGenerateInvoice(true)} variant="ghost" className="bg-green-500/20 hover-navy border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200">
+            {userType === 'organization' && <Button onClick={() => setShowGenerateInvoice(true)} variant="ghost" className="bg-green-100 hover:bg-green-200 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 transition-all duration-200">
                 <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
                 <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
                   Generate Invoice
                 </span>
               </Button>}
 
-            <Button onClick={() => setShowUploadInvoice(true)} variant="ghost" className="bg-purple-500/20 hover-navy border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200">
+            <Button onClick={() => setShowUploadInvoice(true)} variant="ghost" className="bg-purple-100 hover:bg-purple-200 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 transition-all duration-200">
               <Upload className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
               <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
                 Upload
               </span>
             </Button>
 
-            <Button onClick={handleExpenseShareClick} variant="ghost" className="bg-pink-500/20 hover-navy border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200">
+            <Button onClick={handleExpenseShareClick} variant="ghost" className="bg-pink-100 hover:bg-pink-200 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 transition-all duration-200">
               <Users className="w-5 h-5 sm:w-6 sm:h-6 text-pink-600" />
               <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
                 Expense Share
               </span>
             </Button>
 
-            <Button onClick={() => setShowViewReports(true)} variant="ghost" className="bg-cyan-500/20 hover-navy border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200">
+            <Button onClick={() => setShowViewReports(true)} variant="ghost" className="bg-cyan-100 hover:bg-cyan-200 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 transition-all duration-200">
               <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-600" />
               <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
                 Reports
               </span>
             </Button>
 
-            <Button onClick={() => setShowViewArchive(true)} variant="ghost" className="bg-gray-500/20 hover-navy border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 backdrop-blur-sm transition-all duration-200">
+            <Button onClick={() => setShowViewArchive(true)} variant="ghost" className="bg-gray-100 hover:bg-gray-200 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 transition-all duration-200">
               <Archive className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
               <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
                 Archive
@@ -396,7 +397,7 @@ const Dashboard = ({
 
         {/* Stats Cards - Improved Single Row Layout */}
         <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
-          <Card className="bg-white/95 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer hover:border-green-300" onClick={() => handleStatClick('income', 'Total Income', stats.totalIncome)}>
+          <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer hover:border-green-300" onClick={() => handleStatClick('income', 'Total Income', stats.totalIncome)}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
               <CardTitle className="text-xs sm:text-sm font-semibold text-gray-700 leading-tight">Total Income</CardTitle>
               <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-green-100 flex items-center justify-center">
@@ -411,7 +412,7 @@ const Dashboard = ({
             </CardContent>
           </Card>
 
-          <Card className="bg-white/95 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer hover:border-red-300" onClick={() => handleStatClick('expenses', 'Total Expenses', stats.totalExpense)}>
+          <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer hover:border-red-300" onClick={() => handleStatClick('expenses', 'Total Expenses', stats.totalExpense)}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
               <CardTitle className="text-xs sm:text-sm font-semibold text-gray-700 leading-tight">Total Expenses</CardTitle>
               <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-red-100 flex items-center justify-center">
@@ -426,7 +427,7 @@ const Dashboard = ({
             </CardContent>
           </Card>
 
-          <Card className="bg-white/95 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer hover:border-blue-300" onClick={() => handleStatClick('balance', 'Balance', stats.balance)}>
+          <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer hover:border-blue-300" onClick={() => handleStatClick('balance', 'Balance', stats.balance)}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
               <CardTitle className="text-xs sm:text-sm font-semibold text-gray-700 leading-tight">Balance</CardTitle>
               <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full flex items-center justify-center ${stats.balance >= 0 ? 'bg-blue-100' : 'bg-red-100'}`}>
@@ -441,7 +442,7 @@ const Dashboard = ({
             </CardContent>
           </Card>
 
-          <Card className="bg-white/95 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer hover:border-orange-300" onClick={() => handleStatClick('transactions', 'Transactions', stats.transactionCount)}>
+          <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer hover:border-orange-300" onClick={() => handleStatClick('transactions', 'Transactions', stats.transactionCount)}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
               <CardTitle className="text-xs sm:text-sm font-semibold text-gray-700 leading-tight">Transactions</CardTitle>
               <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-orange-100 flex items-center justify-center">
@@ -460,10 +461,10 @@ const Dashboard = ({
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
           {/* Recent Transactions */}
-          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm">
+          <Card className="bg-white border-gray-200">
             <CardHeader className="flex flex-row items-center justify-between px-0 py-[10px] mx-[10px]">
               <CardTitle className="text-lg sm:text-xl text-gray-800">Recent Transactions</CardTitle>
-              <Button variant="outline" size="sm" onClick={() => setShowViewAllTransactions(true)} className="border-gray-400 text-gray-800 hover-navy transition-colors">
+              <Button variant="outline" size="sm" onClick={() => setShowViewAllTransactions(true)} className="border-gray-400 text-gray-800 hover:bg-gray-50">
                 View All
               </Button>
             </CardHeader>
@@ -485,13 +486,13 @@ const Dashboard = ({
                           <Button size="sm" variant="outline" onClick={e => {
                       e.stopPropagation();
                       handleEditTransaction(transaction.id);
-                    }} className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-gray-400 text-gray-800 hover-navy transition-colors">
+                    }} className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-gray-400 text-gray-800 hover:bg-gray-50 bg-white">
                             <Edit className="w-3 h-3 text-gray-700" />
                           </Button>
                           <Button size="sm" variant="outline" onClick={e => {
                       e.stopPropagation();
                       handleDeleteTransaction(transaction.id);
-                    }} className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-red-400 text-red-600 hover-black transition-colors">
+                    }} className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-red-400 text-red-600 hover:bg-red-50 bg-white">
                             <Trash2 className="w-3 h-3" />
                           </Button>
                         </div>
@@ -505,10 +506,10 @@ const Dashboard = ({
           </Card>
 
           {/* Budgets Overview */}
-          <Card className="bg-white/90 border-gray-200 backdrop-blur-sm">
+          <Card className="bg-white border-gray-200">
             <CardHeader className="flex flex-row items-center justify-between py-[10px] mx-[10px]">
               <CardTitle className="text-lg sm:text-xl text-gray-800">Budget Overview</CardTitle>
-              <Button variant="outline" size="sm" onClick={() => setShowViewAllBudgets(true)} className="border-gray-400 text-gray-800 hover-navy transition-colors">
+              <Button variant="outline" size="sm" onClick={() => setShowViewAllBudgets(true)} className="border-gray-400 text-gray-800 hover:bg-gray-50">
                 View All
               </Button>
             </CardHeader>
@@ -523,13 +524,13 @@ const Dashboard = ({
                             <Button size="sm" variant="outline" onClick={e => {
                         e.stopPropagation();
                         handleEditBudget(budget.id);
-                      }} className="h-5 w-5 p-0 border-gray-400 text-gray-800 hover-navy transition-colors">
+                      }} className="h-5 w-5 p-0 border-gray-400 text-gray-800 hover:bg-gray-50 bg-white">
                               <Edit className="w-3 h-3" />
                             </Button>
                             <Button size="sm" variant="outline" onClick={e => {
                         e.stopPropagation();
                         handleDeleteBudget(budget.id);
-                      }} className="h-5 w-5 p-0 border-red-400 text-red-600 hover-black transition-colors">
+                      }} className="h-5 w-5 p-0 border-red-400 text-red-600 hover:bg-red-50 bg-white">
                               <Trash2 className="w-3 h-3" />
                             </Button>
                           </div>
@@ -542,7 +543,7 @@ const Dashboard = ({
                 </div> : <div className="text-center py-8 sm:py-12 text-gray-600">
                   <Target className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-4 opacity-50" />
                   <p className="text-sm mb-4">No budgets created</p>
-                  <Button variant="outline" size="sm" onClick={() => setShowCreateBudget(true)} className="border-gray-400 hover-navy transition-colors">
+                  <Button variant="outline" size="sm" onClick={() => setShowCreateBudget(true)} className="border-gray-400 hover:bg-gray-50 bg-white">
                     <span className="text-gray-700">Create Budget</span>
                   </Button>
                 </div>}
@@ -552,33 +553,33 @@ const Dashboard = ({
       </div>
 
       {/* Mobile Bottom Navigation - Updated for cleaner design */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 md:hidden z-50 shadow-lg">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-50 shadow-lg">
         <div className="grid grid-cols-7 h-16">
-          <Button onClick={() => setShowAddTransaction(true)} variant="ghost" className="flex flex-col items-center justify-center gap-1 h-full text-gray-600 hover:text-blue-600 hover:bg-blue-50/80 transition-colors rounded-none">
+          <Button onClick={() => setShowAddTransaction(true)} variant="ghost" className="flex flex-col items-center justify-center gap-1 h-full text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-none">
             <PlusCircle className="w-4 h-4" />
             <span className="text-[10px] leading-none">Add</span>
           </Button>
-          <Button onClick={() => setShowCreateBudget(true)} variant="ghost" className="flex flex-col items-center justify-center gap-1 h-full text-gray-600 hover:text-orange-600 hover:bg-orange-50/80 transition-colors rounded-none">
+          <Button onClick={() => setShowCreateBudget(true)} variant="ghost" className="flex flex-col items-center justify-center gap-1 h-full text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-none">
             <Target className="w-4 h-4" />
             <span className="text-[10px] leading-none">Budget</span>
           </Button>
-          <Button onClick={() => setShowUploadInvoice(true)} variant="ghost" className="flex flex-col items-center justify-center gap-1 h-full text-gray-600 hover:text-purple-600 hover:bg-purple-50/80 transition-colors rounded-none">
+          <Button onClick={() => setShowUploadInvoice(true)} variant="ghost" className="flex flex-col items-center justify-center gap-1 h-full text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-none">
             <Upload className="w-4 h-4" />
             <span className="text-[10px] leading-none">Upload</span>
           </Button>
-          <Button onClick={handleExpenseShareClick} variant="ghost" className="flex flex-col items-center justify-center gap-1 h-full text-gray-600 hover:text-pink-600 hover:bg-pink-50/80 transition-colors rounded-none">
+          <Button onClick={handleExpenseShareClick} variant="ghost" className="flex flex-col items-center justify-center gap-1 h-full text-gray-600 hover:text-pink-600 hover:bg-pink-50 rounded-none">
             <Users className="w-4 h-4" />
             <span className="text-[10px] leading-none">Share</span>
           </Button>
-          <Button onClick={() => setShowViewReports(true)} variant="ghost" className="flex flex-col items-center justify-center gap-1 h-full text-gray-600 hover:text-cyan-600 hover:bg-cyan-50/80 transition-colors rounded-none">
+          <Button onClick={() => setShowViewReports(true)} variant="ghost" className="flex flex-col items-center justify-center gap-1 h-full text-gray-600 hover:text-cyan-600 hover:bg-cyan-50 rounded-none">
             <BarChart3 className="w-4 h-4" />
             <span className="text-[10px] leading-none">Reports</span>
           </Button>
-          <Button onClick={() => setShowViewArchive(true)} variant="ghost" className="flex flex-col items-center justify-center gap-1 h-full text-gray-600 hover:text-gray-700 hover:bg-gray-50/80 transition-colors rounded-none">
+          <Button onClick={() => setShowViewArchive(true)} variant="ghost" className="flex flex-col items-center justify-center gap-1 h-full text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-none">
             <Archive className="w-4 h-4" />
             <span className="text-[10px] leading-none">Archive</span>
           </Button>
-          <Button onClick={() => navigate('/profile')} variant="ghost" className="flex flex-col items-center justify-center gap-1 h-full text-gray-600 hover:text-green-600 hover:bg-green-50/80 transition-colors rounded-none">
+          <Button onClick={() => navigate('/profile')} variant="ghost" className="flex flex-col items-center justify-center gap-1 h-full text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-none">
             <User className="w-4 h-4" />
             <span className="text-[10px] leading-none">Profile</span>
           </Button>
@@ -587,19 +588,19 @@ const Dashboard = ({
 
       {/* Upgrade Prompt Modal */}
       {showUpgradePrompt && <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md">
+          <Card className="w-full max-w-md bg-white">
             <CardHeader>
-              <CardTitle className="text-xl text-center">Upgrade Required</CardTitle>
-              <CardDescription className="text-center">
+              <CardTitle className="text-xl text-center text-gray-900">Upgrade Required</CardTitle>
+              <CardDescription className="text-center text-gray-600">
                 Expense sharing is only available for Premium and Organization users.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
-              <Button onClick={handleUpgradeClick} className="w-full bg-blue-gradient hover:bg-blue-600 text-white transition-colors">
+              <Button onClick={handleUpgradeClick} className="w-full bg-blue-500 hover:bg-blue-600 text-white">
                 <Crown className="w-4 h-4 mr-2" />
                 Upgrade to Premium
               </Button>
-              <Button onClick={() => setShowUpgradePrompt(false)} variant="outline" className="w-full hover-navy transition-colors">
+              <Button onClick={() => setShowUpgradePrompt(false)} variant="outline" className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 bg-white">
                 Cancel
               </Button>
             </CardContent>
