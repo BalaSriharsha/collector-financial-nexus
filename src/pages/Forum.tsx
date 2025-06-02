@@ -76,7 +76,7 @@ const Forum = () => {
             <p className="text-lg lg:text-xl text-collector-black/70 max-w-3xl mx-auto mb-8">
               Connect with fellow financial enthusiasts, share insights, and learn from the community.
             </p>
-            <Button className="bg-blue-gradient hover:bg-blue-600 text-white px-8 py-4 text-lg font-playfair rounded-xl">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white border-2 border-blue-600 hover:border-blue-700 px-8 py-4 text-lg font-playfair rounded-xl">
               Join the Discussion
             </Button>
           </div>

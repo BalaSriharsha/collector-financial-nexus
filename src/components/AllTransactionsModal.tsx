@@ -95,10 +95,10 @@ const AllTransactionsModal = ({ open, onOpenChange }: AllTransactionsModalProps)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto border-2 border-collector-gold/30">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-white text-slate-900 border-2 border-slate-300 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700">
         <DialogHeader>
-          <DialogTitle className="text-xl font-playfair">All Transactions</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-xl font-playfair text-slate-900 dark:text-slate-100">All Transactions</DialogTitle>
+          <DialogDescription className="text-slate-600 dark:text-slate-400">
             Complete transaction history and details
           </DialogDescription>
         </DialogHeader>
@@ -107,20 +107,20 @@ const AllTransactionsModal = ({ open, onOpenChange }: AllTransactionsModalProps)
           {/* Search and Filter */}
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-collector-black/40 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400 w-4 h-4" />
               <Input
                 placeholder="Search transactions..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 border-2 border-collector-gold/30"
+                className="pl-10 border-2 border-slate-300 dark:border-slate-600"
               />
             </div>
             <div className="relative">
-              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-collector-black/40 w-4 h-4" />
+              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400 w-4 h-4" />
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
-                className="flex h-10 w-full rounded-md border-2 border-collector-gold/30 bg-background pl-10 pr-8 py-2 text-sm"
+                className="flex h-10 w-full rounded-md border-2 border-slate-300 bg-white text-slate-900 pl-10 pr-8 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
               >
                 <option value="all">All Types</option>
                 <option value="income">Income</option>
@@ -133,11 +133,11 @@ const AllTransactionsModal = ({ open, onOpenChange }: AllTransactionsModalProps)
           <div className="space-y-3">
             {loading ? (
               <div className="text-center py-8">
-                <div className="w-6 h-6 border-2 border-collector-orange border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-collector-black/60">Loading transactions...</p>
+                <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-slate-600 dark:text-slate-400">Loading transactions...</p>
               </div>
             ) : filteredTransactions.length === 0 ? (
-              <div className="text-center py-8 text-collector-black/60">
+              <div className="text-center py-8 text-slate-600 dark:text-slate-400">
                 <p>
                   {allTransactions.length === 0 
                     ? "No transactions found. Start by adding your first transaction!" 
@@ -147,7 +147,7 @@ const AllTransactionsModal = ({ open, onOpenChange }: AllTransactionsModalProps)
               </div>
             ) : (
               filteredTransactions.map((transaction) => (
-                <div key={transaction.id} className="border-2 border-collector-gold/20 rounded-lg p-4 hover:bg-collector-white/50 transition-colors">
+                <div key={transaction.id} className="border-2 border-slate-200 rounded-lg p-4 hover:bg-slate-50 transition-colors dark:border-slate-700 dark:hover:bg-slate-800">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4 flex-1">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
@@ -159,10 +159,10 @@ const AllTransactionsModal = ({ open, onOpenChange }: AllTransactionsModalProps)
                         }
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-collector-black truncate">
+                        <h4 className="font-medium text-slate-900 dark:text-slate-100 truncate">
                           {transaction.title || 'No title'}
                         </h4>
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-collector-black/60">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-slate-600 dark:text-slate-400">
                           <span className="capitalize">{transaction.category}</span>
                           <span>{new Date(transaction.date).toLocaleDateString()}</span>
                           <span className="uppercase text-xs font-medium">
@@ -170,7 +170,7 @@ const AllTransactionsModal = ({ open, onOpenChange }: AllTransactionsModalProps)
                           </span>
                         </div>
                         {transaction.description && (
-                          <p className="text-sm text-collector-black/50 truncate mt-1">
+                          <p className="text-sm text-slate-500 dark:text-slate-400 truncate mt-1">
                             {transaction.description}
                           </p>
                         )}
@@ -189,22 +189,22 @@ const AllTransactionsModal = ({ open, onOpenChange }: AllTransactionsModalProps)
 
           {/* Summary */}
           {filteredTransactions.length > 0 && (
-            <div className="border-t-2 border-collector-gold/30 pt-4 mt-6">
+            <div className="border-t-2 border-slate-300 dark:border-slate-700 pt-4 mt-6">
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <p className="text-sm text-collector-black/60">Total Income</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">Total Income</p>
                   <p className="text-lg font-semibold text-green-600">
                     +{formatCurrency(totalIncome)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-collector-black/60">Total Expenses</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">Total Expenses</p>
                   <p className="text-lg font-semibold text-red-600">
                     -{formatCurrency(totalExpenses)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-collector-black/60">Net Amount</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">Net Amount</p>
                   <p className={`text-lg font-semibold ${netAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {formatCurrency(netAmount)}
                   </p>

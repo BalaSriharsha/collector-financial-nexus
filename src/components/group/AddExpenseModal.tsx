@@ -29,8 +29,20 @@ interface AddExpenseModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   groupMembers: GroupMember[];
-  user: any;
-  onSubmit: (expenseData: any, selectedMembers: string[], memberSplits: Record<string, string>, splitType: string) => void;
+  user: {
+    id: string;
+    email?: string;
+    user_metadata?: {
+      full_name?: string;
+    };
+  };
+  onSubmit: (expenseData: {
+    title: string;
+    description: string;
+    amount: number;
+    category: string;
+    date: string;
+  }, selectedMembers: string[], memberSplits: Record<string, string>, splitType: string) => void;
   loading: boolean;
 }
 
@@ -38,15 +50,17 @@ const AddExpenseModal = ({ open, onOpenChange, groupMembers, user, onSubmit, loa
   const [newExpense, setNewExpense] = useState({
     title: "",
     description: "",
-    total_amount: "",
+    amount: "",
+    category: "",
+    date: new Date().toISOString().split('T')[0],
   });
   const [splitType, setSplitType] = useState<'equal' | 'percentage' | 'custom'>('equal');
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [memberSplits, setMemberSplits] = useState<Record<string, string>>({});
 
   const calculateEqualSplit = () => {
-    if (newExpense.total_amount && selectedMembers.length > 0) {
-      return (parseFloat(newExpense.total_amount) / (selectedMembers.length + 1)).toFixed(2);
+    if (newExpense.amount && selectedMembers.length > 0) {
+      return (parseFloat(newExpense.amount) / (selectedMembers.length + 1)).toFixed(2);
     }
     return "0.00";
   };
@@ -57,10 +71,10 @@ const AddExpenseModal = ({ open, onOpenChange, groupMembers, user, onSubmit, loa
     } else if (splitType === 'percentage') {
       const totalPercentage = selectedMembers.reduce((sum, id) => sum + (parseFloat(memberSplits[id]) || 0), 0);
       const userPercentage = 100 - totalPercentage;
-      return ((parseFloat(newExpense.total_amount) * userPercentage) / 100).toFixed(2);
+      return ((parseFloat(newExpense.amount) * userPercentage) / 100).toFixed(2);
     } else {
       const membersTotal = selectedMembers.reduce((sum, id) => sum + (parseFloat(memberSplits[id]) || 0), 0);
-      return (parseFloat(newExpense.total_amount) - membersTotal).toFixed(2);
+      return (parseFloat(newExpense.amount) - membersTotal).toFixed(2);
     }
   };
 
@@ -92,8 +106,12 @@ const AddExpenseModal = ({ open, onOpenChange, groupMembers, user, onSubmit, loa
   };
 
   const handleSubmit = () => {
-    onSubmit(newExpense, selectedMembers, memberSplits, splitType);
-    setNewExpense({ title: "", description: "", total_amount: "" });
+    const expenseData = {
+      ...newExpense,
+      amount: parseFloat(newExpense.amount) || 0
+    };
+    onSubmit(expenseData, selectedMembers, memberSplits, splitType);
+    setNewExpense({ title: "", description: "", amount: "", category: "", date: new Date().toISOString().split('T')[0] });
     setSplitType('equal');
     setSelectedMembers([]);
     setMemberSplits({});
@@ -126,8 +144,8 @@ const AddExpenseModal = ({ open, onOpenChange, groupMembers, user, onSubmit, loa
               id="totalAmount"
               type="number"
               step="0.01"
-              value={newExpense.total_amount}
-              onChange={(e) => setNewExpense(prev => ({ ...prev, total_amount: e.target.value }))}
+              value={newExpense.amount}
+              onChange={(e) => setNewExpense(prev => ({ ...prev, amount: e.target.value }))}
               placeholder="0.00"
               className="border-2 border-collector-gold/30 focus:border-collector-orange"
             />
@@ -167,7 +185,7 @@ const AddExpenseModal = ({ open, onOpenChange, groupMembers, user, onSubmit, loa
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <div className="w-10 h-10 bg-blue-gradient rounded-full flex items-center justify-center text-white font-medium mr-3">
+                    <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium mr-3">
                       {user.user_metadata?.full_name?.[0] || user.email?.[0]}
                     </div>
                     <div>
@@ -177,7 +195,7 @@ const AddExpenseModal = ({ open, onOpenChange, groupMembers, user, onSubmit, loa
                   </div>
                   <div className="text-right">
                     <p className="font-medium text-blue-600">
-                      ${newExpense.total_amount ? calculateUserAmount() : '0.00'}
+                      ${newExpense.amount ? calculateUserAmount() : '0.00'}
                     </p>
                     <p className="text-xs text-gray-500">Your share</p>
                   </div>
@@ -193,12 +211,12 @@ const AddExpenseModal = ({ open, onOpenChange, groupMembers, user, onSubmit, loa
                   const isSelected = selectedMembers.includes(member.user_id);
                   let memberAmount = '0.00';
                   
-                  if (isSelected && newExpense.total_amount) {
+                  if (isSelected && newExpense.amount) {
                     if (splitType === 'equal') {
                       memberAmount = calculateEqualSplit();
                     } else if (splitType === 'percentage') {
                       const percentage = parseFloat(memberSplits[member.user_id]) || 0;
-                      memberAmount = ((parseFloat(newExpense.total_amount) * percentage) / 100).toFixed(2);
+                      memberAmount = ((parseFloat(newExpense.amount) * percentage) / 100).toFixed(2);
                     } else {
                       memberAmount = memberSplits[member.user_id] || '0.00';
                     }
@@ -208,7 +226,7 @@ const AddExpenseModal = ({ open, onOpenChange, groupMembers, user, onSubmit, loa
                     <Card 
                       key={member.id} 
                       className={`cursor-pointer transition-all ${
-                        isSelected ? 'border-collector-orange bg-orange-50' : 'border-gray-200 hover:border-gray-300'
+                        isSelected ? 'border-orange-500 bg-orange-50 text-orange-900' : 'border-slate-300 hover:border-slate-400 bg-white text-slate-900 dark:border-slate-600 dark:hover:border-slate-500 dark:bg-slate-800 dark:text-slate-100'
                       }`}
                       onClick={() => handleMemberToggle(member.user_id)}
                     >
@@ -280,7 +298,7 @@ const AddExpenseModal = ({ open, onOpenChange, groupMembers, user, onSubmit, loa
             </Button>
             <Button 
               onClick={handleSubmit} 
-              disabled={loading || !newExpense.title || !newExpense.total_amount || selectedMembers.length === 0}
+              disabled={loading || !newExpense.title || !newExpense.amount || selectedMembers.length === 0}
               className="flex-1 bg-blue-500 hover:bg-blue-200 text-white hover:text-collector-black transition-all duration-200"
             >
               {loading ? 'Adding...' : 'Add Expense'}

@@ -279,7 +279,7 @@ const OrganizationTeams = ({ onCreateInvoice }: OrganizationTeamsProps) => {
                           {team.group_members.slice(0, 4).map((member: any, index: number) => (
                             <div 
                               key={member.id}
-                              className="w-8 h-8 bg-blue-gradient rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white"
+                              className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white"
                               title={member.profiles?.full_name || member.profiles?.email}
                             >
                               {member.profiles?.full_name?.[0] || member.profiles?.email?.[0]}

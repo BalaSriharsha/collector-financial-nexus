@@ -255,7 +255,7 @@ const RazorpayCheckout = ({ planType, onSuccess }: RazorpayCheckoutProps) => {
             </Button>
             <Button 
               onClick={() => window.open(qrData.upiUrl, '_blank')}
-              className="w-full bg-gradient-to-r from-orange-400 to-amber-400 hover:from-orange-500 hover:to-amber-500"
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white border-2 border-orange-500 hover:border-orange-600"
             >
               <Smartphone className="w-4 h-4 mr-2" />
               Open in UPI App
@@ -286,7 +286,7 @@ const RazorpayCheckout = ({ planType, onSuccess }: RazorpayCheckoutProps) => {
         <Button 
           onClick={handleRazorpayPayment}
           disabled={loading}
-          className="w-full bg-gradient-to-r from-orange-400 to-amber-400 hover:from-orange-500 hover:to-amber-500"
+          className="w-full bg-orange-500 hover:bg-orange-600 text-white border-2 border-orange-500 hover:border-orange-600"
         >
           <CreditCard className="w-4 h-4 mr-2" />
           {loading ? 'Processing...' : 'Pay with Card/Net Banking'}

@@ -65,7 +65,7 @@ const Profile = () => {
 
         if (error) throw error;
         setProfile(data);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Error fetching profile:", error);
         toast.error("Failed to fetch profile");
       } finally {
@@ -118,7 +118,7 @@ const Profile = () => {
       
       toast.success('Account deleted successfully');
       await signOut();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting account:', error);
       toast.error('Failed to delete account');
     }
@@ -378,7 +378,7 @@ const Profile = () => {
                   <div className="mt-4 space-y-2">
                     <Button
                       onClick={() => handleUpgrade('Premium')}
-                      className="w-full bg-orange-500 hover:bg-orange-600 text-white text-sm"
+                      className="w-full bg-orange-500 hover:bg-orange-600 text-white border-2 border-orange-500 hover:border-orange-600 text-sm"
                     >
                       <Crown className="w-4 h-4 mr-2" />
                       Upgrade to Premium - ₹749/month

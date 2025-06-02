@@ -77,7 +77,7 @@ const UploadInvoiceForm = ({ open, onOpenChange }: UploadInvoiceFormProps) => {
                 />
                 <label htmlFor="file-upload" className="cursor-pointer">
                   <div className="flex flex-col items-center space-y-3">
-                    <div className="w-12 h-12 bg-blue-gradient rounded-full flex items-center justify-center border-2 border-blue-300">
+                    <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center border-2 border-blue-300">
                       <Upload className="w-6 h-6 text-white" />
                     </div>
                     <div>
@@ -196,7 +196,7 @@ const UploadInvoiceForm = ({ open, onOpenChange }: UploadInvoiceFormProps) => {
                 </Button>
                 <Button 
                   type="submit" 
-                  className="flex-1 bg-blue-gradient hover:bg-blue-600 text-white border-2 border-transparent hover:border-blue-300"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white border-2 border-blue-600 hover:border-blue-700"
                 >
                   <FileText className="w-4 h-4 mr-2" />
                   Upload Document

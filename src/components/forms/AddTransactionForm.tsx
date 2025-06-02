@@ -53,7 +53,7 @@ const AddTransactionForm = ({ open, onOpenChange, userType, onClose, editingTran
           setDate(transaction.date);
           setDescription(transaction.description || "");
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Error fetching transaction:', error);
         toast.error('Failed to load transaction data');
       }
@@ -93,7 +93,7 @@ const AddTransactionForm = ({ open, onOpenChange, userType, onClose, editingTran
         title,
         amount: parseFloat(amount),
         type,
-        category: category as any, // Type assertion to handle the enum
+        category: category as 'food' | 'transport' | 'entertainment' | 'utilities' | 'healthcare' | 'shopping' | 'education' | 'investment' | 'salary' | 'freelance' | 'business' | 'other',
         date,
         description,
         user_id: user.id,
@@ -121,9 +121,12 @@ const AddTransactionForm = ({ open, onOpenChange, userType, onClose, editingTran
       toast.success(editingTransactionId ? 'Transaction updated successfully!' : 'Transaction added successfully!');
       resetForm();
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving transaction:', error);
-      toast.error(error.message || 'Failed to save transaction');
+      const errorMessage = error && typeof error === 'object' && 'message' in error 
+        ? (error as { message: string }).message 
+        : 'Failed to save transaction';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -262,7 +265,7 @@ const AddTransactionForm = ({ open, onOpenChange, userType, onClose, editingTran
             <Button 
               onClick={handleSubmit} 
               disabled={loading}
-              className="flex-1 bg-blue-gradient hover:bg-blue-600 text-white"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white border-2 border-blue-600 hover:border-blue-700"
             >
               {loading ? 'Saving...' : editingTransactionId ? 'Update Transaction' : 'Add Transaction'}
             </Button>

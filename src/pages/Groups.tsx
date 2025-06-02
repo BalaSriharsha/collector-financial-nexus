@@ -271,9 +271,9 @@ const Groups = () => {
         </div>
 
         {!canAccess('expense-sharing') && (
-          <Alert className="mb-6 border-orange-200 bg-orange-50">
+          <Alert className="mb-6 border-orange-300 bg-orange-50">
             <Crown className="h-4 w-4 text-orange-600" />
-            <AlertDescription className="text-orange-800">
+            <AlertDescription className="text-orange-900 font-medium">
               Upgrade to Premium or Organization plan to create and manage groups for expense sharing.
             </AlertDescription>
           </Alert>
@@ -350,7 +350,7 @@ const Groups = () => {
                       {group.group_members.slice(0, 4).map((member: any, index: number) => (
                         <div 
                           key={member.id}
-                          className="w-6 h-6 bg-blue-gradient rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white"
+                          className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white"
                           title={member.profiles?.full_name || member.profiles?.email}
                         >
                           {member.profiles?.full_name?.[0] || member.profiles?.email?.[0]}

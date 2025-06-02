@@ -14,11 +14,23 @@ interface CreateBudgetFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userType: 'individual' | 'organization';
-  editingBudget?: any;
+  editingBudget?: Budget | null;
   onClose?: () => void;
 }
 
 type BudgetCategory = "food" | "transport" | "entertainment" | "utilities" | "healthcare" | "shopping" | "education" | "investment" | "salary" | "freelance" | "business" | "other";
+
+interface Budget {
+  id: string;
+  name: string;
+  amount: number;
+  category: string;
+  period: string;
+  start_date: string;
+  end_date: string;
+  created_at: string;
+  updated_at: string;
+}
 
 const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose }: CreateBudgetFormProps) => {
   const { user } = useAuth();
@@ -41,7 +53,7 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
       setFormData({
         name: editingBudget.name || "",
         amount: editingBudget.amount?.toString() || "",
-        category: editingBudget.category || "",
+        category: editingBudget.category as BudgetCategory || "",
         period: editingBudget.period || "monthly",
         start_date: editingBudget.start_date || new Date().toISOString().split('T')[0],
         end_date: editingBudget.end_date || "",
@@ -65,7 +77,20 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !formData.category) return;
+    if (!user || !formData.category) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+    
+    if (!formData.name.trim()) {
+      toast.error('Budget name is required');
+      return;
+    }
+    
+    if (!formData.amount || parseFloat(formData.amount) <= 0) {
+      toast.error('Please enter a valid budget amount');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -104,7 +129,9 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
         }
       }
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       // Reset form
       const startDate = new Date();
@@ -120,11 +147,26 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
         end_date: endDate.toISOString().split('T')[0],
       });
 
+      // Trigger dashboard refresh
+      if (onClose) {
+        onClose();
+      } else {
+        onOpenChange(false);
+      }
+      
+      // Also invalidate queries for any components using React Query
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
-      onClose ? onClose() : onOpenChange(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving budget:', error);
-      toast.error(error.message || 'Failed to save budget');
+      
+      // Show specific error message if available
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'PGRST301') {
+        toast.error('Permission denied. Please check your account permissions.');
+      } else if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+        toast.error(`Failed to save budget: ${error.message}`);
+      } else {
+        toast.error('Failed to save budget. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -132,12 +174,12 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
 
   return (
     <Sheet open={open} onOpenChange={onClose || onOpenChange}>
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto bg-white">
+      <SheetContent className="w-full sm:max-w-md overflow-y-auto bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">
         <SheetHeader>
-          <SheetTitle className="font-playfair text-gray-900">
+          <SheetTitle className="font-playfair text-slate-900 dark:text-slate-100">
             {editingBudget ? 'Edit Budget' : 'Create Budget'}
           </SheetTitle>
-          <SheetDescription className="text-gray-600">
+          <SheetDescription className="text-slate-600 dark:text-slate-400">
             {editingBudget ? 'Update your budget details' : 'Set up a new budget to track your spending.'}
           </SheetDescription>
         </SheetHeader>
@@ -145,20 +187,20 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
         <form onSubmit={handleSubmit} className="mt-6 space-y-6">
           {/* Budget Name */}
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-gray-700">Budget Name</Label>
+            <Label htmlFor="name" className="text-slate-700 dark:text-slate-300">Budget Name</Label>
             <Input
               id="name"
               placeholder="e.g., Monthly Groceries, Entertainment..."
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               required
-              className="border-2 border-gray-300 focus:border-blue-500 bg-white text-gray-900"
+              className="border-2 border-slate-300 focus:border-blue-500 bg-white text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400"
             />
           </div>
 
           {/* Amount */}
           <div className="space-y-2">
-            <Label htmlFor="amount" className="text-gray-700">Budget Amount ($)</Label>
+            <Label htmlFor="amount" className="text-slate-700 dark:text-slate-300">Budget Amount ($)</Label>
             <Input
               id="amount"
               type="number"
@@ -167,18 +209,18 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
               value={formData.amount}
               onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
               required
-              className="border-2 border-gray-300 focus:border-blue-500 bg-white text-gray-900"
+              className="border-2 border-slate-300 focus:border-blue-500 bg-white text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400"
             />
           </div>
 
           {/* Category */}
           <div className="space-y-2">
-            <Label htmlFor="category" className="text-gray-700">Category</Label>
-            <Select value={formData.category} onValueChange={(value: BudgetCategory) => setFormData(prev => ({ ...prev, category: value }))}>
-              <SelectTrigger className="border-2 border-gray-300 focus:border-blue-500 bg-white text-gray-900">
+            <Label htmlFor="category" className="text-slate-700 dark:text-slate-300">Category</Label>
+            <Select value={formData.category} onValueChange={(value: BudgetCategory) => setFormData(prev => ({ ...prev, category: value }))} required>
+              <SelectTrigger className="border-2 border-slate-300 focus:border-blue-500 bg-white text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400">
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+              <SelectContent className="bg-white border-2 border-slate-300 shadow-lg z-50 dark:bg-slate-800 dark:border-slate-600">
                 {categories.map((category) => (
                   <SelectItem key={category} value={category}>
                     {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -190,12 +232,12 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
 
           {/* Period */}
           <div className="space-y-2">
-            <Label htmlFor="period" className="text-gray-700">Budget Period</Label>
+            <Label htmlFor="period" className="text-slate-700 dark:text-slate-300">Budget Period</Label>
             <Select value={formData.period} onValueChange={(value) => setFormData(prev => ({ ...prev, period: value }))}>
-              <SelectTrigger className="border-2 border-gray-300 focus:border-blue-500 bg-white text-gray-900">
+              <SelectTrigger className="border-2 border-slate-300 focus:border-blue-500 bg-white text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+              <SelectContent className="bg-white border-2 border-slate-300 shadow-lg z-50 dark:bg-slate-800 dark:border-slate-600">
                 <SelectItem value="weekly">Weekly</SelectItem>
                 <SelectItem value="monthly">Monthly</SelectItem>
                 <SelectItem value="quarterly">Quarterly</SelectItem>
@@ -206,27 +248,27 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
 
           {/* Start Date */}
           <div className="space-y-2">
-            <Label htmlFor="start_date" className="text-gray-700">Start Date</Label>
+            <Label htmlFor="start_date" className="text-slate-700 dark:text-slate-300">Start Date</Label>
             <Input
               id="start_date"
               type="date"
               value={formData.start_date}
               onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
               required
-              className="border-2 border-gray-300 focus:border-blue-500 bg-white text-gray-900"
+              className="border-2 border-slate-300 focus:border-blue-500 bg-white text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400"
             />
           </div>
 
           {/* End Date */}
           <div className="space-y-2">
-            <Label htmlFor="end_date" className="text-gray-700">End Date</Label>
+            <Label htmlFor="end_date" className="text-slate-700 dark:text-slate-300">End Date</Label>
             <Input
               id="end_date"
               type="date"
               value={formData.end_date}
               onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
               required
-              className="border-2 border-gray-300 focus:border-blue-500 bg-white text-gray-900"
+              className="border-2 border-slate-300 focus:border-blue-500 bg-white text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400"
             />
           </div>
 
@@ -235,14 +277,14 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
               type="button" 
               variant="outline" 
               onClick={() => onClose ? onClose() : onOpenChange(false)} 
-              className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50 bg-white transition-all duration-200"
+              className="flex-1 border-slate-300 text-slate-700 hover:bg-slate-50 bg-white dark:border-slate-600 dark:text-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition-all duration-200"
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
               disabled={loading} 
-              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white transition-all duration-200"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white border-2 border-blue-600 hover:border-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 dark:border-blue-500 dark:hover:border-blue-600 transition-all duration-200"
             >
               {loading ? 'Saving...' : editingBudget ? 'Update Budget' : 'Create Budget'}
             </Button>

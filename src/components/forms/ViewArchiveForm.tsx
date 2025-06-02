@@ -126,9 +126,12 @@ const ViewArchiveForm = ({ open, onOpenChange, userType, subscription }: ViewArc
       toast.success('Transaction deleted successfully');
       queryClient.invalidateQueries({ queryKey: ['archived-items'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting transaction:', error);
-      toast.error(error.message || 'Failed to delete transaction');
+      const errorMessage = error && typeof error === 'object' && 'message' in error 
+        ? (error as { message: string }).message 
+        : 'Failed to delete transaction';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -149,9 +152,12 @@ const ViewArchiveForm = ({ open, onOpenChange, userType, subscription }: ViewArc
       toast.success('Budget deleted successfully');
       queryClient.invalidateQueries({ queryKey: ['archived-items'] });
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting budget:', error);
-      toast.error(error.message || 'Failed to delete budget');
+      const errorMessage = error && typeof error === 'object' && 'message' in error 
+        ? (error as { message: string }).message 
+        : 'Failed to delete budget';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -172,9 +178,12 @@ const ViewArchiveForm = ({ open, onOpenChange, userType, subscription }: ViewArc
       toast.success('Invoice deleted successfully');
       queryClient.invalidateQueries({ queryKey: ['archived-items'] });
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting invoice:', error);
-      toast.error(error.message || 'Failed to delete invoice');
+      const errorMessage = error && typeof error === 'object' && 'message' in error 
+        ? (error as { message: string }).message 
+        : 'Failed to delete invoice';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -217,13 +226,13 @@ const ViewArchiveForm = ({ open, onOpenChange, userType, subscription }: ViewArc
 
           {/* Premium Feature Notice */}
           {!isPremiumUser && (
-            <Card className="border-orange-200 bg-orange-50">
+            <Card className="border-orange-300 bg-orange-50">
               <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-orange-700">
+                <div className="flex items-center gap-2 text-orange-900">
                   <Archive className="w-5 h-5" />
                   <span className="font-medium">Premium Feature</span>
                 </div>
-                <p className="text-sm text-orange-600 mt-1">
+                <p className="text-sm text-orange-800 mt-1">
                   Upgrade to Premium to view deleted transactions from the last 30 days and access enhanced archive features.
                 </p>
               </CardContent>

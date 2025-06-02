@@ -66,18 +66,21 @@ const ViewAllModal: React.FC<ViewAllModalProps> = ({
     switch (period) {
       case 'daily':
         return { start: startOfDay, end: now };
-      case 'weekly':
+      case 'weekly': {
         const weekStart = new Date(startOfDay);
         weekStart.setDate(weekStart.getDate() - weekStart.getDay());
         return { start: weekStart, end: now };
+      }
       case 'monthly':
         return { start: new Date(now.getFullYear(), now.getMonth(), 1), end: now };
-      case 'quarterly':
+      case 'quarterly': {
         const quarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
         return { start: quarterStart, end: now };
-      case 'half-yearly':
+      }
+      case 'half-yearly': {
         const halfYearStart = new Date(now.getFullYear(), now.getMonth() < 6 ? 0 : 6, 1);
         return { start: halfYearStart, end: now };
+      }
       case 'yearly':
         return { start: new Date(now.getFullYear(), 0, 1), end: now };
       case 'custom':
@@ -102,7 +105,7 @@ const ViewAllModal: React.FC<ViewAllModalProps> = ({
       const itemCategory = type === 'transactions' ? (item as Transaction).category : (item as Budget).category;
       return dateInRange && itemCategory === categoryFilter;
     });
-  }, [data, filterPeriod, customStartDate, customEndDate, categoryFilter, type]);
+  }, [data, filterPeriod, customStartDate, customEndDate, categoryFilter, type, getDateRange]);
 
   const categories = useMemo(() => {
     const cats = new Set(data.map(item => 
@@ -113,28 +116,28 @@ const ViewAllModal: React.FC<ViewAllModalProps> = ({
 
   const getCategoryBadgeColor = (category: string) => {
     const colors = {
-      food: 'bg-orange-100 text-orange-800',
-      transport: 'bg-blue-100 text-blue-800',
-      entertainment: 'bg-purple-100 text-purple-800',
-      utilities: 'bg-gray-100 text-gray-800',
-      healthcare: 'bg-red-100 text-red-800',
-      shopping: 'bg-pink-100 text-pink-800',
-      education: 'bg-green-100 text-green-800',
-      investment: 'bg-indigo-100 text-indigo-800',
-      salary: 'bg-emerald-100 text-emerald-800',
-      freelance: 'bg-teal-100 text-teal-800',
-      business: 'bg-yellow-100 text-yellow-800',
-      other: 'bg-slate-100 text-slate-800'
+      food: 'bg-orange-100 text-orange-900 border border-orange-200',
+      transport: 'bg-blue-100 text-blue-900 border border-blue-200',
+      entertainment: 'bg-purple-100 text-purple-900 border border-purple-200',
+      utilities: 'bg-gray-100 text-gray-900 border border-gray-200',
+      healthcare: 'bg-red-100 text-red-900 border border-red-200',
+      shopping: 'bg-pink-100 text-pink-900 border border-pink-200',
+      education: 'bg-green-100 text-green-900 border border-green-200',
+      investment: 'bg-indigo-100 text-indigo-900 border border-indigo-200',
+      salary: 'bg-emerald-100 text-emerald-900 border border-emerald-200',
+      freelance: 'bg-teal-100 text-teal-900 border border-teal-200',
+      business: 'bg-amber-100 text-amber-900 border border-amber-200',
+      other: 'bg-slate-100 text-slate-900 border border-slate-200'
     };
     return colors[category as keyof typeof colors] || colors.other;
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-white text-slate-900 border-2 border-slate-300 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">{title}</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-xl font-semibold text-slate-900 dark:text-slate-100">{title}</DialogTitle>
+          <DialogDescription className="text-slate-600 dark:text-slate-400">
             Showing {filteredData.length} {type} with advanced filtering options
           </DialogDescription>
         </DialogHeader>
@@ -143,7 +146,7 @@ const ViewAllModal: React.FC<ViewAllModalProps> = ({
           {/* Filters */}
           <div className="flex flex-wrap gap-4">
             <div className="flex-1 min-w-[200px]">
-              <label className="text-sm font-medium mb-2 block">Time Period</label>
+              <label className="text-sm font-medium mb-2 block text-slate-700 dark:text-slate-300">Time Period</label>
               <Select value={filterPeriod} onValueChange={(value) => setFilterPeriod(value as FilterPeriod)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -161,7 +164,7 @@ const ViewAllModal: React.FC<ViewAllModalProps> = ({
             </div>
 
             <div className="flex-1 min-w-[200px]">
-              <label className="text-sm font-medium mb-2 block">Category</label>
+              <label className="text-sm font-medium mb-2 block text-slate-700 dark:text-slate-300">Category</label>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                 <SelectTrigger>
                   <SelectValue />
@@ -182,7 +185,7 @@ const ViewAllModal: React.FC<ViewAllModalProps> = ({
           {filterPeriod === 'custom' && (
             <div className="flex flex-wrap gap-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Start Date</label>
+                <label className="text-sm font-medium mb-2 block text-slate-700 dark:text-slate-300">Start Date</label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="w-[200px] justify-start text-left font-normal">
@@ -202,7 +205,7 @@ const ViewAllModal: React.FC<ViewAllModalProps> = ({
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">End Date</label>
+                <label className="text-sm font-medium mb-2 block text-slate-700 dark:text-slate-300">End Date</label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="w-[200px] justify-start text-left font-normal">
@@ -228,14 +231,14 @@ const ViewAllModal: React.FC<ViewAllModalProps> = ({
           {/* Data Display */}
           <div className="space-y-3">
             {filteredData.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-center py-8 text-slate-500 dark:text-slate-400">
                 No {type} found for the selected filters
               </div>
             ) : (
               filteredData.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                  className="flex items-center justify-between p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors dark:border-slate-700 dark:hover:bg-slate-800"
                 >
                   {type === 'transactions' ? (
                     <>
@@ -250,11 +253,11 @@ const ViewAllModal: React.FC<ViewAllModalProps> = ({
                           </Badge>
                         </div>
                         {(item as Transaction).description && (
-                          <p className="text-sm text-muted-foreground mb-1">
+                          <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
                             {(item as Transaction).description}
                           </p>
                         )}
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
                           {new Date((item as Transaction).date).toLocaleDateString('en-IN', {
                             year: 'numeric',
                             month: 'short',
@@ -281,11 +284,11 @@ const ViewAllModal: React.FC<ViewAllModalProps> = ({
                             {(item as Budget).category}
                           </Badge>
                         </div>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
                           {new Date((item as Budget).start_date).toLocaleDateString('en-IN')} - {new Date((item as Budget).end_date).toLocaleDateString('en-IN')}
                         </p>
                         {(item as Budget).period && (
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
                             Period: {(item as Budget).period}
                           </p>
                         )}

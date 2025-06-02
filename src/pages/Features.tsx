@@ -95,14 +95,14 @@ const Features = () => {
 
         {/* CTA Section */}
         <section className="max-w-7xl mx-auto px-4 py-12 sm:py-16 text-center">
-          <div className="bg-gray-50 rounded-2xl p-6 sm:p-8 lg:p-12 border-2 border-collector-gold/20">
+          <div className="bg-gray-50 rounded-2xl p-6 sm:p-8 lg:p-12 border-2 border-slate-300">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-playfair font-bold text-collector-black mb-4">
               Ready to Master Your Finances?
             </h2>
             <p className="text-base sm:text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
               Join thousands of users who have transformed their financial lives with Vittas's powerful features.
             </p>
-            <button className="bg-blue-gradient hover:bg-blue-600 text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-playfair rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+            <button className="bg-blue-600 hover:bg-blue-700 text-white border-2 border-blue-600 hover:border-blue-700 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-playfair rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
               Start Your Journey
             </button>
           </div>

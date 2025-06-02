@@ -69,13 +69,13 @@ const Navigation = () => {
   };
 
   return (
-    <nav className="bg-white/95 backdrop-blur-sm border-b border-collector-gold/20 sticky top-0 z-50">
+    <nav className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-300/20 dark:border-slate-700/20 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link to="/" className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-navy-800 rounded-xl flex items-center justify-center">
+              <div className="w-8 h-8 bg-slate-800 dark:bg-slate-700 rounded-xl flex items-center justify-center">
                 <Coins className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl sm:text-2xl brand-logo">
@@ -94,8 +94,8 @@ const Navigation = () => {
                     to={link.to}
                     className={`text-sm font-medium transition-colors duration-200 hover:text-orange-500 ${
                       isActivePath(link.to)
-                        ? 'text-collector-orange'
-                        : 'text-collector-black/70'
+                        ? 'text-orange-500'
+                        : 'text-slate-700 dark:text-slate-300'
                     }`}
                   >
                     {link.label}
@@ -109,8 +109,8 @@ const Navigation = () => {
                   to={link.to}
                   className={`text-sm font-medium transition-colors duration-200 hover:text-orange-500 ${
                     isActivePath(link.to)
-                      ? 'text-collector-orange'
-                      : 'text-collector-black/70'
+                      ? 'text-orange-500'
+                      : 'text-slate-700 dark:text-slate-300'
                   }`}
                 >
                   {link.label}
@@ -135,7 +135,7 @@ const Navigation = () => {
                 )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full hover-navy transition-colors">
+                    <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                       <User className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -158,14 +158,14 @@ const Navigation = () => {
                   variant="ghost" 
                   size="sm" 
                   onClick={() => navigate('/auth')}
-                  className="text-collector-black/70 hover:text-orange-500 transition-colors"
+                  className="text-slate-700 dark:text-slate-300 hover:text-orange-500 transition-colors"
                 >
                   Sign In
                 </Button>
                 <Button 
                   size="sm" 
                   onClick={() => navigate('/auth')}
-                  className="bg-navy-700 hover:bg-navy-800 text-white transition-colors"
+                  className="bg-slate-700 dark:bg-slate-600 hover:bg-slate-800 dark:hover:bg-slate-500 text-white transition-colors"
                 >
                   Get Started
                 </Button>
@@ -179,7 +179,7 @@ const Navigation = () => {
               variant="ghost"
               size="sm"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="h-8 w-8 p-0 hover-navy transition-colors"
+              className="h-8 w-8 p-0 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
             >
               {isMobileMenuOpen ? (
                 <X className="h-5 w-5" />
@@ -192,7 +192,7 @@ const Navigation = () => {
 
         {/* Mobile Navigation Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-collector-gold/20">
+          <div className="md:hidden border-t border-slate-300/20 dark:border-slate-700/20 bg-white/95 dark:bg-slate-900/95">
             <div className="px-2 pt-2 pb-3 space-y-1">
               {user ? (
                 <>
@@ -215,21 +215,21 @@ const Navigation = () => {
                       key={link.to}
                       to={link.to}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className={`block px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover-navy ${
+                      className={`block px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 ${
                         isActivePath(link.to)
-                          ? 'text-collector-orange bg-orange-50'
-                          : 'text-collector-black/70'
+                          ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 dark:border-blue-400'
+                          : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
                       }`}
                     >
                       {link.label}
                     </Link>
                   ))}
                   
-                  <div className="border-t border-gray-200 pt-2 mt-2">
+                  <div className="border-t border-slate-200 dark:border-slate-700 pt-2 mt-2">
                     <Link
                       to="/profile"
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="block px-3 py-2 text-sm font-medium text-collector-black/70 hover-navy rounded-md transition-colors"
+                      className="block px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 rounded-md transition-colors"
                     >
                       <User className="inline mr-2 h-4 w-4" />
                       Profile
@@ -239,7 +239,7 @@ const Navigation = () => {
                         setIsMobileMenuOpen(false);
                         handleSignOut();
                       }}
-                      className="block w-full text-left px-3 py-2 text-sm font-medium text-collector-black/70 hover-navy rounded-md transition-colors"
+                      className="block w-full text-left px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 rounded-md transition-colors"
                     >
                       <LogOut className="inline mr-2 h-4 w-4" />
                       Sign Out
@@ -253,17 +253,17 @@ const Navigation = () => {
                       key={link.to}
                       to={link.to}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className={`block px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover-navy ${
+                      className={`block px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 ${
                         isActivePath(link.to)
-                          ? 'text-collector-orange bg-orange-50'
-                          : 'text-collector-black/70'
+                          ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 dark:border-blue-400'
+                          : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
                       }`}
                     >
                       {link.label}
                     </Link>
                   ))}
                   
-                  <div className="border-t border-gray-200 pt-2 mt-2 space-y-2 px-3">
+                  <div className="border-t border-slate-200 dark:border-slate-700 pt-2 mt-2 space-y-2 px-3">
                     <Button 
                       variant="ghost" 
                       size="sm" 
@@ -271,7 +271,7 @@ const Navigation = () => {
                         setIsMobileMenuOpen(false);
                         navigate('/auth');
                       }}
-                      className="w-full justify-start text-collector-black/70 hover-navy transition-colors"
+                      className="w-full justify-start text-slate-700 dark:text-slate-300 hover:text-orange-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                     >
                       Sign In
                     </Button>
@@ -281,7 +281,7 @@ const Navigation = () => {
                         setIsMobileMenuOpen(false);
                         navigate('/auth');
                       }}
-                      className="w-full bg-navy-700 hover:bg-navy-800 text-white transition-colors"
+                      className="w-full bg-slate-700 dark:bg-slate-600 hover:bg-slate-800 dark:hover:bg-slate-500 text-white transition-colors"
                     >
                       Get Started
                     </Button>

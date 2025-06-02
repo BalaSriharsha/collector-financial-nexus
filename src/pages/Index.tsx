@@ -48,7 +48,7 @@ const Index = () => {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <Link to="/auth">
-              <Button size="lg" className="bg-blue-gradient hover:bg-blue-600 text-white px-8 py-3 w-full sm:w-auto">
+              <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white border-2 border-blue-600 hover:border-blue-700 px-8 py-3 w-full sm:w-auto">
                 Get Started Free
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
@@ -224,7 +224,7 @@ const Index = () => {
             Join thousands of users who have already taken control of their finances with our platform.
           </p>
           <Link to="/auth">
-            <Button size="lg" className="bg-orange-gradient hover:bg-orange-600 text-white px-8 py-4 w-full sm:w-auto">
+            <Button size="lg" className="bg-orange-500 hover:bg-orange-600 text-white border-2 border-orange-500 hover:border-orange-600 px-8 py-4 w-full sm:w-auto">
               Start Your Journey Today
               <Zap className="ml-2 w-5 h-5" />
             </Button>

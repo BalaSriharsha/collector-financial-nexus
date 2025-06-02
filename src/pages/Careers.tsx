@@ -133,7 +133,7 @@ const Careers = () => {
                           </ul>
                         </div>
                       </div>
-                      <Button className="bg-blue-gradient hover:bg-blue-600 text-white shrink-0">
+                      <Button className="bg-blue-600 hover:bg-blue-700 text-white border-2 border-blue-600 hover:border-blue-700 shrink-0">
                         Apply Now
                       </Button>
                     </div>
@@ -152,7 +152,7 @@ const Careers = () => {
               <p className="text-lg text-collector-black/70 mb-8">
                 We're always looking for talented people. Send us your resume and tell us how you'd like to contribute.
               </p>
-              <Button className="bg-orange-gradient hover:bg-orange-600 text-white px-8 py-4 text-lg font-playfair rounded-xl">
+              <Button className="bg-orange-500 hover:bg-orange-600 text-white border-2 border-orange-500 hover:border-orange-600 px-8 py-4 text-lg font-playfair rounded-xl">
                 Send Us Your Resume
               </Button>
             </div>

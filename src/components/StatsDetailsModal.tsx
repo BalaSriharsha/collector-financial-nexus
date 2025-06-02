@@ -50,18 +50,18 @@ const StatsDetailsModal: React.FC<StatsDetailsModalProps> = ({
 
   const getCategoryBadgeColor = (category: string) => {
     const colors = {
-      food: 'bg-orange-100 text-orange-800',
-      transport: 'bg-blue-100 text-blue-800',
-      entertainment: 'bg-purple-100 text-purple-800',
-      utilities: 'bg-gray-100 text-gray-800',
-      healthcare: 'bg-red-100 text-red-800',
-      shopping: 'bg-pink-100 text-pink-800',
-      education: 'bg-green-100 text-green-800',
-      investment: 'bg-indigo-100 text-indigo-800',
-      salary: 'bg-emerald-100 text-emerald-800',
-      freelance: 'bg-teal-100 text-teal-800',
-      business: 'bg-yellow-100 text-yellow-800',
-      other: 'bg-slate-100 text-slate-800'
+      food: 'bg-orange-100 text-orange-900 border border-orange-200',
+      transport: 'bg-blue-100 text-blue-900 border border-blue-200',
+      entertainment: 'bg-purple-100 text-purple-900 border border-purple-200',
+      utilities: 'bg-gray-100 text-gray-900 border border-gray-200',
+      healthcare: 'bg-red-100 text-red-900 border border-red-200',
+      shopping: 'bg-pink-100 text-pink-900 border border-pink-200',
+      education: 'bg-green-100 text-green-900 border border-green-200',
+      investment: 'bg-indigo-100 text-indigo-900 border border-indigo-200',
+      salary: 'bg-emerald-100 text-emerald-900 border border-emerald-200',
+      freelance: 'bg-teal-100 text-teal-900 border border-teal-200',
+      business: 'bg-amber-100 text-amber-900 border border-amber-200',
+      other: 'bg-slate-100 text-slate-900 border border-slate-200'
     };
     return colors[category as keyof typeof colors] || colors.other;
   };

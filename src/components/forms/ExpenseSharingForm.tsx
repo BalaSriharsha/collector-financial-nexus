@@ -177,9 +177,12 @@ const ExpenseSharingForm = ({ open, onOpenChange, userType }: ExpenseSharingForm
       resetForm();
       onOpenChange(false);
       queryClient.invalidateQueries({ queryKey: ['shared-expenses'] });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating shared expense:', error);
-      toast.error(error.message || 'Failed to create shared expense');
+      const errorMessage = error && typeof error === 'object' && 'message' in error 
+        ? (error as { message: string }).message 
+        : 'Failed to create shared expense';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -221,7 +224,7 @@ const ExpenseSharingForm = ({ open, onOpenChange, userType }: ExpenseSharingForm
                   <Users className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                   <p className="text-sm text-gray-600 mb-3">No groups found. Create a group first to share expenses.</p>
                   <Link to="/groups">
-                    <Button size="sm" className="bg-blue-gradient hover:bg-blue-600 text-white">
+                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white border-2 border-blue-600 hover:border-blue-700">
                       <Plus className="w-4 h-4 mr-2" />
                       Create Group
                     </Button>
@@ -287,7 +290,7 @@ const ExpenseSharingForm = ({ open, onOpenChange, userType }: ExpenseSharingForm
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
-                          <div className="w-10 h-10 bg-blue-gradient rounded-full flex items-center justify-center text-white font-medium mr-3">
+                          <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium mr-3">
                             {user.user_metadata?.full_name?.[0] || user.email?.[0]}
                           </div>
                           <div>
@@ -308,8 +311,8 @@ const ExpenseSharingForm = ({ open, onOpenChange, userType }: ExpenseSharingForm
                   {/* Group Members */}
                   <div className="space-y-2">
                     {groupMembers
-                      .filter((member: any) => member.user_id !== user.id)
-                      .map((member: any) => {
+                      .filter((member) => member.user_id !== user.id)
+                      .map((member) => {
                         const isSelected = selectedMembers.includes(member.user_id);
                         const memberAmount = splitType === 'equal' 
                           ? calculateEqualSplit() 
@@ -319,7 +322,7 @@ const ExpenseSharingForm = ({ open, onOpenChange, userType }: ExpenseSharingForm
                           <Card 
                             key={member.id} 
                             className={`cursor-pointer transition-all ${
-                              isSelected ? 'border-collector-orange bg-orange-50' : 'border-gray-200 hover:border-gray-300'
+                              isSelected ? 'border-orange-500 bg-orange-50 text-orange-900' : 'border-slate-300 hover:border-slate-400 bg-white text-slate-900 dark:border-slate-600 dark:hover:border-slate-500 dark:bg-slate-800 dark:text-slate-100'
                             }`}
                             onClick={() => handleMemberToggle(member.user_id)}
                           >
@@ -419,7 +422,7 @@ const ExpenseSharingForm = ({ open, onOpenChange, userType }: ExpenseSharingForm
             <Button 
               onClick={handleSubmit} 
               disabled={loading || !selectedGroupId || selectedMembers.length === 0}
-              className="flex-1 bg-blue-gradient hover:bg-blue-600 text-white"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white border-2 border-blue-600 hover:border-blue-700"
             >
               {loading ? 'Creating...' : 'Share Expense'}
             </Button>

@@ -28,12 +28,12 @@ const GroupMembers = ({ members }: GroupMembersProps) => {
           {members.map((member) => (
             <div key={member.id} className="flex items-center justify-between p-3 bg-white/60 rounded-lg">
               <div className="flex items-center">
-                <div className="w-10 h-10 bg-blue-gradient rounded-full flex items-center justify-center text-white font-medium mr-3">
+                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium mr-3">
                   {member.profiles?.full_name?.[0] || member.profiles?.email?.[0]}
                 </div>
                 <div>
-                  <p className="font-medium">{member.profiles?.full_name || member.profiles?.email}</p>
-                  <p className="text-sm text-gray-600">{member.profiles?.email}</p>
+                  <p className="font-medium text-slate-900 dark:text-slate-100">{member.profiles?.full_name || member.profiles?.email}</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">{member.profiles?.email}</p>
                 </div>
               </div>
               <Badge variant={member.role === 'admin' ? 'default' : 'secondary'}>

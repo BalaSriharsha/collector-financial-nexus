@@ -100,7 +100,7 @@ const Auth = () => {
   // Don't render the auth form if user is already authenticated
   if (user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-collector-orange border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-collector-black/70">Redirecting to dashboard...</p>
@@ -110,11 +110,11 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       <Navigation />
       
       <section className="flex-1 flex items-center justify-center px-4 py-8">
-        <Card className="w-full max-w-md border-2 border-collector-gold/30 bg-white/90 backdrop-blur-sm shadow-xl">
+        <Card className="w-full max-w-md border-2 border-slate-300 bg-white shadow-xl">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-playfair text-collector-black">
               {authMode === 'login' ? 'Welcome Back' : 
@@ -245,7 +245,7 @@ const Auth = () => {
                 
                 <Button 
                   onClick={handleAuthSubmit}
-                  className="w-full bg-orange-gradient hover:bg-orange-600 text-white py-3 rounded-xl border-2 border-transparent hover:border-orange-300"
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl border-2 border-orange-500 hover:border-orange-600"
                   disabled={loading || !formData.fullName || !formData.email || !formData.password}
                 >
                   {loading ? (
@@ -354,7 +354,7 @@ const Auth = () => {
                 
                 <Button 
                   onClick={handleAuthSubmit}
-                  className="w-full bg-blue-gradient hover:bg-blue-600 text-white py-3 rounded-xl border-2 border-transparent hover:border-blue-300"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl border-2 border-blue-600 hover:border-blue-700"
                   disabled={loading || !formData.fullName || !formData.email || !formData.password || !formData.organizationName}
                 >
                   {loading ? (
@@ -396,7 +396,7 @@ const Auth = () => {
                 
                 <Button 
                   onClick={handleAuthSubmit}
-                  className="w-full bg-blue-gradient hover:bg-blue-600 text-white py-3 rounded-xl border-2 border-transparent hover:border-blue-300"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl border-2 border-blue-600 hover:border-blue-700"
                   disabled={loading || !formData.email || !formData.password}
                 >
                   {loading ? (
