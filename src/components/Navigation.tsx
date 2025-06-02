@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -74,7 +75,7 @@ const Navigation = () => {
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link to="/" className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-blue-gradient rounded-xl flex items-center justify-center">
+              <div className="w-8 h-8 bg-navy-800 rounded-xl flex items-center justify-center">
                 <Coins className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl sm:text-2xl brand-logo">
@@ -164,7 +165,7 @@ const Navigation = () => {
                 <Button 
                   size="sm" 
                   onClick={() => navigate('/auth')}
-                  className="bg-blue-gradient hover:bg-blue-600 text-white transition-colors"
+                  className="bg-navy-700 hover:bg-navy-800 text-white transition-colors"
                 >
                   Get Started
                 </Button>
@@ -280,7 +281,7 @@ const Navigation = () => {
                         setIsMobileMenuOpen(false);
                         navigate('/auth');
                       }}
-                      className="w-full bg-blue-gradient hover:bg-blue-600 text-white transition-colors"
+                      className="w-full bg-navy-700 hover:bg-navy-800 text-white transition-colors"
                     >
                       Get Started
                     </Button>

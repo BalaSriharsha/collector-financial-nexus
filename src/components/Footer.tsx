@@ -10,7 +10,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-gradient rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-navy-800 rounded-xl flex items-center justify-center">
                 <Coins className="w-6 h-6 text-white" />
               </div>
               <h1 className="text-2xl font-playfair font-bold">Vittas</h1>
