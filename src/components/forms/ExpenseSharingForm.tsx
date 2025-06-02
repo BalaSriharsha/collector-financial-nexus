@@ -177,9 +177,12 @@ const ExpenseSharingForm = ({ open, onOpenChange, userType }: ExpenseSharingForm
       resetForm();
       onOpenChange(false);
       queryClient.invalidateQueries({ queryKey: ['shared-expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['groups'] });
       
-      // Navigate to groups page
-      navigate('/groups');
+      // Navigate to groups page after a short delay to allow the toast to show
+      setTimeout(() => {
+        navigate('/groups');
+      }, 500);
     } catch (error: unknown) {
       console.error('Error creating shared expense:', error);
       const errorMessage = error && typeof error === 'object' && 'message' in error 

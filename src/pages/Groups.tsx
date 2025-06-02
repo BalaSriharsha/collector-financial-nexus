@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Users, Edit, Trash2 } from "lucide-react";
+import { Plus, Users, Edit, Trash2, ArrowLeft } from "lucide-react";
 import Navigation from "@/components/Navigation";
+import MobileNavigation from "@/components/MobileNavigation";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +35,8 @@ interface Group {
 const Groups = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  
   const [groups, setGroups] = useState<Group[]>([]);
   const [newGroup, setNewGroup] = useState({ 
     name: "", 
@@ -229,10 +233,22 @@ const Groups = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <Navigation />
+    <div className={`min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 ${isMobile ? 'pb-20' : ''}`}>
+      {/* Desktop Navigation */}
+      {!isMobile && <Navigation />}
       
       <div className="max-w-6xl mx-auto px-4 py-4 sm:py-8">
+        {/* Back to Dashboard */}
+        <div className="mb-6">
+          <Link 
+            to="/dashboard" 
+            className="inline-flex items-center text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Link>
+        </div>
+
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl sm:text-3xl font-playfair font-bold text-slate-800 dark:text-slate-100">
@@ -518,6 +534,9 @@ const Groups = () => {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Mobile Navigation */}
+      {isMobile && <MobileNavigation />}
     </div>
   );
 };
