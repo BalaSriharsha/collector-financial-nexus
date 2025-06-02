@@ -231,7 +231,7 @@ const ViewAllModal: React.FC<ViewAllModalProps> = ({
           {/* Data Display */}
           <div className="space-y-3">
             {filteredData.length === 0 ? (
-              <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+              <div className="text-center py-8 text-slate-600 dark:text-slate-400">
                 No {type} found for the selected filters
               </div>
             ) : (
@@ -244,7 +244,7 @@ const ViewAllModal: React.FC<ViewAllModalProps> = ({
                     <>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-medium">{(item as Transaction).title}</h4>
+                          <h4 className="font-medium text-slate-900 dark:text-slate-100">{(item as Transaction).title}</h4>
                           <Badge 
                             variant="secondary" 
                             className={`text-xs ${getCategoryBadgeColor((item as Transaction).category)}`}
@@ -257,7 +257,7 @@ const ViewAllModal: React.FC<ViewAllModalProps> = ({
                             {(item as Transaction).description}
                           </p>
                         )}
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                        <p className="text-xs text-slate-600 dark:text-slate-400">
                           {new Date((item as Transaction).date).toLocaleDateString('en-IN', {
                             year: 'numeric',
                             month: 'short',
@@ -276,7 +276,7 @@ const ViewAllModal: React.FC<ViewAllModalProps> = ({
                     <>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-medium">{(item as Budget).name}</h4>
+                          <h4 className="font-medium text-slate-900 dark:text-slate-100">{(item as Budget).name}</h4>
                           <Badge 
                             variant="secondary" 
                             className={`text-xs ${getCategoryBadgeColor((item as Budget).category)}`}
@@ -284,11 +284,11 @@ const ViewAllModal: React.FC<ViewAllModalProps> = ({
                             {(item as Budget).category}
                           </Badge>
                         </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                        <p className="text-xs text-slate-600 dark:text-slate-400">
                           {new Date((item as Budget).start_date).toLocaleDateString('en-IN')} - {new Date((item as Budget).end_date).toLocaleDateString('en-IN')}
                         </p>
                         {(item as Budget).period && (
-                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                          <p className="text-xs text-slate-600 dark:text-slate-400">
                             Period: {(item as Budget).period}
                           </p>
                         )}

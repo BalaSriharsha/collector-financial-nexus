@@ -238,23 +238,23 @@ const Groups = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-orange-50/30 to-amber-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <Navigation />
       
       <div className="max-w-6xl mx-auto px-4 py-4 sm:py-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-playfair font-bold text-collector-black">
+            <h1 className="text-2xl sm:text-3xl font-playfair font-bold text-slate-800 dark:text-slate-100">
               Groups
             </h1>
-            <p className="text-collector-black/70 text-sm sm:text-base">
+            <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base">
               Manage your expense sharing groups
             </p>
           </div>
           <Button
             onClick={() => setShowCreateGroup(true)}
             disabled={!canAccess('expense-sharing')}
-            className="bg-blue-500 hover:bg-blue-600 text-white transition-all duration-200 text-sm sm:text-base"
+            className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600 transition-all duration-200 text-sm sm:text-base"
           >
             {!canAccess('expense-sharing') ? (
               <>
@@ -271,9 +271,9 @@ const Groups = () => {
         </div>
 
         {!canAccess('expense-sharing') && (
-          <Alert className="mb-6 border-orange-300 bg-orange-50">
-            <Crown className="h-4 w-4 text-orange-600" />
-            <AlertDescription className="text-orange-900 font-medium">
+          <Alert className="mb-6 border-orange-300 bg-orange-50 dark:border-orange-700 dark:bg-orange-900/20">
+            <Crown className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+            <AlertDescription className="text-orange-900 dark:text-orange-300 font-medium">
               Upgrade to Premium or Organization plan to create and manage groups for expense sharing.
             </AlertDescription>
           </Alert>
@@ -284,34 +284,34 @@ const Groups = () => {
           {isLoading ? (
             <div className="col-span-full text-center py-8">
               <div className="w-8 h-8 border-4 border-collector-orange border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-collector-black/70">Loading groups...</p>
+              <p className="text-slate-600 dark:text-slate-400">Loading groups...</p>
             </div>
           ) : groups && groups.length > 0 ? (
             groups.map((group) => (
               <Card 
                 key={group.id} 
-                className="shadow-sm border-collector-gold/20 hover:shadow-md transition-all duration-200"
+                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-200"
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 cursor-pointer min-w-0" onClick={() => navigate(`/groups/${group.id}`)}>
-                      <CardTitle className="text-base sm:text-lg text-collector-black truncate">{group.name}</CardTitle>
+                      <CardTitle className="text-base sm:text-lg text-slate-800 dark:text-slate-100 truncate">{group.name}</CardTitle>
                       {group.description && (
-                        <CardDescription className="mt-1 text-sm line-clamp-2">{group.description}</CardDescription>
+                        <CardDescription className="mt-1 text-sm line-clamp-2 text-slate-600 dark:text-slate-400">{group.description}</CardDescription>
                       )}
                       {userProfile?.user_type === 'organization' && (group.department_name || group.team_name) && (
                         <div className="flex flex-wrap gap-1 mt-2">
                           {group.department_name && (
-                            <Badge variant="secondary" className="text-xs">{group.department_name}</Badge>
+                            <Badge variant="secondary" className="text-xs dark:bg-slate-700 dark:text-slate-200">{group.department_name}</Badge>
                           )}
                           {group.team_name && (
-                            <Badge variant="outline" className="text-xs">{group.team_name}</Badge>
+                            <Badge variant="outline" className="text-xs dark:border-slate-600 dark:text-slate-300">{group.team_name}</Badge>
                           )}
                         </div>
                       )}
                     </div>
                     <div className="flex flex-col gap-1">
-                      <Badge variant="outline" className="text-xs text-blue-600 border-blue-200">
+                      <Badge variant="outline" className="text-xs text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-700">
                         Owner
                       </Badge>
                       <div className="flex gap-1">
@@ -319,7 +319,7 @@ const Groups = () => {
                           size="sm"
                           variant="outline"
                           onClick={() => openEditDialog(group)}
-                          className="h-7 w-7 p-0 hover:bg-blue-50"
+                          className="h-7 w-7 p-0 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:border-slate-600"
                         >
                           <Edit className="w-3 h-3" />
                         </Button>
@@ -327,7 +327,7 @@ const Groups = () => {
                           size="sm"
                           variant="outline"
                           onClick={() => handleDeleteGroup(group.id, group.name)}
-                          className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20 dark:border-red-500"
                         >
                           <Trash2 className="w-3 h-3" />
                         </Button>
@@ -336,7 +336,7 @@ const Groups = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <div className="flex items-center justify-between text-xs text-collector-black/60 mb-3">
+                  <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 mb-3">
                     <div className="flex items-center">
                       <Users className="w-3 h-3 mr-1" />
                       <span>{group.group_members?.length || 0} members</span>
@@ -350,14 +350,14 @@ const Groups = () => {
                       {group.group_members.slice(0, 4).map((member: any, index: number) => (
                         <div 
                           key={member.id}
-                          className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white"
+                          className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white dark:border-slate-800"
                           title={member.profiles?.full_name || member.profiles?.email}
                         >
                           {member.profiles?.full_name?.[0] || member.profiles?.email?.[0]}
                         </div>
                       ))}
                       {group.group_members.length > 4 && (
-                        <div className="w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white">
+                        <div className="w-6 h-6 bg-gray-400 dark:bg-gray-600 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white dark:border-slate-800">
                           +{group.group_members.length - 4}
                         </div>
                       )}
@@ -368,9 +368,9 @@ const Groups = () => {
             ))
           ) : (
             <div className="col-span-full text-center py-12">
-              <Users className="w-12 sm:w-16 h-12 sm:h-16 text-collector-black/30 mx-auto mb-4" />
-              <h3 className="text-base sm:text-lg font-medium text-collector-black/70 mb-2">No groups yet</h3>
-              <p className="text-sm text-collector-black/50 mb-4">
+              <Users className="w-12 sm:w-16 h-12 sm:h-16 text-slate-400 dark:text-slate-600 mx-auto mb-4" />
+              <h3 className="text-base sm:text-lg font-medium text-slate-600 dark:text-slate-400 mb-2">No groups yet</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-500 mb-4">
                 {canAccess('expense-sharing') 
                   ? 'Create your first group to start sharing expenses'
                   : 'Upgrade to Premium to create groups'
@@ -379,7 +379,7 @@ const Groups = () => {
               {canAccess('expense-sharing') && (
                 <Button
                   onClick={() => setShowCreateGroup(true)}
-                  className="bg-blue-500 hover:bg-blue-600 text-white transition-all duration-200"
+                  className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600 transition-all duration-200"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Create Group
@@ -391,7 +391,7 @@ const Groups = () => {
 
         {/* Create Group Modal */}
         <Dialog open={showCreateGroup} onOpenChange={setShowCreateGroup}>
-          <DialogContent className="border-2 border-collector-gold/30 max-w-md mx-4">
+          <DialogContent className="bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 max-w-md mx-4">
             <DialogHeader>
               <DialogTitle>Create New Group</DialogTitle>
               <DialogDescription>

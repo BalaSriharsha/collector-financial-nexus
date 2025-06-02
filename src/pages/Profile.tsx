@@ -126,12 +126,12 @@ const Profile = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-white via-orange-50/30 to-amber-50/30">
+      <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         <Navigation />
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="text-center py-8">
             <div className="w-8 h-8 border-4 border-collector-orange border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-collector-black/70">Loading profile...</p>
+            <p className="text-slate-600 dark:text-slate-400">Loading profile...</p>
           </div>
         </div>
       </div>
@@ -140,7 +140,7 @@ const Profile = () => {
 
   if (!user || !profile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-white via-orange-50/30 to-amber-50/30">
+      <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         <Navigation />
         <div className="max-w-4xl mx-auto px-4 py-8">
           <Alert>
@@ -154,7 +154,7 @@ const Profile = () => {
   // Show Razorpay checkout if user is upgrading
   if (showRazorpayCheckout) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-white via-orange-50/30 to-amber-50/30">
+      <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         <Navigation />
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="mb-6">
@@ -165,10 +165,10 @@ const Profile = () => {
             >
               ← Back to Profile
             </Button>
-            <h1 className="text-2xl sm:text-3xl font-playfair font-bold text-collector-black mb-2">
+            <h1 className="text-2xl sm:text-3xl font-playfair font-bold text-slate-800 dark:text-slate-100 mb-2">
               Upgrade to {showRazorpayCheckout}
             </h1>
-            <p className="text-collector-black/70">
+            <p className="text-slate-600 dark:text-slate-400">
               Complete your subscription upgrade with secure Razorpay payment
             </p>
           </div>
@@ -184,21 +184,21 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-orange-50/30 to-amber-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <Navigation />
       
       <div className="max-w-4xl mx-auto px-4 py-4 sm:py-8 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-playfair font-bold text-collector-black">
+            <h1 className="text-2xl sm:text-3xl font-playfair font-bold text-slate-800 dark:text-slate-100">
               Profile Settings
             </h1>
-            <p className="text-collector-black/70 text-sm sm:text-base">
+            <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base">
               Manage your account information and preferences
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">
+            <Badge variant="outline" className="text-xs dark:border-slate-600 dark:text-slate-300">
               {profile.user_type === 'individual' ? 'Individual' : 'Organization'}
             </Badge>
           </div>
@@ -207,43 +207,43 @@ const Profile = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Profile Information */}
           <div className="space-y-6">
-            <Card className="shadow-sm border-collector-gold/20">
+            <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm">
               <CardHeader className="pb-4">
                 <div className="flex items-center gap-2">
                   <User className="w-5 h-5 text-collector-orange" />
-                  <CardTitle className="text-lg">Personal Information</CardTitle>
+                  <CardTitle className="text-lg text-slate-800 dark:text-slate-100">Personal Information</CardTitle>
                 </div>
-                <CardDescription className="text-sm">
+                <CardDescription className="text-sm text-slate-600 dark:text-slate-400">
                   Update your personal details and preferences
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="full_name" className="text-sm font-medium">Full Name</Label>
+                    <Label htmlFor="full_name" className="text-sm font-medium text-slate-700 dark:text-slate-300">Full Name</Label>
                     <Input
                       id="full_name"
                       name="full_name"
                       defaultValue={profile.full_name || ""}
-                      className="border-collector-gold/30 focus:border-collector-orange text-sm"
+                      className="border-slate-300 focus:border-collector-orange text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+                    <Label htmlFor="email" className="text-sm font-medium text-slate-700 dark:text-slate-300">Email</Label>
                     <Input
                       id="email"
                       value={profile.email || ""}
                       disabled
-                      className="bg-gray-50 text-sm"
+                      className="bg-gray-50 text-sm dark:bg-slate-600 dark:text-slate-300"
                     />
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="currency" className="text-sm font-medium">Currency</Label>
+                      <Label htmlFor="currency" className="text-sm font-medium text-slate-700 dark:text-slate-300">Currency</Label>
                       <Select name="currency" defaultValue={profile.currency || "INR"}>
-                        <SelectTrigger className="border-collector-gold/30 focus:border-collector-orange text-sm">
+                        <SelectTrigger className="border-slate-300 focus:border-collector-orange text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -256,9 +256,9 @@ const Profile = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="country" className="text-sm font-medium">Country</Label>
+                      <Label htmlFor="country" className="text-sm font-medium text-slate-700 dark:text-slate-300">Country</Label>
                       <Select name="country" defaultValue={profile.country || "IND"}>
-                        <SelectTrigger className="border-collector-gold/30 focus:border-collector-orange text-sm">
+                        <SelectTrigger className="border-slate-300 focus:border-collector-orange text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -275,7 +275,7 @@ const Profile = () => {
                   <Button 
                     type="submit" 
                     disabled={loading}
-                    className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600 text-sm"
                   >
                     {loading ? 'Updating...' : 'Update Profile'}
                   </Button>
@@ -284,21 +284,21 @@ const Profile = () => {
             </Card>
 
             {/* Theme Settings */}
-            <Card className="shadow-sm border-collector-gold/20">
+            <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm">
               <CardHeader className="pb-4">
                 <div className="flex items-center gap-2">
                   <Palette className="w-5 h-5 text-collector-orange" />
-                  <CardTitle className="text-lg">Theme Settings</CardTitle>
+                  <CardTitle className="text-lg text-slate-800 dark:text-slate-100">Theme Settings</CardTitle>
                 </div>
-                <CardDescription className="text-sm">
+                <CardDescription className="text-sm text-slate-600 dark:text-slate-400">
                   Customize your app appearance
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Theme Mode</Label>
+                  <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Theme Mode</Label>
                   <Select value={mode} onValueChange={setMode}>
-                    <SelectTrigger className="border-collector-gold/30 focus:border-collector-orange text-sm">
+                    <SelectTrigger className="border-slate-300 focus:border-collector-orange text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -325,15 +325,15 @@ const Profile = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Theme Style</Label>
+                  <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Theme Style</Label>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">Compact Theme (Excel-like)</span>
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Compact Theme (Excel-like)</span>
                     <Switch
                       checked={style === 'compact'}
                       onCheckedChange={(checked) => setStyle(checked ? 'compact' : 'default')}
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
                     Enable for a more compact, Excel-style interface
                   </p>
                 </div>
@@ -343,11 +343,11 @@ const Profile = () => {
 
           {/* Subscription and Danger Zone */}
           <div className="space-y-6">
-            <Card className="shadow-sm border-collector-gold/20">
+            <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm">
               <CardHeader className="pb-4">
                 <div className="flex items-center gap-2">
                   <CreditCard className="w-5 h-5 text-collector-orange" />
-                  <CardTitle className="text-lg">Subscription</CardTitle>
+                  <CardTitle className="text-lg text-slate-800 dark:text-slate-100">Subscription</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
@@ -358,14 +358,14 @@ const Profile = () => {
                     <Button
                       variant="outline"
                       onClick={() => manageSubscription()}
-                      className="w-full text-sm"
+                      className="w-full text-sm dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
                     >
                       Cancel Subscription
                     </Button>
                     {subscription?.tier === 'Premium' && (
                       <Button
                         onClick={() => handleUpgrade('Organization')}
-                        className="w-full bg-purple-500 hover:bg-purple-600 text-white text-sm"
+                        className="w-full bg-purple-600 hover:bg-purple-700 text-white dark:bg-purple-500 dark:hover:bg-purple-600 text-sm"
                       >
                         <Crown className="w-4 h-4 mr-2" />
                         Upgrade to Organization - ₹2,249/month
@@ -378,14 +378,14 @@ const Profile = () => {
                   <div className="mt-4 space-y-2">
                     <Button
                       onClick={() => handleUpgrade('Premium')}
-                      className="w-full bg-orange-500 hover:bg-orange-600 text-white border-2 border-orange-500 hover:border-orange-600 text-sm"
+                      className="w-full bg-orange-600 hover:bg-orange-700 text-white border-2 border-orange-600 hover:border-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 dark:border-orange-500 dark:hover:border-orange-600 text-sm"
                     >
                       <Crown className="w-4 h-4 mr-2" />
                       Upgrade to Premium - ₹749/month
                     </Button>
                     <Button
                       onClick={() => handleUpgrade('Organization')}
-                      className="w-full bg-purple-500 hover:bg-purple-600 text-white text-sm"
+                      className="w-full bg-purple-600 hover:bg-purple-700 text-white dark:bg-purple-500 dark:hover:bg-purple-600 text-sm"
                     >
                       <Gem className="w-4 h-4 mr-2" />
                       Upgrade to Organization - ₹2,249/month
@@ -393,7 +393,7 @@ const Profile = () => {
                     <Button
                       variant="outline"
                       onClick={() => setShowUpgradeOptions(false)}
-                      className="w-full text-sm"
+                      className="w-full text-sm dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
                     >
                       Cancel
                     </Button>
@@ -403,13 +403,13 @@ const Profile = () => {
             </Card>
 
             {/* Danger Zone */}
-            <Card className="shadow-sm border-red-200">
+            <Card className="bg-white dark:bg-slate-800 border-red-200 dark:border-red-700 shadow-sm">
               <CardHeader className="pb-4">
                 <div className="flex items-center gap-2">
-                  <Trash2 className="w-5 h-5 text-red-600" />
-                  <CardTitle className="text-lg text-red-600">Danger Zone</CardTitle>
+                  <Trash2 className="w-5 h-5 text-red-600 dark:text-red-400" />
+                  <CardTitle className="text-lg text-red-600 dark:text-red-400">Danger Zone</CardTitle>
                 </div>
-                <CardDescription className="text-sm">
+                <CardDescription className="text-sm text-slate-600 dark:text-slate-400">
                   Irreversible actions for your account
                 </CardDescription>
               </CardHeader>

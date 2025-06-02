@@ -13,9 +13,56 @@ interface RazorpayCheckoutProps {
   onSuccess?: () => void;
 }
 
+interface QrCodeData {
+  qrCodeUrl: string;
+  upiId: string;
+  amount: string;
+  upiUrl: string;
+}
+
+interface RazorpayResponse {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+}
+
+interface RazorpayOptions {
+  key: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  order_id: string;
+  prefill: {
+    email: string;
+    name: string;
+  };
+  theme: {
+    color: string;
+  };
+  method: {
+    netbanking: boolean;
+    card: boolean;
+    upi: boolean;
+    wallet: boolean;
+  };
+  handler: (response: RazorpayResponse) => void;
+  modal: {
+    ondismiss: () => void;
+  };
+}
+
+interface RazorpayInstance {
+  open: () => void;
+}
+
+interface RazorpayConstructor {
+  new (options: RazorpayOptions): RazorpayInstance;
+}
+
 declare global {
   interface Window {
-    Razorpay: any;
+    Razorpay: RazorpayConstructor;
   }
 }
 
@@ -24,7 +71,7 @@ const RazorpayCheckout = ({ planType, onSuccess }: RazorpayCheckoutProps) => {
   const { refreshSubscription } = useSubscription();
   const [loading, setLoading] = useState(false);
   const [showUPI, setShowUPI] = useState(false);
-  const [qrData, setQrData] = useState<any>(null);
+  const [qrData, setQrData] = useState<QrCodeData | null>(null);
 
   const planDetails = {
     Premium: {
@@ -91,13 +138,49 @@ const RazorpayCheckout = ({ planType, onSuccess }: RazorpayCheckoutProps) => {
           upi: true,
           wallet: true,
         },
-        handler: async function (response: any) {
+        handler: async function (response: RazorpayResponse) {
           console.log('Payment successful:', response);
           toast.success('Payment successful! Processing your subscription...');
           
+          // Manual subscription update as fallback using Supabase function
+          const manualSubscriptionUpdate = async () => {
+            try {
+              console.log('Attempting manual subscription update via Supabase function...');
+              
+              const { data, error } = await supabase.functions.invoke('manual-subscription-update', {
+                body: {
+                  paymentId: response.razorpay_payment_id,
+                  orderId: response.razorpay_order_id,
+                  signature: response.razorpay_signature,
+                  planType: planType
+                }
+              });
+              
+              if (error) {
+                console.error('Manual subscription update function failed:', error);
+                throw error;
+              }
+              
+              if (!data?.success) {
+                console.error('Manual subscription update returned failure:', data);
+                throw new Error(data?.error || 'Unknown error in subscription update');
+              }
+              
+              console.log('Manual subscription update successful:', data);
+              await refreshSubscription();
+              onSuccess?.();
+              toast.success('Your subscription has been activated!');
+              return true;
+              
+            } catch (error) {
+              console.error('Manual subscription update failed:', error);
+              return false;
+            }
+          };
+          
           // Wait longer for webhook processing and be more thorough
           let attempts = 0;
-          const maxAttempts = 15; // Increased attempts
+          const maxAttempts = 12; // Reduced attempts since we have manual fallback
           
           const checkSubscriptionStatus = async () => {
             attempts++;
@@ -145,7 +228,7 @@ const RazorpayCheckout = ({ planType, onSuccess }: RazorpayCheckoutProps) => {
           // Check immediately first
           if (await checkSubscriptionStatus()) return;
           
-          // Then check every 3 seconds with longer timeout
+          // Then check every 3 seconds with timeout
           const intervalId = setInterval(async () => {
             if (await checkSubscriptionStatus()) {
               clearInterval(intervalId);
@@ -154,14 +237,17 @@ const RazorpayCheckout = ({ planType, onSuccess }: RazorpayCheckoutProps) => {
             
             if (attempts >= maxAttempts) {
               clearInterval(intervalId);
-              console.log('Timeout waiting for subscription update after', attempts, 'attempts');
+              console.log('Timeout waiting for webhook, attempting manual update...');
               
-              // Manual refresh and show message
-              await refreshSubscription();
-              toast.warning('Payment processed successfully. If your subscription doesn\'t update immediately, please refresh the page or contact support.');
-              onSuccess?.();
+              // Try manual subscription update as fallback
+              const manualUpdateSuccess = await manualSubscriptionUpdate();
+              
+              if (!manualUpdateSuccess) {
+                // If manual update also fails, show error
+                toast.error('Payment successful but subscription update failed. Please contact support with payment ID: ' + response.razorpay_payment_id);
+              }
             }
-          }, 3000); // Check every 3 seconds
+          }, 2500); // Check every 2.5 seconds
         },
         modal: {
           ondismiss: function() {
@@ -173,9 +259,10 @@ const RazorpayCheckout = ({ planType, onSuccess }: RazorpayCheckoutProps) => {
 
       const paymentObject = new window.Razorpay(options);
       paymentObject.open();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create checkout session';
       console.error('Error creating checkout:', error);
-      toast.error(error.message || 'Failed to create checkout session');
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -210,9 +297,10 @@ const RazorpayCheckout = ({ planType, onSuccess }: RazorpayCheckoutProps) => {
 
       setQrData(qrResponse);
       setShowUPI(true);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate UPI QR code';
       console.error('Error generating UPI QR:', error);
-      toast.error(error.message || 'Failed to generate UPI QR code');
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

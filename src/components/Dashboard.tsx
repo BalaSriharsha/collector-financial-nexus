@@ -608,7 +608,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowViewAllTransactions(true)}
-                className="border-gray-300 text-gray-700 hover:bg-gray-50 bg-white"
+                className="border-gray-300 text-gray-700 hover:bg-gray-50 bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700 dark:bg-slate-800"
               >
                 View All
               </Button>
@@ -623,10 +623,10 @@ const Dashboard = ({ userType }: DashboardProps) => {
                       onClick={() => handleTransactionClick(transaction)}
                     >
                       <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-gray-800 text-sm mb-1 truncate">
+                        <div className="font-semibold text-gray-800 dark:text-slate-100 text-sm mb-1 truncate">
                           {transaction.title}
                         </div>
-                        <div className="text-xs text-gray-600 truncate">
+                        <div className="text-xs text-gray-600 dark:text-slate-400 truncate">
                           {transaction.category}
                         </div>
                       </div>
@@ -639,7 +639,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                             {currencySymbol}
                             {Number(transaction.amount).toLocaleString()}
                           </div>
-                          <div className="text-xs text-gray-600">
+                          <div className="text-xs text-gray-600 dark:text-slate-400">
                             {transaction.date}
                           </div>
                         </div>
@@ -672,7 +672,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 sm:py-12 text-gray-600">
+                <div className="text-center py-8 sm:py-12 text-gray-600 dark:text-slate-400">
                   <FileText className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-4 opacity-50" />
                   <p className="text-sm mb-4">No transactions yet</p>
                 </div>
@@ -690,7 +690,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowViewAllBudgets(true)}
-                className="border-gray-300 text-gray-700 hover:bg-gray-50 bg-white"
+                className="border-gray-300 text-gray-700 hover:bg-gray-50 bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700 dark:bg-slate-800"
               >
                 View All
               </Button>
@@ -701,61 +701,63 @@ const Dashboard = ({ userType }: DashboardProps) => {
                   {budgets.slice(0, 4).map((budget) => (
                     <div
                       key={budget.id}
-                      className="p-3 sm:p-4 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                      className="flex items-center justify-between p-3 sm:p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer dark:border-slate-700 dark:hover:bg-slate-700"
                       onClick={() => handleBudgetClick(budget)}
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-semibold text-gray-800 text-sm truncate flex-1">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-gray-800 dark:text-slate-100 text-sm mb-1 truncate">
                           {budget.name}
-                        </span>
-                        <div className="flex items-center gap-2 ml-2">
-                          <span className="text-sm font-bold text-orange-600">
-                            {currencySymbol}
-                            {Number(budget.amount).toLocaleString()}
-                          </span>
-                          <div className="flex flex-col gap-1">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditBudget(budget.id);
-                              }}
-                              className="h-5 w-5 p-0 border-gray-300 text-gray-700 hover:bg-gray-50 bg-white"
-                            >
-                              <Edit className="w-3 h-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteBudget(budget.id);
-                              }}
-                              className="h-5 w-5 p-0 border-red-300 text-red-600 hover:bg-red-50 bg-white"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          </div>
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-slate-400 truncate">
+                          {budget.category} • {budget.period}
                         </div>
                       </div>
-                      <div className="text-xs text-gray-600">
-                        {budget.category} • {budget.period}
+                      <div className="flex items-center gap-2 sm:gap-3 ml-2">
+                        <div className="text-right">
+                          <div className="font-bold text-sm text-orange-600">
+                            {currencySymbol}
+                            {Number(budget.amount).toLocaleString()}
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditBudget(budget.id);
+                            }}
+                            className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-gray-300 text-gray-700 hover:bg-gray-50 bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700 dark:bg-slate-800"
+                          >
+                            <Edit className="w-3 h-3 text-gray-700 dark:text-slate-300" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteBudget(budget.id);
+                            }}
+                            className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-red-300 text-red-600 hover:bg-red-50 bg-white dark:border-red-500 dark:text-red-400 dark:hover:bg-red-900/20 dark:bg-slate-800"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 sm:py-12 text-gray-600">
+                <div className="text-center py-8 sm:py-12 text-gray-600 dark:text-slate-400">
                   <Target className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-4 opacity-50" />
                   <p className="text-sm mb-4">No budgets created</p>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setShowCreateBudget(true)}
-                    className="border-gray-300 hover:bg-gray-50 bg-white"
+                    className="border-gray-300 hover:bg-gray-50 bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700 dark:bg-slate-800"
                   >
-                    <span className="text-gray-700">Create Budget</span>
+                    <span className="text-gray-700 dark:text-slate-300">Create Budget</span>
                   </Button>
                 </div>
               )}

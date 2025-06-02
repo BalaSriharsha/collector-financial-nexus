@@ -73,7 +73,7 @@ const TransactionDetailsModal = ({ open, onOpenChange, transaction, onEdit, onDe
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-lg mx-auto bg-white text-slate-900 border-2 border-slate-300 max-h-[90vh] overflow-y-auto dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-3 text-lg sm:text-xl font-playfair text-gray-900">
+          <DialogTitle className="flex items-center gap-3 text-lg sm:text-xl font-playfair text-slate-800 dark:text-slate-100">
             {transaction.type === 'income' ? 
               <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" /> :
               <TrendingDown className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
