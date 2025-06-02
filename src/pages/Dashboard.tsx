@@ -40,7 +40,7 @@ const DashboardPage = () => {
       <div className="min-h-screen bg-gradient-to-br from-collector-white via-orange-50 to-amber-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-collector-orange border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-collector-black/70">Loading dashboard...</p>
+          <p className="text-gray-800">Loading dashboard...</p>
         </div>
       </div>
     );

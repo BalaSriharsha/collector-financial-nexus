@@ -10,11 +10,11 @@ const PrivacyPolicy = () => {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-sm border border-collector-gold/20 p-8">
           <h1 className="text-3xl font-playfair font-bold text-collector-black mb-6">Privacy Policy</h1>
-          <p className="text-sm text-collector-black/70 mb-8">Last updated: June 1, 2025</p>
+          <p className="text-sm text-gray-600 mb-8">Last updated: June 1, 2025</p>
 
-          <div className="space-y-6 text-collector-black/80">
+          <div className="space-y-6 text-gray-800">
             <section>
-              <h2 className="text-xl font-semibold mb-3">1. Information We Collect</h2>
+              <h2 className="text-xl font-semibold mb-3 text-collector-black">1. Information We Collect</h2>
               <p className="mb-3">We collect information you provide directly to us, such as when you create an account, use our services, or contact us.</p>
               <ul className="list-disc pl-6 space-y-1">
                 <li>Personal information (name, email address, phone number)</li>
@@ -25,7 +25,7 @@ const PrivacyPolicy = () => {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3">2. How We Use Your Information</h2>
+              <h2 className="text-xl font-semibold mb-3 text-collector-black">2. How We Use Your Information</h2>
               <ul className="list-disc pl-6 space-y-1">
                 <li>Provide, maintain, and improve our financial management services</li>
                 <li>Process transactions and send related information</li>
@@ -36,7 +36,7 @@ const PrivacyPolicy = () => {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3">3. Information Sharing and Disclosure</h2>
+              <h2 className="text-xl font-semibold mb-3 text-collector-black">3. Information Sharing and Disclosure</h2>
               <p className="mb-3">We do not sell, trade, or otherwise transfer your personal information to third parties except as described in this policy:</p>
               <ul className="list-disc pl-6 space-y-1">
                 <li>With your consent</li>
@@ -48,12 +48,12 @@ const PrivacyPolicy = () => {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3">4. Data Security</h2>
+              <h2 className="text-xl font-semibold mb-3 text-collector-black">4. Data Security</h2>
               <p>We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction. This includes encryption, secure data transmission, and regular security assessments.</p>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3">5. Your Rights</h2>
+              <h2 className="text-xl font-semibold mb-3 text-collector-black">5. Your Rights</h2>
               <p className="mb-3">You have the right to:</p>
               <ul className="list-disc pl-6 space-y-1">
                 <li>Access and update your personal information</li>
@@ -65,7 +65,7 @@ const PrivacyPolicy = () => {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3">6. Contact Us</h2>
+              <h2 className="text-xl font-semibold mb-3 text-collector-black">6. Contact Us</h2>
               <p>If you have any questions about this Privacy Policy, please contact us at:</p>
               <div className="mt-2">
                 <p>Email: privacy@vittas.app</p>

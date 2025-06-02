@@ -70,14 +70,14 @@ const StatsDetailsModal: React.FC<StatsDetailsModalProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">{title} Details</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-xl font-semibold text-gray-900">{title} Details</DialogTitle>
+          <DialogDescription className="text-gray-700">
             Total amount: <span className="font-semibold">{formatCurrency(amount)}</span>
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="text-sm text-muted-foreground">
+          <div className="text-sm text-gray-600">
             Showing {filteredTransactions.length} transactions
           </div>
 
@@ -85,18 +85,18 @@ const StatsDetailsModal: React.FC<StatsDetailsModalProps> = ({
 
           <div className="space-y-3">
             {filteredTransactions.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-center py-8 text-gray-600">
                 No transactions found for {type}
               </div>
             ) : (
               filteredTransactions.map((transaction) => (
                 <div
                   key={transaction.id}
-                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-medium">{transaction.title}</h4>
+                      <h4 className="font-medium text-gray-900">{transaction.title}</h4>
                       <Badge 
                         variant="secondary" 
                         className={`text-xs ${getCategoryBadgeColor(transaction.category)}`}
@@ -105,11 +105,11 @@ const StatsDetailsModal: React.FC<StatsDetailsModalProps> = ({
                       </Badge>
                     </div>
                     {transaction.description && (
-                      <p className="text-sm text-muted-foreground mb-1">
+                      <p className="text-sm text-gray-600 mb-1">
                         {transaction.description}
                       </p>
                     )}
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-gray-500">
                       {new Date(transaction.date).toLocaleDateString('en-IN', {
                         year: 'numeric',
                         month: 'short',

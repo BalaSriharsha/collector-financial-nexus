@@ -10,11 +10,11 @@ const ShippingDelivery = () => {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-sm border border-collector-gold/20 p-8">
           <h1 className="text-3xl font-playfair font-bold text-collector-black mb-6">Shipping & Delivery Policy</h1>
-          <p className="text-sm text-collector-black/70 mb-8">Last updated: June 1, 2025</p>
+          <p className="text-sm text-gray-600 mb-8">Last updated: June 1, 2025</p>
 
-          <div className="space-y-6 text-collector-black/80">
+          <div className="space-y-6 text-gray-800">
             <section>
-              <h2 className="text-xl font-semibold mb-3">1. Digital Service Delivery</h2>
+              <h2 className="text-xl font-semibold mb-3 text-collector-black">1. Digital Service Delivery</h2>
               <p className="mb-3">Vittas is a digital financial management platform. All services are delivered electronically:</p>
               <ul className="list-disc pl-6 space-y-1">
                 <li>Instant access upon successful subscription activation</li>
@@ -25,7 +25,7 @@ const ShippingDelivery = () => {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3">2. Service Activation</h2>
+              <h2 className="text-xl font-semibold mb-3 text-collector-black">2. Service Activation</h2>
               <ul className="list-disc pl-6 space-y-1">
                 <li>Free accounts are activated immediately upon registration</li>
                 <li>Premium subscriptions are activated within minutes of payment</li>
@@ -35,7 +35,7 @@ const ShippingDelivery = () => {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3">3. Data Export and Delivery</h2>
+              <h2 className="text-xl font-semibold mb-3 text-collector-black">3. Data Export and Delivery</h2>
               <p className="mb-3">For data portability and backup purposes:</p>
               <ul className="list-disc pl-6 space-y-1">
                 <li>Data exports are generated instantly upon request</li>
@@ -46,7 +46,7 @@ const ShippingDelivery = () => {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3">4. Service Availability</h2>
+              <h2 className="text-xl font-semibold mb-3 text-collector-black">4. Service Availability</h2>
               <ul className="list-disc pl-6 space-y-1">
                 <li>99.9% uptime guarantee</li>
                 <li>Scheduled maintenance windows are announced 24 hours in advance</li>
@@ -56,7 +56,7 @@ const ShippingDelivery = () => {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3">5. Account Setup Assistance</h2>
+              <h2 className="text-xl font-semibold mb-3 text-collector-black">5. Account Setup Assistance</h2>
               <p className="mb-3">We provide comprehensive onboarding support:</p>
               <ul className="list-disc pl-6 space-y-1">
                 <li>Welcome email with getting started guide</li>
@@ -67,7 +67,7 @@ const ShippingDelivery = () => {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3">6. Technical Requirements</h2>
+              <h2 className="text-xl font-semibold mb-3 text-collector-black">6. Technical Requirements</h2>
               <p className="mb-3">To ensure optimal service delivery:</p>
               <ul className="list-disc pl-6 space-y-1">
                 <li>Modern web browser (Chrome, Firefox, Safari, Edge)</li>
@@ -78,7 +78,7 @@ const ShippingDelivery = () => {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3">7. Support and Delivery Issues</h2>
+              <h2 className="text-xl font-semibold mb-3 text-collector-black">7. Support and Delivery Issues</h2>
               <p className="mb-3">If you experience any issues with service delivery:</p>
               <ul className="list-disc pl-6 space-y-1">
                 <li>Check your email spam folder for activation messages</li>
@@ -89,7 +89,7 @@ const ShippingDelivery = () => {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3">8. Contact Information</h2>
+              <h2 className="text-xl font-semibold mb-3 text-collector-black">8. Contact Information</h2>
               <p>For delivery or access issues, contact us at:</p>
               <div className="mt-2">
                 <p>Email: support@vittas.app</p>
