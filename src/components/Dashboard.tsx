@@ -329,7 +329,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
     setShowBudgetDetails(true);
   };
   const handleExpenseShareClick = () => {
-    setShowExpenseSharing(true);
+    navigate('/groups');
   };
   const handleUpgradeClick = () => {
     navigate("/pricing");
