@@ -132,12 +132,12 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
 
   return (
     <Sheet open={open} onOpenChange={onClose || onOpenChange}>
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+      <SheetContent className="w-full sm:max-w-md overflow-y-auto bg-white">
         <SheetHeader>
-          <SheetTitle className="font-playfair text-collector-black">
+          <SheetTitle className="font-playfair text-gray-900">
             {editingBudget ? 'Edit Budget' : 'Create Budget'}
           </SheetTitle>
-          <SheetDescription>
+          <SheetDescription className="text-gray-600">
             {editingBudget ? 'Update your budget details' : 'Set up a new budget to track your spending.'}
           </SheetDescription>
         </SheetHeader>
@@ -145,20 +145,20 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
         <form onSubmit={handleSubmit} className="mt-6 space-y-6">
           {/* Budget Name */}
           <div className="space-y-2">
-            <Label htmlFor="name">Budget Name</Label>
+            <Label htmlFor="name" className="text-gray-700">Budget Name</Label>
             <Input
               id="name"
               placeholder="e.g., Monthly Groceries, Entertainment..."
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               required
-              className="border-2 border-collector-gold/30 focus:border-collector-orange"
+              className="border-2 border-gray-300 focus:border-blue-500 bg-white text-gray-900"
             />
           </div>
 
           {/* Amount */}
           <div className="space-y-2">
-            <Label htmlFor="amount">Budget Amount ($)</Label>
+            <Label htmlFor="amount" className="text-gray-700">Budget Amount ($)</Label>
             <Input
               id="amount"
               type="number"
@@ -167,15 +167,15 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
               value={formData.amount}
               onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
               required
-              className="border-2 border-collector-gold/30 focus:border-collector-orange"
+              className="border-2 border-gray-300 focus:border-blue-500 bg-white text-gray-900"
             />
           </div>
 
           {/* Category */}
           <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
+            <Label htmlFor="category" className="text-gray-700">Category</Label>
             <Select value={formData.category} onValueChange={(value: BudgetCategory) => setFormData(prev => ({ ...prev, category: value }))}>
-              <SelectTrigger className="border-2 border-collector-gold/30 focus:border-collector-orange">
+              <SelectTrigger className="border-2 border-gray-300 focus:border-blue-500 bg-white text-gray-900">
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
@@ -190,9 +190,9 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
 
           {/* Period */}
           <div className="space-y-2">
-            <Label htmlFor="period">Budget Period</Label>
+            <Label htmlFor="period" className="text-gray-700">Budget Period</Label>
             <Select value={formData.period} onValueChange={(value) => setFormData(prev => ({ ...prev, period: value }))}>
-              <SelectTrigger className="border-2 border-collector-gold/30 focus:border-collector-orange">
+              <SelectTrigger className="border-2 border-gray-300 focus:border-blue-500 bg-white text-gray-900">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
@@ -206,27 +206,27 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
 
           {/* Start Date */}
           <div className="space-y-2">
-            <Label htmlFor="start_date">Start Date</Label>
+            <Label htmlFor="start_date" className="text-gray-700">Start Date</Label>
             <Input
               id="start_date"
               type="date"
               value={formData.start_date}
               onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
               required
-              className="border-2 border-collector-gold/30 focus:border-collector-orange"
+              className="border-2 border-gray-300 focus:border-blue-500 bg-white text-gray-900"
             />
           </div>
 
           {/* End Date */}
           <div className="space-y-2">
-            <Label htmlFor="end_date">End Date</Label>
+            <Label htmlFor="end_date" className="text-gray-700">End Date</Label>
             <Input
               id="end_date"
               type="date"
               value={formData.end_date}
               onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
               required
-              className="border-2 border-collector-gold/30 focus:border-collector-orange"
+              className="border-2 border-gray-300 focus:border-blue-500 bg-white text-gray-900"
             />
           </div>
 
@@ -235,14 +235,14 @@ const CreateBudgetForm = ({ open, onOpenChange, userType, editingBudget, onClose
               type="button" 
               variant="outline" 
               onClick={() => onClose ? onClose() : onOpenChange(false)} 
-              className="flex-1 hover:bg-gray-200 transition-all duration-200"
+              className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50 bg-white transition-all duration-200"
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
               disabled={loading} 
-              className="flex-1 bg-blue-500 hover:bg-blue-200 text-white hover:text-collector-black transition-all duration-200"
+              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white transition-all duration-200"
             >
               {loading ? 'Saving...' : editingBudget ? 'Update Budget' : 'Create Budget'}
             </Button>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -298,7 +297,7 @@ const Dashboard = ({
     setShowStatsDetails(true);
   };
   if (loading) {
-    return <div className="min-h-screen bg-gray-50">
+    return <div className="min-h-screen bg-white">
         <Navigation />
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="text-center py-8">
@@ -308,7 +307,7 @@ const Dashboard = ({
         </div>
       </div>;
   }
-  return <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
+  return <div className="min-h-screen bg-white pb-20 md:pb-0">
       <Navigation />
       
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
@@ -344,49 +343,49 @@ const Dashboard = ({
         {/* Quick Menu - Hidden on mobile */}
         <div className="mb-6 sm:mb-8 hidden md:block">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 xl:grid-cols-7 gap-3 sm:gap-4">
-            <Button onClick={() => setShowAddTransaction(true)} variant="ghost" className="bg-blue-100 hover:bg-blue-200 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 transition-all duration-200">
+            <Button onClick={() => setShowAddTransaction(true)} variant="ghost" className="bg-white hover:bg-gray-100 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 transition-all duration-200">
               <PlusCircle className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
               <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
                 Add Transaction
               </span>
             </Button>
             
-            <Button onClick={() => setShowCreateBudget(true)} variant="ghost" className="bg-orange-100 hover:bg-orange-200 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 transition-all duration-200">
+            <Button onClick={() => setShowCreateBudget(true)} variant="ghost" className="bg-white hover:bg-gray-100 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 transition-all duration-200">
               <Target className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
               <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
                 Create Budget
               </span>
             </Button>
 
-            {userType === 'organization' && <Button onClick={() => setShowGenerateInvoice(true)} variant="ghost" className="bg-green-100 hover:bg-green-200 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 transition-all duration-200">
+            {userType === 'organization' && <Button onClick={() => setShowGenerateInvoice(true)} variant="ghost" className="bg-white hover:bg-gray-100 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 transition-all duration-200">
                 <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
                 <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
                   Generate Invoice
                 </span>
               </Button>}
 
-            <Button onClick={() => setShowUploadInvoice(true)} variant="ghost" className="bg-purple-100 hover:bg-purple-200 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 transition-all duration-200">
+            <Button onClick={() => setShowUploadInvoice(true)} variant="ghost" className="bg-white hover:bg-gray-100 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 transition-all duration-200">
               <Upload className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
               <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
                 Upload
               </span>
             </Button>
 
-            <Button onClick={handleExpenseShareClick} variant="ghost" className="bg-pink-100 hover:bg-pink-200 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 transition-all duration-200">
+            <Button onClick={handleExpenseShareClick} variant="ghost" className="bg-white hover:bg-gray-100 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 transition-all duration-200">
               <Users className="w-5 h-5 sm:w-6 sm:h-6 text-pink-600" />
               <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
                 Expense Share
               </span>
             </Button>
 
-            <Button onClick={() => setShowViewReports(true)} variant="ghost" className="bg-cyan-100 hover:bg-cyan-200 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 transition-all duration-200">
+            <Button onClick={() => setShowViewReports(true)} variant="ghost" className="bg-white hover:bg-gray-100 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 transition-all duration-200">
               <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-600" />
               <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
                 Reports
               </span>
             </Button>
 
-            <Button onClick={() => setShowViewArchive(true)} variant="ghost" className="bg-gray-100 hover:bg-gray-200 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 transition-all duration-200">
+            <Button onClick={() => setShowViewArchive(true)} variant="ghost" className="bg-white hover:bg-gray-100 border border-gray-300 h-auto p-3 sm:p-4 flex flex-col items-center gap-2 text-gray-700 transition-all duration-200">
               <Archive className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
               <span className="text-xs sm:text-sm font-medium text-center leading-tight text-gray-800">
                 Archive
@@ -464,7 +463,7 @@ const Dashboard = ({
           <Card className="bg-white border-gray-200">
             <CardHeader className="flex flex-row items-center justify-between px-0 py-[10px] mx-[10px]">
               <CardTitle className="text-lg sm:text-xl text-gray-800">Recent Transactions</CardTitle>
-              <Button variant="outline" size="sm" onClick={() => setShowViewAllTransactions(true)} className="border-gray-400 text-gray-800 hover:bg-gray-50">
+              <Button variant="outline" size="sm" onClick={() => setShowViewAllTransactions(true)} className="border-gray-300 text-gray-700 hover:bg-gray-50 bg-white">
                 View All
               </Button>
             </CardHeader>
@@ -486,13 +485,13 @@ const Dashboard = ({
                           <Button size="sm" variant="outline" onClick={e => {
                       e.stopPropagation();
                       handleEditTransaction(transaction.id);
-                    }} className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-gray-400 text-gray-800 hover:bg-gray-50 bg-white">
+                    }} className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-gray-300 text-gray-700 hover:bg-gray-50 bg-white">
                             <Edit className="w-3 h-3 text-gray-700" />
                           </Button>
                           <Button size="sm" variant="outline" onClick={e => {
                       e.stopPropagation();
                       handleDeleteTransaction(transaction.id);
-                    }} className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-red-400 text-red-600 hover:bg-red-50 bg-white">
+                    }} className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-red-300 text-red-600 hover:bg-red-50 bg-white">
                             <Trash2 className="w-3 h-3" />
                           </Button>
                         </div>
@@ -509,7 +508,7 @@ const Dashboard = ({
           <Card className="bg-white border-gray-200">
             <CardHeader className="flex flex-row items-center justify-between py-[10px] mx-[10px]">
               <CardTitle className="text-lg sm:text-xl text-gray-800">Budget Overview</CardTitle>
-              <Button variant="outline" size="sm" onClick={() => setShowViewAllBudgets(true)} className="border-gray-400 text-gray-800 hover:bg-gray-50">
+              <Button variant="outline" size="sm" onClick={() => setShowViewAllBudgets(true)} className="border-gray-300 text-gray-700 hover:bg-gray-50 bg-white">
                 View All
               </Button>
             </CardHeader>
@@ -524,13 +523,13 @@ const Dashboard = ({
                             <Button size="sm" variant="outline" onClick={e => {
                         e.stopPropagation();
                         handleEditBudget(budget.id);
-                      }} className="h-5 w-5 p-0 border-gray-400 text-gray-800 hover:bg-gray-50 bg-white">
+                      }} className="h-5 w-5 p-0 border-gray-300 text-gray-700 hover:bg-gray-50 bg-white">
                               <Edit className="w-3 h-3" />
                             </Button>
                             <Button size="sm" variant="outline" onClick={e => {
                         e.stopPropagation();
                         handleDeleteBudget(budget.id);
-                      }} className="h-5 w-5 p-0 border-red-400 text-red-600 hover:bg-red-50 bg-white">
+                      }} className="h-5 w-5 p-0 border-red-300 text-red-600 hover:bg-red-50 bg-white">
                               <Trash2 className="w-3 h-3" />
                             </Button>
                           </div>
@@ -543,7 +542,7 @@ const Dashboard = ({
                 </div> : <div className="text-center py-8 sm:py-12 text-gray-600">
                   <Target className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-4 opacity-50" />
                   <p className="text-sm mb-4">No budgets created</p>
-                  <Button variant="outline" size="sm" onClick={() => setShowCreateBudget(true)} className="border-gray-400 hover:bg-gray-50 bg-white">
+                  <Button variant="outline" size="sm" onClick={() => setShowCreateBudget(true)} className="border-gray-300 hover:bg-gray-50 bg-white">
                     <span className="text-gray-700">Create Budget</span>
                   </Button>
                 </div>}
