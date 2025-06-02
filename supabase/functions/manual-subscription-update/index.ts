@@ -182,7 +182,7 @@ serve(async (req) => {
       updatedData: profileData
     });
 
-    // Update subscribers table
+    // Update subscribers table - use email as conflict target since it has unique constraint
     logStep("=== UPDATING SUBSCRIBERS TABLE ===");
     const subscriberUpdateData = {
       email: user.email,
@@ -195,13 +195,35 @@ serve(async (req) => {
 
     logStep("Subscriber data to upsert", subscriberUpdateData);
 
-    const { data: subscriberData, error: subscriberError } = await supabaseClient
+    // First try to update existing record, then insert if it doesn't exist
+    const { data: existingSubscriber, error: findError } = await supabaseClient
       .from("subscribers")
-      .upsert(subscriberUpdateData, { 
-        onConflict: 'user_id',
-        ignoreDuplicates: false 
-      })
-      .select();
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    let subscriberData, subscriberError;
+
+    if (existingSubscriber) {
+      // Update existing record
+      logStep("Updating existing subscriber record");
+      const { data, error } = await supabaseClient
+        .from("subscribers")
+        .update(subscriberUpdateData)
+        .eq("user_id", user.id)
+        .select();
+      subscriberData = data;
+      subscriberError = error;
+    } else {
+      // Insert new record
+      logStep("Inserting new subscriber record");
+      const { data, error } = await supabaseClient
+        .from("subscribers")
+        .insert(subscriberUpdateData)
+        .select();
+      subscriberData = data;
+      subscriberError = error;
+    }
 
     if (subscriberError) {
       logStep("ERROR updating subscribers table", { 

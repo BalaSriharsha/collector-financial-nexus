@@ -1,4 +1,6 @@
+
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -69,6 +71,7 @@ declare global {
 const RazorpayCheckout = ({ planType, onSuccess }: RazorpayCheckoutProps) => {
   const { user } = useAuth();
   const { refreshSubscription } = useSubscription();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showUPI, setShowUPI] = useState(false);
   const [qrData, setQrData] = useState<QrCodeData | null>(null);
@@ -170,17 +173,30 @@ const RazorpayCheckout = ({ planType, onSuccess }: RazorpayCheckoutProps) => {
               await refreshSubscription();
               onSuccess?.();
               toast.success('Your subscription has been activated!');
+              
+              // Redirect to profile page after successful subscription
+              setTimeout(() => {
+                navigate('/profile');
+              }, 2000);
+              
               return true;
               
             } catch (error) {
               console.error('Manual subscription update failed:', error);
+              toast.error('Payment successful but subscription update failed. Please contact support with payment ID: ' + response.razorpay_payment_id);
+              
+              // Redirect to profile page even on failure so user can see their status
+              setTimeout(() => {
+                navigate('/profile');
+              }, 3000);
+              
               return false;
             }
           };
           
           // Wait longer for webhook processing and be more thorough
           let attempts = 0;
-          const maxAttempts = 12; // Reduced attempts since we have manual fallback
+          const maxAttempts = 8; // Reduced attempts since we have manual fallback
           
           const checkSubscriptionStatus = async () => {
             attempts++;
@@ -206,6 +222,12 @@ const RazorpayCheckout = ({ planType, onSuccess }: RazorpayCheckoutProps) => {
                 await refreshSubscription();
                 onSuccess?.();
                 toast.success('Your subscription has been activated!');
+                
+                // Redirect to profile page after successful subscription
+                setTimeout(() => {
+                  navigate('/profile');
+                }, 2000);
+                
                 return true;
               }
               
@@ -240,12 +262,7 @@ const RazorpayCheckout = ({ planType, onSuccess }: RazorpayCheckoutProps) => {
               console.log('Timeout waiting for webhook, attempting manual update...');
               
               // Try manual subscription update as fallback
-              const manualUpdateSuccess = await manualSubscriptionUpdate();
-              
-              if (!manualUpdateSuccess) {
-                // If manual update also fails, show error
-                toast.error('Payment successful but subscription update failed. Please contact support with payment ID: ' + response.razorpay_payment_id);
-              }
+              await manualSubscriptionUpdate();
             }
           }, 2500); // Check every 2.5 seconds
         },
@@ -253,6 +270,8 @@ const RazorpayCheckout = ({ planType, onSuccess }: RazorpayCheckoutProps) => {
           ondismiss: function() {
             console.log('Payment modal closed by user');
             setLoading(false);
+            // Redirect to profile page if user cancels
+            navigate('/profile');
           }
         }
       };
@@ -263,6 +282,11 @@ const RazorpayCheckout = ({ planType, onSuccess }: RazorpayCheckoutProps) => {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create checkout session';
       console.error('Error creating checkout:', error);
       toast.error(errorMessage);
+      
+      // Redirect to profile page on error
+      setTimeout(() => {
+        navigate('/profile');
+      }, 2000);
     } finally {
       setLoading(false);
     }
@@ -301,6 +325,11 @@ const RazorpayCheckout = ({ planType, onSuccess }: RazorpayCheckoutProps) => {
       const errorMessage = error instanceof Error ? error.message : 'Failed to generate UPI QR code';
       console.error('Error generating UPI QR:', error);
       toast.error(errorMessage);
+      
+      // Redirect to profile page on error
+      setTimeout(() => {
+        navigate('/profile');
+      }, 2000);
     } finally {
       setLoading(false);
     }
@@ -347,6 +376,13 @@ const RazorpayCheckout = ({ planType, onSuccess }: RazorpayCheckoutProps) => {
             >
               <Smartphone className="w-4 h-4 mr-2" />
               Open in UPI App
+            </Button>
+            <Button 
+              onClick={() => navigate('/profile')}
+              variant="outline"
+              className="w-full"
+            >
+              Go to Profile
             </Button>
           </div>
         </CardContent>

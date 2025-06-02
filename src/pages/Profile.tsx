@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -107,6 +106,7 @@ const Profile = () => {
     setShowRazorpayCheckout(null);
     await refreshSubscription();
     toast.success('Subscription updated successfully!');
+    // Stay on profile page - no need to redirect since we're already here
   };
 
   const handleDeleteAccount = async () => {
