@@ -79,7 +79,7 @@ const SubscriptionCard = ({ onUpgrade }: SubscriptionCardProps) => {
             </Badge>
           </div>
           <CardDescription>
-            {subscription?.tier === 'Individual' && 'Basic financial management features'}
+            {subscription?.tier === 'Individual' && 'Basic financial management features with expense sharing'}
             {subscription?.tier === 'Premium' && 'Advanced features for serious users'}
             {subscription?.tier === 'Organization' && 'Complete solution for businesses'}
           </CardDescription>
@@ -90,6 +90,10 @@ const SubscriptionCard = ({ onUpgrade }: SubscriptionCardProps) => {
               <Check className="w-4 h-4 text-green-600" />
               <span className="text-sm">Unlimited transactions</span>
             </div>
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-green-600" />
+              <span className="text-sm">Expense sharing & groups</span>
+            </div>
             {subscription?.tier !== 'Individual' && (
               <>
                 <div className="flex items-center gap-2">
@@ -99,10 +103,6 @@ const SubscriptionCard = ({ onUpgrade }: SubscriptionCardProps) => {
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-green-600" />
                   <span className="text-sm">Advanced analytics</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-green-600" />
-                  <span className="text-sm">Expense sharing</span>
                 </div>
               </>
             )}

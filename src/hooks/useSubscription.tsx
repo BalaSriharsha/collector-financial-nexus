@@ -107,7 +107,6 @@ export const useSubscription = () => {
     if (!subscription) return false;
 
     const features = {
-      'expense-sharing': ['Premium', 'Organization'],
       'analytics': ['Premium', 'Organization'],
       'export': ['Premium', 'Organization'],
       'unlimited-storage': ['Premium', 'Organization'],

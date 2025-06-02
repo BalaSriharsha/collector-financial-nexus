@@ -1,16 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Plus, Users, Edit, Trash2, Crown, Lock } from "lucide-react";
+import { Plus, Users, Edit, Trash2 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import {
   Dialog,
@@ -34,7 +32,6 @@ interface Group {
 
 const Groups = () => {
   const { user } = useAuth();
-  const { subscription, canAccess } = useSubscription();
   const navigate = useNavigate();
   const [groups, setGroups] = useState<Group[]>([]);
   const [newGroup, setNewGroup] = useState({ 
@@ -100,12 +97,6 @@ const Groups = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-
-    // Check if user can access expense sharing
-    if (!canAccess('expense-sharing')) {
-      toast.error('Upgrade to Premium or Organization plan to create groups');
-      return;
-    }
 
     setLoading(true);
     try {
@@ -253,31 +244,12 @@ const Groups = () => {
           </div>
           <Button
             onClick={() => setShowCreateGroup(true)}
-            disabled={!canAccess('expense-sharing')}
             className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600 transition-all duration-200 text-sm sm:text-base"
           >
-            {!canAccess('expense-sharing') ? (
-              <>
-                <Lock className="w-4 h-4 mr-2" />
-                Upgrade Required
-              </>
-            ) : (
-              <>
-                <Plus className="w-4 h-4 mr-2" />
-                Create Group
-              </>
-            )}
+            <Plus className="w-4 h-4 mr-2" />
+            Create Group
           </Button>
         </div>
-
-        {!canAccess('expense-sharing') && (
-          <Alert className="mb-6 border-orange-300 bg-orange-50 dark:border-orange-700 dark:bg-orange-900/20">
-            <Crown className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-            <AlertDescription className="text-orange-900 dark:text-orange-300 font-medium">
-              Upgrade to Premium or Organization plan to create and manage groups for expense sharing.
-            </AlertDescription>
-          </Alert>
-        )}
 
         {/* Groups List */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -371,20 +343,15 @@ const Groups = () => {
               <Users className="w-12 sm:w-16 h-12 sm:h-16 text-slate-400 dark:text-slate-600 mx-auto mb-4" />
               <h3 className="text-base sm:text-lg font-medium text-slate-600 dark:text-slate-400 mb-2">No groups yet</h3>
               <p className="text-sm text-slate-500 dark:text-slate-500 mb-4">
-                {canAccess('expense-sharing') 
-                  ? 'Create your first group to start sharing expenses'
-                  : 'Upgrade to Premium to create groups'
-                }
+                Create your first group to start sharing expenses
               </p>
-              {canAccess('expense-sharing') && (
-                <Button
-                  onClick={() => setShowCreateGroup(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600 transition-all duration-200"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Group
-                </Button>
-              )}
+              <Button
+                onClick={() => setShowCreateGroup(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600 transition-all duration-200"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Group
+              </Button>
             </div>
           )}
         </div>

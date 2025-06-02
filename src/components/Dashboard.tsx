@@ -329,11 +329,7 @@ const Dashboard = ({ userType }: DashboardProps) => {
     setShowBudgetDetails(true);
   };
   const handleExpenseShareClick = () => {
-    if (canAccess("expense-sharing")) {
-      setShowExpenseSharing(true);
-    } else {
-      setShowUpgradePrompt(true);
-    }
+    setShowExpenseSharing(true);
   };
   const handleUpgradeClick = () => {
     navigate("/pricing");
@@ -828,39 +824,6 @@ const Dashboard = ({ userType }: DashboardProps) => {
         </div>
       </div>
 
-      {/* Upgrade Prompt Modal */}
-      {showUpgradePrompt && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md bg-white">
-            <CardHeader>
-              <CardTitle className="text-xl text-center text-gray-900">
-                Upgrade Required
-              </CardTitle>
-              <CardDescription className="text-center text-gray-600">
-                Expense sharing is only available for Premium and Organization
-                users.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              <Button
-                onClick={handleUpgradeClick}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white"
-              >
-                <Crown className="w-4 h-4 mr-2" />
-                Upgrade to Premium
-              </Button>
-              <Button
-                onClick={() => setShowUpgradePrompt(false)}
-                variant="outline"
-                className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 bg-white"
-              >
-                Cancel
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
       {/* Form Modals */}
       <AddTransactionForm
         open={showAddTransaction}
@@ -959,4 +922,5 @@ const Dashboard = ({ userType }: DashboardProps) => {
     </div>
   );
 };
+
 export default Dashboard;
