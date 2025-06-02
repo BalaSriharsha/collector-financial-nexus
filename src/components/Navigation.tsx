@@ -39,11 +39,6 @@ const Navigation = () => {
     { to: "/careers", label: "Careers" },
   ];
 
-  const authenticatedLinks = [
-    { to: "/dashboard", label: "Dashboard" },
-    { to: "/groups", label: "Groups" },
-  ];
-
   const isActivePath = (path: string) => location.pathname === path;
 
   const getSubscriptionIcon = () => {
@@ -86,37 +81,19 @@ const Navigation = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
-            {user ? (
-              <>
-                {authenticatedLinks.map((link) => (
-                  <Link
-                    key={link.to}
-                    to={link.to}
-                    className={`text-sm font-medium transition-colors duration-200 hover:text-orange-500 ${
-                      isActivePath(link.to)
-                        ? 'text-orange-500'
-                        : 'text-slate-700 dark:text-slate-300'
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </>
-            ) : (
-              navLinks.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  className={`text-sm font-medium transition-colors duration-200 hover:text-orange-500 ${
-                    isActivePath(link.to)
-                      ? 'text-orange-500'
-                      : 'text-slate-700 dark:text-slate-300'
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))
-            )}
+            {navLinks.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`text-sm font-medium transition-colors duration-200 hover:text-orange-500 ${
+                  isActivePath(link.to)
+                    ? 'text-orange-500'
+                    : 'text-slate-700 dark:text-slate-300'
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
 
           {/* User Menu / Auth Buttons */}
@@ -209,21 +186,6 @@ const Navigation = () => {
                       </Badge>
                     </div>
                   )}
-                  
-                  {authenticatedLinks.map((link) => (
-                    <Link
-                      key={link.to}
-                      to={link.to}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={`block px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 ${
-                        isActivePath(link.to)
-                          ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 dark:border-blue-400'
-                          : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
-                      }`}
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
                   
                   <div className="border-t border-slate-200 dark:border-slate-700 pt-2 mt-2">
                     <Link

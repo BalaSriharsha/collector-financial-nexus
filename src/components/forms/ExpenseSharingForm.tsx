@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 interface ExpenseSharingFormProps {
   open: boolean;
@@ -21,6 +20,7 @@ interface ExpenseSharingFormProps {
 
 const ExpenseSharingForm = ({ open, onOpenChange, userType }: ExpenseSharingFormProps) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [selectedGroupId, setSelectedGroupId] = useState<string>("");
   const [expenseTitle, setExpenseTitle] = useState("");
@@ -177,6 +177,9 @@ const ExpenseSharingForm = ({ open, onOpenChange, userType }: ExpenseSharingForm
       resetForm();
       onOpenChange(false);
       queryClient.invalidateQueries({ queryKey: ['shared-expenses'] });
+      
+      // Navigate to groups page
+      navigate('/groups');
     } catch (error: unknown) {
       console.error('Error creating shared expense:', error);
       const errorMessage = error && typeof error === 'object' && 'message' in error 
@@ -223,12 +226,17 @@ const ExpenseSharingForm = ({ open, onOpenChange, userType }: ExpenseSharingForm
                 <div className="p-4 border border-dashed border-gray-300 rounded-lg text-center">
                   <Users className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                   <p className="text-sm text-gray-600 mb-3">No groups found. Create a group first to share expenses.</p>
-                  <Link to="/groups">
-                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white border-2 border-blue-600 hover:border-blue-700">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Create Group
-                    </Button>
-                  </Link>
+                  <Button 
+                    size="sm" 
+                    className="bg-blue-600 hover:bg-blue-700 text-white border-2 border-blue-600 hover:border-blue-700"
+                    onClick={() => {
+                      onOpenChange(false);
+                      navigate('/groups');
+                    }}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Group
+                  </Button>
                 </div>
               )}
             </div>
