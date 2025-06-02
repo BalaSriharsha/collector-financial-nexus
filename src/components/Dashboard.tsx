@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, TrendingUp, TrendingDown, DollarSign, Target, FileText, Archive, BarChart3, Upload, Crown, Edit, Trash2, Users, User } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PlusCircle, TrendingUp, TrendingDown, DollarSign, Target, FileText, Archive, BarChart3, Upload, Crown, Edit, Trash2, Users, User, Calendar } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -22,6 +23,7 @@ import BudgetDetailsModal from "./BudgetDetailsModal";
 import StatsDetailsModal from "./StatsDetailsModal";
 import ViewAllModal from "./ViewAllModal";
 import { getCurrencySymbol } from "@/utils/currency";
+
 interface DashboardProps {
   userType: 'individual' | 'organization';
 }
@@ -98,6 +100,7 @@ const Dashboard = ({
   const [selectedStatAmount, setSelectedStatAmount] = useState(0);
   const [showViewAllTransactions, setShowViewAllTransactions] = useState(false);
   const [showViewAllBudgets, setShowViewAllBudgets] = useState(false);
+  const [timePeriod, setTimePeriod] = useState<'day' | 'week' | 'month' | 'quarter' | 'year'>('month');
 
   // Get currency symbol based on user profile
   const currencySymbol = getCurrencySymbol(profile?.currency || 'USD');
@@ -126,19 +129,57 @@ const Dashboard = ({
       window.removeEventListener('focus', handleFocus);
     };
   }, [refreshSubscription]);
+  const getDateRange = (period: 'day' | 'week' | 'month' | 'quarter' | 'year') => {
+    const now = new Date();
+    const start = new Date();
+    
+    switch (period) {
+      case 'day':
+        start.setHours(0, 0, 0, 0);
+        break;
+      case 'week':
+        start.setDate(now.getDate() - now.getDay());
+        start.setHours(0, 0, 0, 0);
+        break;
+      case 'month':
+        start.setDate(1);
+        start.setHours(0, 0, 0, 0);
+        break;
+      case 'quarter':
+        const quarterStart = Math.floor(now.getMonth() / 3) * 3;
+        start.setMonth(quarterStart, 1);
+        start.setHours(0, 0, 0, 0);
+        break;
+      case 'year':
+        start.setMonth(0, 1);
+        start.setHours(0, 0, 0, 0);
+        break;
+    }
+    
+    return {
+      start: start.toISOString().split('T')[0],
+      end: now.toISOString().split('T')[0]
+    };
+  };
   const fetchDashboardData = async () => {
     if (!user) return;
     try {
-      const {
-        data: transactions,
-        error: transError
-      } = await supabase.from('transactions').select('*').eq('user_id', user.id).order('date', {
-        ascending: false
-      });
+      const { start, end } = getDateRange(timePeriod);
+      
+      const { data: transactions, error: transError } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('date', start)
+        .lte('date', end)
+        .order('date', { ascending: false });
+
       if (transError) throw transError;
+
       const totalIncome = transactions?.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0) || 0;
       const totalExpense = transactions?.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0) || 0;
       const balance = totalIncome - totalExpense;
+
       setStats({
         totalIncome,
         totalExpense,
@@ -163,12 +204,15 @@ const Dashboard = ({
       // Show only 4 recent transactions
       const mappedTransactions = mappedAllTransactions.slice(0, 4);
       setRecentTransactions(mappedTransactions);
-      const {
-        data: budgetData,
-        error: budgetError
-      } = await supabase.from('budgets').select('*').eq('user_id', user.id).order('created_at', {
-        ascending: false
-      });
+
+      const { data: budgetData, error: budgetError } = await supabase
+        .from('budgets')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('start_date', start)
+        .lte('end_date', end)
+        .order('created_at', { ascending: false });
+
       if (budgetError) throw budgetError;
       setBudgets(budgetData || []);
     } catch (error: any) {
@@ -180,7 +224,7 @@ const Dashboard = ({
   };
   useEffect(() => {
     fetchDashboardData();
-  }, [user]);
+  }, [user, timePeriod]);
   const handleTransactionSuccess = () => {
     fetchDashboardData();
     setShowAddTransaction(false);
@@ -278,6 +322,22 @@ const Dashboard = ({
             </p>
           </div>
           
+          {/* Time Period Selector */}
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-gray-600" />
+            <Select value={timePeriod} onValueChange={(value: 'day' | 'week' | 'month' | 'quarter' | 'year') => setTimePeriod(value)}>
+              <SelectTrigger className="w-32 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="day">Today</SelectItem>
+                <SelectItem value="week">This Week</SelectItem>
+                <SelectItem value="month">This Month</SelectItem>
+                <SelectItem value="quarter">This Quarter</SelectItem>
+                <SelectItem value="year">This Year</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Quick Menu - Hidden on mobile */}

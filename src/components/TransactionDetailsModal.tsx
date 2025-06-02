@@ -71,45 +71,45 @@ const TransactionDetailsModal = ({ open, onOpenChange, transaction, onEdit, onDe
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg border-2 border-collector-gold/30">
+      <DialogContent className="w-[95vw] max-w-lg mx-auto border-2 border-collector-gold/30 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-3 text-xl font-playfair text-gray-900">
+          <DialogTitle className="flex items-center gap-3 text-lg sm:text-xl font-playfair text-gray-900">
             {transaction.type === 'income' ? 
-              <TrendingUp className="w-6 h-6 text-green-600" /> :
-              <TrendingDown className="w-6 h-6 text-red-600" />
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" /> :
+              <TrendingDown className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
             }
             Transaction Details
           </DialogTitle>
-          <DialogDescription className="text-gray-700">
+          <DialogDescription className="text-gray-700 text-sm">
             Reference: {getTransactionReference(transaction.id)}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 mt-6">
+        <div className="space-y-3 sm:space-y-4 mt-4 sm:mt-6">
           <Card className="border-2 border-collector-gold/20">
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="text-center">
-                <p className="text-sm text-gray-600 uppercase tracking-wide">Amount</p>
-                <p className={`text-3xl font-playfair font-bold ${
+                <p className="text-xs sm:text-sm text-gray-600 uppercase tracking-wide">Amount</p>
+                <p className={`text-xl sm:text-2xl lg:text-3xl font-playfair font-bold ${
                   transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
                 }`}>
                   {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
                 </p>
-                <p className="text-sm text-gray-600 mt-1">{getStatus()}</p>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">{getStatus()}</p>
               </div>
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-3 sm:gap-4">
             <Card className="border border-collector-gold/20">
-              <CardContent className="p-4">
+              <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-3">
-                  <FileText className="w-5 h-5 text-collector-blue" />
-                  <div>
-                    <p className="font-medium text-gray-900">
+                  <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-collector-blue flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-gray-900 text-sm sm:text-base break-words">
                       {transaction.title || 'No title provided'}
                     </p>
-                    <p className="text-sm text-gray-600">Title</p>
+                    <p className="text-xs sm:text-sm text-gray-600">Title</p>
                   </div>
                 </div>
               </CardContent>
@@ -117,12 +117,12 @@ const TransactionDetailsModal = ({ open, onOpenChange, transaction, onEdit, onDe
 
             {transaction.description && (
               <Card className="border border-collector-gold/20">
-                <CardContent className="p-4">
+                <CardContent className="p-3 sm:p-4">
                   <div className="flex items-start gap-3">
-                    <FileText className="w-5 h-5 text-collector-blue mt-0.5" />
-                    <div>
-                      <p className="font-medium text-gray-900">{transaction.description}</p>
-                      <p className="text-sm text-gray-600">Description</p>
+                    <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-collector-blue mt-0.5 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-gray-900 text-sm sm:text-base break-words">{transaction.description}</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Description</p>
                     </div>
                   </div>
                 </CardContent>
@@ -130,50 +130,50 @@ const TransactionDetailsModal = ({ open, onOpenChange, transaction, onEdit, onDe
             )}
 
             <Card className="border border-collector-gold/20">
-              <CardContent className="p-4">
+              <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-3">
-                  <Calendar className="w-5 h-5 text-collector-blue" />
-                  <div>
-                    <p className="font-medium text-gray-900">{formatDate(transaction.date)}</p>
-                    <p className="text-sm text-gray-600">Transaction Date</p>
+                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-collector-blue flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-gray-900 text-sm sm:text-base">{formatDate(transaction.date)}</p>
+                    <p className="text-xs sm:text-sm text-gray-600">Transaction Date</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             <Card className="border border-collector-gold/20">
-              <CardContent className="p-4">
+              <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-3">
-                  <Tag className="w-5 h-5 text-collector-blue" />
-                  <div>
-                    <p className="font-medium text-gray-900 capitalize">{transaction.category}</p>
-                    <p className="text-sm text-gray-600">Category</p>
+                  <Tag className="w-4 h-4 sm:w-5 sm:h-5 text-collector-blue flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-gray-900 capitalize text-sm sm:text-base">{transaction.category}</p>
+                    <p className="text-xs sm:text-sm text-gray-600">Category</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             <Card className="border border-collector-gold/20">
-              <CardContent className="p-4">
+              <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-3">
-                  <CreditCard className="w-5 h-5 text-collector-blue" />
-                  <div>
-                    <p className="font-medium text-gray-900">{getPaymentMethod(transaction.type)}</p>
-                    <p className="text-sm text-gray-600">Payment Method</p>
+                  <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-collector-blue flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-gray-900 text-sm sm:text-base">{getPaymentMethod(transaction.type)}</p>
+                    <p className="text-xs sm:text-sm text-gray-600">Payment Method</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             <Card className="border border-collector-gold/20">
-              <CardContent className="p-4">
+              <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-3">
-                  <Calendar className="w-5 h-5 text-collector-blue" />
-                  <div>
-                    <p className="font-medium text-gray-900">
+                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-collector-blue flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-gray-900 text-sm sm:text-base">
                       {formatDate(transaction.created_at)}
                     </p>
-                    <p className="text-sm text-gray-600">Created At</p>
+                    <p className="text-xs sm:text-sm text-gray-600">Created At</p>
                   </div>
                 </div>
               </CardContent>
@@ -181,12 +181,12 @@ const TransactionDetailsModal = ({ open, onOpenChange, transaction, onEdit, onDe
           </div>
 
           {(onEdit || onDelete) && (
-            <div className="flex gap-2 pt-4">
+            <div className="flex flex-col sm:flex-row gap-2 pt-4">
               {onEdit && (
                 <Button
                   onClick={handleEdit}
                   variant="outline"
-                  className="flex-1 border-gray-400 text-gray-800 hover-navy transition-colors"
+                  className="flex-1 border-gray-400 text-gray-800 hover-navy transition-colors text-sm"
                 >
                   <Edit className="w-4 h-4 mr-2" />
                   Edit Transaction
@@ -196,7 +196,7 @@ const TransactionDetailsModal = ({ open, onOpenChange, transaction, onEdit, onDe
                 <Button
                   onClick={handleDelete}
                   variant="outline"
-                  className="flex-1 border-red-400 text-red-600 hover-black transition-colors"
+                  className="flex-1 border-red-400 text-red-600 hover-black transition-colors text-sm"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
                   Delete Transaction
