@@ -8,26 +8,21 @@ import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
-import { Download, FileText, Calendar, DollarSign, TrendingUp, TrendingDown, PieChart } from "lucide-react";
+import { Download, FileText, Calendar, DollarSign, TrendingUp, TrendingDown, PieChart, Target, AlertTriangle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { generatePDF } from "@/utils/pdfGenerator";
 import { getCurrencySymbol } from "@/utils/currency";
+
 interface ViewReportsFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-const ViewReportsForm = ({
-  open,
-  onOpenChange
-}: ViewReportsFormProps) => {
-  const {
-    user
-  } = useAuth();
-  const {
-    profile
-  } = useProfile();
+
+const ViewReportsForm = ({ open, onOpenChange }: ViewReportsFormProps) => {
+  const { user } = useAuth();
+  const { profile } = useProfile();
   const [reportType, setReportType] = useState<'transactions' | 'budgets' | 'summary'>('summary');
   const [dateRange, setDateRange] = useState<'week' | 'month' | 'quarter' | 'year' | 'custom'>('month');
   const [startDate, setStartDate] = useState('');
@@ -71,45 +66,38 @@ const ViewReportsForm = ({
       end: end.toISOString().split('T')[0]
     };
   };
-  const {
-    start,
-    end
-  } = getDateRange();
+
+  const { start, end } = getDateRange();
 
   // Fetch transactions data
-  const {
-    data: transactions = [],
-    isLoading: transactionsLoading
-  } = useQuery({
+  const { data: transactions = [], isLoading: transactionsLoading } = useQuery({
     queryKey: ['transactions-report', user?.id, start, end],
     queryFn: async () => {
       if (!user?.id) return [];
-      const {
-        data,
-        error
-      } = await supabase.from('transactions').select('*').eq('user_id', user.id).gte('date', start).lte('date', end).order('date', {
-        ascending: false
-      });
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('date', start)
+        .lte('date', end)
+        .order('date', { ascending: false });
       if (error) throw error;
       return data || [];
     },
     enabled: !!user?.id && open
   });
 
-  // Fetch budgets data
-  const {
-    data: budgets = [],
-    isLoading: budgetsLoading
-  } = useQuery({
+  // Fetch budgets data with overlapping date ranges
+  const { data: budgets = [], isLoading: budgetsLoading } = useQuery({
     queryKey: ['budgets-report', user?.id, start, end],
     queryFn: async () => {
       if (!user?.id) return [];
-      const {
-        data,
-        error
-      } = await supabase.from('budgets').select('*').eq('user_id', user.id).gte('start_date', start).lte('end_date', end).order('created_at', {
-        ascending: false
-      });
+      const { data, error } = await supabase
+        .from('budgets')
+        .select('*')
+        .eq('user_id', user.id)
+        .or(`and(start_date.lte.${end},end_date.gte.${start})`)
+        .order('created_at', { ascending: false });
       if (error) throw error;
       return data || [];
     },
@@ -127,22 +115,54 @@ const ViewReportsForm = ({
     acc[t.category] = (acc[t.category] || 0) + Number(t.amount);
     return acc;
   }, {} as Record<string, number>);
+
   const incomeByCategory = transactions.filter(t => t.type === 'income').reduce((acc, t) => {
     acc[t.category] = (acc[t.category] || 0) + Number(t.amount);
     return acc;
   }, {} as Record<string, number>);
+
+  // Budget analysis - calculate spending vs budget by category
+  const budgetAnalysis = budgets.reduce((acc, budget) => {
+    const categoryExpenses = transactions
+      .filter(t => t.type === 'expense' && t.category === budget.category)
+      .filter(t => {
+        const transactionDate = new Date(t.date);
+        const budgetStart = new Date(budget.start_date);
+        const budgetEnd = new Date(budget.end_date);
+        return transactionDate >= budgetStart && transactionDate <= budgetEnd;
+      })
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+    const budgetAmount = Number(budget.amount);
+    const remainingBudget = budgetAmount - categoryExpenses;
+    const utilizationPercentage = budgetAmount > 0 ? (categoryExpenses / budgetAmount) * 100 : 0;
+
+    acc[budget.category] = {
+      ...budget,
+      spent: categoryExpenses,
+      remaining: remainingBudget,
+      utilization: utilizationPercentage,
+      status: utilizationPercentage > 100 ? 'exceeded' : utilizationPercentage > 80 ? 'warning' : 'good'
+    };
+    return acc;
+  }, {} as Record<string, any>);
+
+  // ... keep existing download functions with slight modifications for budget details
   const downloadCSV = (data: any[], filename: string, type: 'transactions' | 'budgets') => {
     let csvContent = '';
     if (type === 'transactions') {
       csvContent = `Date,Title,Type,Category,Amount (${profile?.currency || 'USD'}),Description\n`;
-      csvContent += data.map(t => `${t.date},${t.title},${t.type},${t.category},${t.amount},"${t.description || ''}"`).join('\n');
+      csvContent += data.map(t => 
+        `${t.date},${t.title},${t.type},${t.category},${t.amount},"${t.description || ''}"`
+      ).join('\n');
     } else {
-      csvContent = `Name,Category,Period,Start Date,End Date,Amount (${profile?.currency || 'USD'})\n`;
-      csvContent += data.map(b => `${b.name},${b.category},${b.period},${b.start_date},${b.end_date},${b.amount}`).join('\n');
+      csvContent = `Name,Category,Period,Start Date,End Date,Budget Amount (${profile?.currency || 'USD'}),Spent Amount,Remaining,Utilization %,Status\n`;
+      csvContent += data.map(b => {
+        const analysis = budgetAnalysis[b.category] || {};
+        return `${b.name},${b.category},${b.period},${b.start_date},${b.end_date},${b.amount},${analysis.spent || 0},${analysis.remaining || b.amount},${(analysis.utilization || 0).toFixed(1)},${analysis.status || 'good'}`;
+      }).join('\n');
     }
-    const blob = new Blob([csvContent], {
-      type: 'text/csv'
-    });
+    const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -152,26 +172,21 @@ const ViewReportsForm = ({
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
+
   const handleDownloadPDF = () => {
     if (reportType === 'transactions') {
       generatePDF(transactions, `Transaction Report - ${start} to ${end}`, 'transactions');
     } else if (reportType === 'budgets') {
       generatePDF(budgets, `Budget Report - ${start} to ${end}`, 'budgets');
     } else {
-      // Generate summary report with proper currency
-      const summaryData = [{
-        label: 'Total Income',
-        value: `${currencySymbol}${totalIncome.toFixed(2)}`
-      }, {
-        label: 'Total Expenses',
-        value: `${currencySymbol}${totalExpenses.toFixed(2)}`
-      }, {
-        label: 'Net Amount',
-        value: `${currencySymbol}${netAmount.toFixed(2)}`
-      }, {
-        label: 'Total Budgets',
-        value: `${currencySymbol}${totalBudgets.toFixed(2)}`
-      }];
+      // Generate enhanced summary report with budget analysis
+      const summaryData = [
+        { label: 'Total Income', value: `${currencySymbol}${totalIncome.toFixed(2)}` },
+        { label: 'Total Expenses', value: `${currencySymbol}${totalExpenses.toFixed(2)}` },
+        { label: 'Net Amount', value: `${currencySymbol}${netAmount.toFixed(2)}` },
+        { label: 'Total Budgets', value: `${currencySymbol}${totalBudgets.toFixed(2)}` }
+      ];
+
       const htmlContent = `
         <!DOCTYPE html>
         <html>
@@ -180,12 +195,16 @@ const ViewReportsForm = ({
             <style>
                 body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
                 h1 { color: #1e40af; border-bottom: 2px solid #f97316; padding-bottom: 10px; }
+                h2 { color: #1e40af; margin-top: 30px; }
                 .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 20px 0; }
                 .summary-card { border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: #f9f9f9; }
                 .summary-value { font-size: 24px; font-weight: bold; color: #1e40af; }
                 table { width: 100%; border-collapse: collapse; margin: 20px 0; }
                 th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
                 th { background-color: #f8f9fa; }
+                .status-good { color: #16a34a; font-weight: bold; }
+                .status-warning { color: #ea580c; font-weight: bold; }
+                .status-exceeded { color: #dc2626; font-weight: bold; }
             </style>
         </head>
         <body>
@@ -202,6 +221,34 @@ const ViewReportsForm = ({
                     </div>
                 `).join('')}
             </div>
+
+            <h2>Budget Analysis</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Budget Name</th>
+                        <th>Category</th>
+                        <th>Budget Amount</th>
+                        <th>Spent</th>
+                        <th>Remaining</th>
+                        <th>Utilization %</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${Object.values(budgetAnalysis).map((budget: any) => `
+                        <tr>
+                            <td>${budget.name}</td>
+                            <td>${budget.category.charAt(0).toUpperCase() + budget.category.slice(1)}</td>
+                            <td>${currencySymbol}${budget.amount}</td>
+                            <td>${currencySymbol}${budget.spent.toFixed(2)}</td>
+                            <td>${currencySymbol}${budget.remaining.toFixed(2)}</td>
+                            <td>${budget.utilization.toFixed(1)}%</td>
+                            <td class="status-${budget.status}">${budget.status.toUpperCase()}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
 
             <h2>Income Breakdown by Category</h2>
             <table>
@@ -225,9 +272,8 @@ const ViewReportsForm = ({
         </body>
         </html>
       `;
-      const blob = new Blob([htmlContent], {
-        type: 'text/html'
-      });
+      
+      const blob = new Blob([htmlContent], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -239,6 +285,7 @@ const ViewReportsForm = ({
     }
     toast.success('Report downloaded successfully!');
   };
+
   const handleDownloadCSV = () => {
     if (reportType === 'transactions') {
       downloadCSV(transactions, `transactions_${start}_to_${end}`, 'transactions');
@@ -247,7 +294,9 @@ const ViewReportsForm = ({
     }
     toast.success('CSV downloaded successfully!');
   };
-  return <Sheet open={open} onOpenChange={onOpenChange}>
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-4xl overflow-y-auto bg-white">
         <SheetHeader>
           <SheetTitle className="font-playfair text-gray-900">
@@ -296,27 +345,42 @@ const ViewReportsForm = ({
                 <Download className="w-4 h-4 mr-2" />
                 PDF
               </Button>
-              {reportType !== 'summary' && <Button onClick={handleDownloadCSV} variant="outline" className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50">
+              {reportType !== 'summary' && (
+                <Button onClick={handleDownloadCSV} variant="outline" className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50">
                   <Download className="w-4 h-4 mr-2" />
                   CSV
-                </Button>}
+                </Button>
+              )}
             </div>
           </div>
 
           {/* Custom Date Range */}
-          {dateRange === 'custom' && <div className="grid grid-cols-2 gap-4">
+          {dateRange === 'custom' && (
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-gray-700">Start Date</Label>
-                <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="border-2 border-gray-300 focus:border-blue-500 bg-white text-gray-900" />
+                <Input 
+                  type="date" 
+                  value={startDate} 
+                  onChange={(e) => setStartDate(e.target.value)} 
+                  className="border-2 border-gray-300 focus:border-blue-500 bg-white text-gray-900" 
+                />
               </div>
               <div>
                 <Label className="text-gray-700">End Date</Label>
-                <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="border-2 border-gray-300 focus:border-blue-500 bg-white text-gray-900" />
+                <Input 
+                  type="date" 
+                  value={endDate} 
+                  onChange={(e) => setEndDate(e.target.value)} 
+                  className="border-2 border-gray-300 focus:border-blue-500 bg-white text-gray-900" 
+                />
               </div>
-            </div>}
+            </div>
+          )}
 
           {/* Summary Cards */}
-          {reportType === 'summary' && <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {reportType === 'summary' && (
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card className="border-gray-200 hover:bg-gray-50 transition-colors bg-white">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
@@ -362,14 +426,72 @@ const ViewReportsForm = ({
                       <p className="text-gray-600 text-xs">Total Budgets</p>
                       <p className="text-2xl font-bold text-blue-600">{currencySymbol}{totalBudgets.toFixed(2)}</p>
                     </div>
-                    <PieChart className="w-6 h-6 text-blue-600" />
+                    <Target className="w-6 h-6 text-blue-600" />
                   </div>
                 </CardContent>
               </Card>
-            </div>}
+            </div>
+          )}
+
+          {/* Budget Analysis Section */}
+          {reportType === 'summary' && Object.keys(budgetAnalysis).length > 0 && (
+            <Card className="border-gray-200 bg-white">
+              <CardHeader>
+                <CardTitle className="text-lg text-blue-600">Budget Performance Analysis</CardTitle>
+                <CardDescription className="text-gray-600">
+                  Track your spending against budgets for the selected period
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4 max-h-80 overflow-y-auto">
+                  {Object.values(budgetAnalysis).map((budget: any) => (
+                    <div key={budget.id} className="flex justify-between items-center p-4 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <p className="font-medium text-gray-900">{budget.name}</p>
+                            <p className="text-sm text-gray-600">{budget.category} • {budget.period}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm text-gray-600">
+                              {currencySymbol}{budget.spent.toFixed(2)} / {currencySymbol}{budget.amount}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge 
+                                variant={budget.status === 'exceeded' ? 'destructive' : budget.status === 'warning' ? 'default' : 'secondary'}
+                                className="text-xs"
+                              >
+                                {budget.utilization.toFixed(1)}% used
+                              </Badge>
+                              {budget.status === 'exceeded' && <AlertTriangle className="w-4 h-4 text-red-600" />}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full ${
+                              budget.status === 'exceeded' ? 'bg-red-500' : 
+                              budget.status === 'warning' ? 'bg-orange-500' : 'bg-green-500'
+                            }`}
+                            style={{ width: `${Math.min(budget.utilization, 100)}%` }}
+                          ></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                          <span>Remaining: {currencySymbol}{budget.remaining.toFixed(2)}</span>
+                          <span>{budget.start_date} - {budget.end_date}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Category Breakdown - Show both income and expenses */}
-          {reportType === 'summary' && <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {reportType === 'summary' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* ... keep existing income and expense breakdown cards */}
               <Card className="border-gray-200 bg-white">
                 <CardHeader>
                   <CardTitle className="text-lg text-green-600">Income by Category</CardTitle>
@@ -377,12 +499,18 @@ const ViewReportsForm = ({
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {Object.entries(incomeByCategory).length > 0 ? Object.entries(incomeByCategory).map(([category, amount]) => <div key={category} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded transition-colors">
+                    {Object.entries(incomeByCategory).length > 0 ? (
+                      Object.entries(incomeByCategory).map(([category, amount]) => (
+                        <div key={category} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded transition-colors">
                           <span className="capitalize font-medium text-gray-900">{category}</span>
                           <Badge variant="outline" className="text-green-600 border-green-200">
                             {currencySymbol}{amount.toFixed(2)}
                           </Badge>
-                        </div>) : <p className="text-center text-gray-500 py-4">No income transactions found</p>}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-center text-gray-500 py-4">No income transactions found</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -394,19 +522,27 @@ const ViewReportsForm = ({
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {Object.entries(expensesByCategory).length > 0 ? Object.entries(expensesByCategory).map(([category, amount]) => <div key={category} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded transition-colors">
+                    {Object.entries(expensesByCategory).length > 0 ? (
+                      Object.entries(expensesByCategory).map(([category, amount]) => (
+                        <div key={category} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded transition-colors">
                           <span className="capitalize font-medium text-gray-900">{category}</span>
                           <Badge variant="outline" className="text-red-600 border-red-200">
                             {currencySymbol}{amount.toFixed(2)}
                           </Badge>
-                        </div>) : <p className="text-center text-gray-500 py-4">No expense transactions found</p>}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-center text-gray-500 py-4">No expense transactions found</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
-            </div>}
+            </div>
+          )}
 
           {/* Detailed Data - Transactions */}
-          {reportType === 'transactions' && <Card className="border-gray-200 bg-white">
+          {reportType === 'transactions' && (
+            <Card className="border-gray-200 bg-white">
               <CardHeader>
                 <CardTitle className="text-gray-900">Transaction Details</CardTitle>
                 <CardDescription className="text-gray-600">
@@ -415,7 +551,11 @@ const ViewReportsForm = ({
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {transactionsLoading ? <p className="text-gray-700">Loading transactions...</p> : transactions.length > 0 ? transactions.map(transaction => <div key={transaction.id} className="flex justify-between items-center p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
+                  {transactionsLoading ? (
+                    <p className="text-gray-700">Loading transactions...</p>
+                  ) : transactions.length > 0 ? (
+                    transactions.map((transaction) => (
+                      <div key={transaction.id} className="flex justify-between items-center p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                         <div className="flex-1">
                           <div className="flex justify-between items-start mb-1">
                             <p className="font-medium text-gray-900">{transaction.title}</p>
@@ -426,15 +566,23 @@ const ViewReportsForm = ({
                           <p className="text-sm text-gray-600">
                             {new Date(transaction.date).toLocaleDateString()} • {transaction.category}
                           </p>
-                          {transaction.description && <p className="text-xs text-gray-500 mt-1">{transaction.description}</p>}
+                          {transaction.description && (
+                            <p className="text-xs text-gray-500 mt-1">{transaction.description}</p>
+                          )}
                         </div>
-                      </div>) : <p className="text-center text-gray-500">No transactions found for this period</p>}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-center text-gray-500">No transactions found for this period</p>
+                  )}
                 </div>
               </CardContent>
-            </Card>}
+            </Card>
+          )}
 
           {/* Detailed Data - Budgets */}
-          {reportType === 'budgets' && <Card className="border-gray-200 bg-white">
+          {reportType === 'budgets' && (
+            <Card className="border-gray-200 bg-white">
               <CardHeader>
                 <CardTitle className="text-gray-900">Budget Details</CardTitle>
                 <CardDescription className="text-gray-600">
@@ -443,27 +591,70 @@ const ViewReportsForm = ({
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {budgetsLoading ? <p className="text-gray-700">Loading budgets...</p> : budgets.length > 0 ? budgets.map(budget => <div key={budget.id} className="flex justify-between items-center p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
-                        <div className="flex-1">
-                          <div className="flex justify-between items-start mb-1">
-                            <p className="font-medium text-gray-900">{budget.name}</p>
-                            <Badge variant="outline" className="ml-2">
-                              {currencySymbol}{Number(budget.amount).toFixed(2)}
-                            </Badge>
+                  {budgetsLoading ? (
+                    <p className="text-gray-700">Loading budgets...</p>
+                  ) : budgets.length > 0 ? (
+                    budgets.map((budget) => {
+                      const analysis = budgetAnalysis[budget.category] || {
+                        spent: 0,
+                        remaining: budget.amount,
+                        utilization: 0,
+                        status: 'good'
+                      };
+                      
+                      return (
+                        <div key={budget.id} className="flex justify-between items-center p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start mb-1">
+                              <p className="font-medium text-gray-900">{budget.name}</p>
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="ml-2">
+                                  {currencySymbol}{Number(budget.amount).toFixed(2)}
+                                </Badge>
+                                <Badge 
+                                  variant={analysis.status === 'exceeded' ? 'destructive' : analysis.status === 'warning' ? 'default' : 'secondary'}
+                                  className="text-xs"
+                                >
+                                  {analysis.utilization.toFixed(1)}%
+                                </Badge>
+                              </div>
+                            </div>
+                            <p className="text-sm text-gray-600">
+                              {budget.category} • {budget.period}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {new Date(budget.start_date).toLocaleDateString()} - {new Date(budget.end_date).toLocaleDateString()}
+                            </p>
+                            <div className="mt-2">
+                              <div className="flex justify-between text-xs text-gray-600 mb-1">
+                                <span>Spent: {currencySymbol}{analysis.spent.toFixed(2)}</span>
+                                <span>Remaining: {currencySymbol}{analysis.remaining.toFixed(2)}</span>
+                              </div>
+                              <div className="w-full bg-gray-200 rounded-full h-1.5">
+                                <div 
+                                  className={`h-1.5 rounded-full ${
+                                    analysis.status === 'exceeded' ? 'bg-red-500' : 
+                                    analysis.status === 'warning' ? 'bg-orange-500' : 'bg-green-500'
+                                  }`}
+                                  style={{ width: `${Math.min(analysis.utilization, 100)}%` }}
+                                ></div>
+                              </div>
+                            </div>
                           </div>
-                          <p className="text-sm text-gray-600">
-                            {budget.category} • {budget.period}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {new Date(budget.start_date).toLocaleDateString()} - {new Date(budget.end_date).toLocaleDateString()}
-                          </p>
                         </div>
-                      </div>) : <p className="text-center text-gray-500">No budgets found for this period</p>}
+                      );
+                    })
+                  ) : (
+                    <p className="text-center text-gray-500">No budgets found for this period</p>
+                  )}
                 </div>
               </CardContent>
-            </Card>}
+            </Card>
+          )}
         </div>
       </SheetContent>
-    </Sheet>;
+    </Sheet>
+  );
 };
+
 export default ViewReportsForm;
