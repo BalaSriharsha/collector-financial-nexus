@@ -26,12 +26,7 @@ const Navigation = () => {
     }
   };
 
-  const navLinks = [
-    { to: "/features", label: "Features" },
-    { to: "/pricing", label: "Pricing" },
-    { to: "/forum", label: "Forum" },
-    { to: "/careers", label: "Careers" }
-  ];
+  const navLinks: { to: string; label: string }[] = [];
 
   const isActivePath = (path: string) => location.pathname === path;
 

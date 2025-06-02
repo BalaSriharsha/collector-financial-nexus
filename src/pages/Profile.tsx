@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -13,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { User, CreditCard, Trash2, Crown, Gem, Palette, Monitor, Moon, Sun, Loader2, LogOut } from "lucide-react";
+import { User, CreditCard, Trash2, Crown, Gem, Palette, Monitor, Moon, Sun, Loader2, LogOut, ArrowLeft } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import RazorpayCheckout from "@/components/RazorpayCheckout";
@@ -522,6 +523,17 @@ const Profile = () => {
       <div className="max-w-4xl mx-auto px-4 py-4 sm:py-8 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
+            <div className="flex items-center gap-3 mb-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+                className="text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                Back to Dashboard
+              </Button>
+            </div>
             <h1 className="text-2xl sm:text-3xl font-playfair font-bold text-slate-800 dark:text-slate-100">
               Profile Settings
             </h1>
