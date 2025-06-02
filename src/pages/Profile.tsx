@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { User, CreditCard, Trash2, Crown, Gem, Palette, Monitor, Moon, Sun, Loader2 } from "lucide-react";
+import { User, CreditCard, Trash2, Crown, Gem, Palette, Monitor, Moon, Sun, Loader2, LogOut } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import RazorpayCheckout from "@/components/RazorpayCheckout";
@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useNavigate } from "react-router-dom";
 
 interface Profile {
   id: string;
@@ -50,6 +51,7 @@ const Profile = () => {
   const [showRazorpayCheckout, setShowRazorpayCheckout] = useState<'Premium' | 'Organization' | null>(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!user) {
@@ -149,6 +151,11 @@ const Profile = () => {
       console.error('Error deleting account:', error);
       toast.error('Failed to delete account');
     }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
   };
 
   if (isLoading) {
@@ -526,6 +533,15 @@ const Profile = () => {
             <Badge variant="outline" className="text-xs dark:border-slate-600 dark:text-slate-300">
               {profile.user_type === 'individual' ? 'Individual' : 'Organization'}
             </Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSignOut}
+              className="text-sm dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
           </div>
         </div>
 
