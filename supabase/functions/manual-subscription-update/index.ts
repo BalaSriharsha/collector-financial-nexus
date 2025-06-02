@@ -1,9 +1,11 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 const logStep = (step: string, details?: any) => {
@@ -13,8 +15,12 @@ const logStep = (step: string, details?: any) => {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      headers: corsHeaders,
+      status: 200 
+    });
   }
 
   const supabaseClient = createClient(
@@ -30,9 +36,19 @@ serve(async (req) => {
     logStep("Request data received", { paymentId, orderId, signature, planType });
 
     // Get authenticated user
-    const authHeader = req.headers.get("Authorization")!;
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      throw new Error("No authorization header provided");
+    }
+    
     const token = authHeader.replace("Bearer ", "");
-    const { data: authData } = await supabaseClient.auth.getUser(token);
+    const { data: authData, error: authError } = await supabaseClient.auth.getUser(token);
+    
+    if (authError) {
+      logStep("Authentication error", { error: authError.message });
+      throw new Error(`Authentication failed: ${authError.message}`);
+    }
+    
     const user = authData.user;
     
     if (!user?.email) {
