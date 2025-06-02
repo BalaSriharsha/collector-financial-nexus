@@ -20,6 +20,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import GroupInviteModal from "@/components/GroupInviteModal";
 
 interface Group {
   id: string;
@@ -46,6 +47,8 @@ const Groups = () => {
   });
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showEditGroup, setShowEditGroup] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [selectedGroupForInvite, setSelectedGroupForInvite] = useState<Group | null>(null);
   const [editingGroup, setEditingGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -227,6 +230,11 @@ const Groups = () => {
     }
   };
 
+  const openInviteModal = (group: Group) => {
+    setSelectedGroupForInvite(group);
+    setShowInviteModal(true);
+  };
+
   const openEditDialog = (group: Group) => {
     setEditingGroup({ ...group });
     setShowEditGroup(true);
@@ -306,8 +314,18 @@ const Groups = () => {
                         <Button
                           size="sm"
                           variant="outline"
+                          onClick={() => openInviteModal(group)}
+                          className="h-7 w-7 p-0 hover:bg-green-50 dark:hover:bg-green-900/20 dark:border-slate-600"
+                          title="Invite members"
+                        >
+                          <Users className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
                           onClick={() => openEditDialog(group)}
                           className="h-7 w-7 p-0 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:border-slate-600"
+                          title="Edit group"
                         >
                           <Edit className="w-3 h-3" />
                         </Button>
@@ -316,6 +334,7 @@ const Groups = () => {
                           variant="outline"
                           onClick={() => handleDeleteGroup(group.id, group.name)}
                           className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20 dark:border-red-500"
+                          title="Delete group"
                         >
                           <Trash2 className="w-3 h-3" />
                         </Button>
@@ -533,6 +552,19 @@ const Groups = () => {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Group Invite Modal */}
+        {selectedGroupForInvite && (
+          <GroupInviteModal
+            isOpen={showInviteModal}
+            onClose={() => {
+              setShowInviteModal(false);
+              setSelectedGroupForInvite(null);
+            }}
+            groupId={selectedGroupForInvite.id}
+            groupName={selectedGroupForInvite.name}
+          />
+        )}
       </div>
 
       {/* Mobile Navigation */}
